@@ -1,2 +1,1 @@
 # ProjectPulse
-Hello World
