@@ -58,33 +58,37 @@ export const AuthProvider = ({ children }) => {
     initialize();
 
     // 2. State Change Listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log('[Auth] Event:', event);
-      if (!mounted) return;
-
-      setSession(currentSession);
-      setLoading(false); // Ensure UI isn't hung
-
-      if (currentSession?.user) {
-        fetchProfile(currentSession.user.id);
-      } else {
-        setProfile(null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) {
+        setSession(session);
+        setLoading(false);
+        if (session?.user) {
+          fetchProfile(session.user.id);
+        } else {
+          setProfile(null);
+        }
       }
     });
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
 
+  const refreshProfile = async () => {
+    if (session?.user) {
+        await fetchProfile(session.user.id);
+    }
+  };
+
   const value = {
     session,
-    user: session?.user,
     profile,
     loading,
     profileLoading,
-    refreshProfile: () => session?.user && fetchProfile(session.user.id)
+    user: session?.user,
+    refreshProfile
   };
 
   return (

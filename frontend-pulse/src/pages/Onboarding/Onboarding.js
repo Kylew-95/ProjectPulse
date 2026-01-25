@@ -29,7 +29,7 @@ function Onboarding() {
         </div>
 
         <button 
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/login')}
           className="px-8 py-3 bg-primary hover:bg-blue-600 text-white font-semibold rounded-xl shadow-lg shadow-primary/20 transition-all duration-200 hover:-translate-y-1 w-full sm:w-auto"
         >
           Continue

@@ -31,7 +31,12 @@ function ManageSubscription() {
     }
   };
 
-  const currentPlanName = profile?.subscription_tier?.replace('_', ' ') || 'No Active Plan';
+  const planName = profile?.subscription_tier?.replace('_', ' ') || 'No Active Plan';
+  
+  // Dynamic Status Logic
+  const status = profile?.status || 'active'; // Default to active if missing
+  const isTrialing = status === 'trialing';
+  const trialEndDate = profile?.trial_end ? new Date(profile.trial_end).toLocaleDateString() : null;
 
   return (
     <div className="animate-fade-in max-w-2xl mx-auto">
@@ -52,15 +57,20 @@ function ManageSubscription() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <span className="text-xs font-bold text-primary uppercase tracking-widest mb-1 block">Your Plan</span>
-              <h3 className="text-3xl font-bold capitalize">{currentPlanName}</h3>
+              <h3 className="text-3xl font-bold capitalize">
+                {planName} 
+                {isTrialing && <span className="text-lg font-normal text-emerald-400 ml-2">(Trial)</span>}
+              </h3>
             </div>
           </div>
           
           <div className="flex items-center gap-2 text-sm text-slate-400">
-            <svg className="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+            <svg className={`w-4 h-4 ${isTrialing ? 'text-emerald-500' : 'text-blue-500'}`} fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
-            Status: <span className="text-emerald-500 font-semibold">Active</span>
+            Status: <span className={`${isTrialing ? 'text-emerald-500' : 'text-blue-500'} font-semibold capitalize`}>
+              {status} {isTrialing && trialEndDate ? `(Ends ${trialEndDate})` : ''}
+            </span>
           </div>
         </div>
 
@@ -85,7 +95,12 @@ function ManageSubscription() {
       <div className="mt-8 bg-surface/30 border border-dashed border-slate-800 rounded-2xl p-6">
         <h4 className="font-semibold mb-2 text-white">Need a custom plan?</h4>
         <p className="text-sm text-slate-400 mb-4">We offer tailored solutions for large-scale operations with dedicated support and unlimited throughput.</p>
-        <button className="text-primary font-bold hover:underline text-sm uppercase tracking-wider">Contact Enterprise Sales</button>
+        <button 
+          onClick={() => navigate('/about')}
+          className="text-primary font-bold hover:underline text-sm uppercase tracking-wider"
+        >
+          Contact Enterprise Sales
+        </button>
       </div>
     </div>
   );

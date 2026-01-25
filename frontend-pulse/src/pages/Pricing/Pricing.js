@@ -23,6 +23,19 @@ function Pricing() {
     fetchProducts();
   }, []);
 
+  // Auto-redirect to checkout if user logged in after clicking a plan
+  useEffect(() => {
+    const pendingPlanId = localStorage.getItem('subscription_tier_id');
+    console.log('Pricing Effect Debug:', { user: user?.email, pendingPlanId }); // DEBUG
+
+    if (user && pendingPlanId) {
+        console.log('Found pending plan, redirecting to checkout:', pendingPlanId);
+        localStorage.removeItem('subscription_tier_id'); // Clear it so it doesn't loop
+        handleSelectPlan(pendingPlanId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
   const handleSelectPlan = async (priceId) => {
     if (!user) {
         localStorage.setItem('subscription_tier_id', priceId);
@@ -30,11 +43,16 @@ function Pricing() {
         return;
     }
 
+    console.log('Creating checkout session for user:', user); // DEBUG
+
     try {
+      const payload = { price_id: priceId, email: user.email, user_id: user.id };
+      console.log('Checkout Payload:', payload); // DEBUG
+
       const response = await fetch('http://localhost:8000/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ price_id: priceId, email: user.email })
+        body: JSON.stringify(payload)
       });
       const { url } = await response.json();
       window.location.href = url;
@@ -71,10 +89,25 @@ function Pricing() {
                 </div>
               )}
               <h2 className="text-2xl font-bold mb-2 lowercase first-letter:uppercase">{product.name}</h2>
-              <div className="text-4xl font-bold mb-6">
+              <div className="text-4xl font-bold mb-2">
                 £{product.price}
                 <span className="text-sm text-slate-400 font-normal">/mo</span>
               </div>
+
+               {/* Display Tickets Info */}
+               {product.metadata?.tickets && (
+                <div className="mb-2 text-sm font-bold text-primary uppercase tracking-wider">
+                  {product.metadata.tickets}
+                </div>
+              )}
+              
+              {/* Display Trial Info */}
+              {product.metadata?.trial_days && (
+                <div className="mb-4 text-sm font-semibold text-emerald-400">
+                  {product.metadata.trial_days}-Day Free Trial
+                </div>
+              )}
+
               <p className="text-slate-400 text-sm mb-8 leading-relaxed">
                 {product.description || 'Perfect for your projects and growing teams.'}
               </p>
@@ -91,7 +124,13 @@ function Pricing() {
               </ul>
 
               <button 
-                onClick={() => handleSelectPlan(product.price_id)}
+                onClick={() => {
+                  if (product.metadata?.plan_id === 'enterprise') {
+                    navigate('/about');
+                  } else {
+                    handleSelectPlan(product.price_id);
+                  }
+                }}
                 className={`w-full py-4 ${product.metadata?.featured === 'true' ? 'bg-primary hover:bg-blue-600 shadow-lg shadow-primary/25' : 'bg-slate-800 hover:bg-slate-700'} text-white font-bold rounded-xl transition-all mt-auto`}
               >
                 {product.metadata?.cta || 'Get Started'}

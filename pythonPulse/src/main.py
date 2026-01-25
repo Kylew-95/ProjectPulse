@@ -5,6 +5,9 @@ import asyncio
 import os
 import uvicorn
 from api import app as fastapi_app
+from sync_plans import sync_plans
+
+import subprocess
 
 # Define Intents
 intents = discord.Intents.default()
@@ -39,6 +42,22 @@ async def run_fastapi():
     await server.serve()
 
 async def main():
+    # Sync Stripe plans at startup
+    sync_plans()
+
+    # Auto-start Stripe Listener (Forwarding to local backend)
+    try:
+        print("🎧 Starting Stripe Listener (Background)...")
+        # Run stripe listen silently
+        subprocess.Popen(
+            ["stripe", "listen", "--forward-to", "localhost:8000/webhook"], 
+            shell=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+    except Exception as e:
+        print(f"⚠️ Could not start Stripe Listener automatically: {e}")
+    
     # Run both bot and API
     await asyncio.gather(
         load_extensions(),

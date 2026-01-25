@@ -4,7 +4,7 @@ import { supabase } from '../../supabaseClient';
 
 function Signup() {
   const [searchParams] = useSearchParams();
-  const plan = searchParams.get('plan') || localStorage.getItem('subscription_tier') || 'free_trial';
+  const plan = searchParams.get('plan') || 'starter';
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -13,7 +13,7 @@ function Signup() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'discord',
       options: {
-        redirectTo: window.location.origin + '/onboarding',
+        redirectTo: window.location.origin + '/pricing',
       },
     });
     if (error) {

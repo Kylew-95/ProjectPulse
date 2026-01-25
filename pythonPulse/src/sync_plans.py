@@ -4,22 +4,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+stripe.api_key = os.getenv("STRIPE_KEY")
 
 # Define your plans here in code. 
 # This is the "Source of Truth".
 PLANS = [
-    {
-        "id": "free_trial",
-        "name": "Free Trial",
-        "description": "Test the waters with full access for one month.",
-        "amount": 0,
-        "currency": "gbp",
-        "interval": "month",
-        "features": "1 project, Basic AI features, Community support, 500 tickets limit",
-        "cta": "Start Free Trial",
-        "featured": "false"
-    },
     {
         "id": "starter",
         "name": "Starter",
@@ -27,7 +16,8 @@ PLANS = [
         "amount": 1800, # In pence (£18.00)
         "currency": "gbp",
         "interval": "month",
-        "features": "5 projects, Standard AI Analysis, Email support, 2,000 tickets/mo",
+        "features": "5 projects, Standard AI Analysis, Email support", 
+        "tickets": "2,000 tickets/mo",
         "cta": "Get Started",
         "featured": "false"
     },
@@ -38,9 +28,11 @@ PLANS = [
         "amount": 2400, # In pence (£24.00)
         "currency": "gbp",
         "interval": "month",
-        "features": "Unlimited projects, Advanced AI Analytics, Priority support, Web Dashboard Access, 10,000 tickets/mo",
+        "features": "Unlimited projects, Advanced AI Analytics, Priority support, Web Dashboard Access", 
+        "tickets": "10,000 tickets/mo",
         "cta": "Get Started",
-        "featured": "true"
+        "featured": "true",
+        "trial_days": "7"
     },
     {
         "id": "enterprise",
@@ -49,7 +41,8 @@ PLANS = [
         "amount": 12000, # In pence (£120.00)
         "currency": "gbp",
         "interval": "month",
-        "features": "Unlimited everything, Direct Ticketing Integration, Dedicated account manager, Unlimited tickets",
+        "features": "Unlimited everything, Direct Ticketing Integration, Dedicated account manager",
+        "tickets": "Unlimited tickets",
         "cta": "Contact Sales",
         "featured": "false"
     }
@@ -73,7 +66,9 @@ def sync_plans():
                     "plan_id": plan['id'],
                     "features": plan['features'],
                     "cta": plan['cta'],
-                    "featured": plan['featured']
+                    "tickets": plan['tickets'],
+                    "featured": plan['featured'],
+                    "trial_days": plan.get('trial_days')
                 }
             )
         else:
@@ -85,7 +80,9 @@ def sync_plans():
                     "plan_id": plan['id'],
                     "features": plan['features'],
                     "cta": plan['cta'],
-                    "featured": plan['featured']
+                    "tickets": plan['tickets'],
+                    "featured": plan['featured'],
+                    "trial_days": plan.get('trial_days')
                 }
             )
 
@@ -111,7 +108,7 @@ def sync_plans():
     print("✅ Sync Complete!")
 
 if __name__ == "__main__":
-    if not os.getenv("STRIPE_SECRET_KEY"):
-        print("❌ Error: STRIPE_SECRET_KEY not found in .env")
+    if not os.getenv("STRIPE_KEY"):
+        print("❌ Error: STRIPE_KEY not found in .env")
     else:
         sync_plans()
