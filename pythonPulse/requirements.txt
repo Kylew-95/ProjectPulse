@@ -1,5 +1,11 @@
 discord.py
+supabase
+stripe
+fastapi
+uvicorn
+python-multipart
 python-dotenv
+cohere
 cohere
 supabase
 APScheduler
