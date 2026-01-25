@@ -33,10 +33,20 @@ function ManageSubscription() {
 
   const planName = profile?.subscription_tier?.replace('_', ' ') || 'No Active Plan';
   
-  // Dynamic Status Logic
-  const status = profile?.status || 'active'; // Default to active if missing
-  const isTrialing = status === 'trialing';
+  // Helper logic
+  const getTrialDaysLeft = () => {
+    if (!profile?.trial_end) return 0;
+    const end = new Date(profile.trial_end);
+    const now = new Date();
+    const diffTime = end - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+  const trialDays = getTrialDaysLeft();
+  const isCanceled = ['canceled', 'past_due', 'unpaid'].includes(profile?.status);
+  const isTrialing = !isCanceled && ((profile?.status === 'trialing') || (trialDays > 0 && trialDays < 30));
   const trialEndDate = profile?.trial_end ? new Date(profile.trial_end).toLocaleDateString() : null;
+  const status = profile?.status || 'Active';
 
   return (
     <div className="animate-fade-in max-w-2xl mx-auto">
@@ -57,10 +67,29 @@ function ManageSubscription() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <span className="text-xs font-bold text-primary uppercase tracking-widest mb-1 block">Your Plan</span>
-              <h3 className="text-3xl font-bold capitalize">
-                {planName} 
-                {isTrialing && <span className="text-lg font-normal text-emerald-400 ml-2">(Trial)</span>}
-              </h3>
+              <div className="flex flex-col items-start gap-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-3xl font-bold capitalize leading-none">
+                        {planName}
+                    </h3>
+                    {isTrialing && (
+                       <span className="text-xs uppercase font-bold tracking-wider text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-1 rounded-full whitespace-nowrap">
+                         Free Trial
+                       </span>
+                    )}
+                    {isCanceled && (
+                       <span className="text-xs uppercase font-bold tracking-wider text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-full whitespace-nowrap">
+                         Canceled
+                       </span>
+                    )}
+                  </div>
+                  
+                  {isTrialing && (
+                      <span className="text-sm font-medium text-slate-400 mt-1">
+                        {trialDays} {trialDays === 1 ? 'day' : 'days'} left • Ends {trialEndDate}
+                      </span>
+                  )}
+              </div>
             </div>
           </div>
           

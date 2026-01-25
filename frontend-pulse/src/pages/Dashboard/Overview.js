@@ -57,11 +57,56 @@ function Overview() {
     );
   }
 
+  // Helper to calculate days remaining
+  const getTrialDaysLeft = () => {
+    if (!profile?.trial_end) return 0;
+    const end = new Date(profile.trial_end);
+    const now = new Date();
+    const diffTime = end - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  // Robust Logic
+  const trialDays = getTrialDaysLeft();
+  const isCanceled = ['canceled', 'past_due', 'unpaid'].includes(profile?.status);
+  // Trial badge only shows if NOT canceled AND actually trialing
+  const isTrialing = !isCanceled && ((profile?.status === 'trialing') || (trialDays > 0 && trialDays < 30));
+  
+  const planName = profile?.subscription_tier?.charAt(0).toUpperCase() + profile?.subscription_tier?.slice(1) || 'Free';
+
   const stats = [
     { label: 'Total Tickets', value: allTickets.length },
     { label: 'Open Tickets', value: allTickets.filter(t => t.status === 'OPEN').length },
     { label: 'Resolved', value: allTickets.filter(t => t.status === 'CLOSED' || t.status === 'RESOLVED').length },
-    { label: 'Plan Tier', value: profile?.subscription_tier?.toUpperCase() || 'FREE' },
+    { 
+      label: 'Current Plan', 
+      value: (
+        <div className="flex flex-col items-start gap-1">
+          <div className="flex items-center gap-2">
+             <span className="font-bold text-2xl leading-none">{planName}</span>
+             
+             {isTrialing && (
+               <span className="text-[10px] uppercase font-bold tracking-wider text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+                 Free Trial
+               </span>
+             )}
+             
+             {isCanceled && (
+               <span className="text-[10px] uppercase font-bold tracking-wider text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+                 Canceled
+               </span>
+             )}
+          </div>
+          
+          {isTrialing && (
+             <span className="text-sm font-medium text-slate-400">
+               {trialDays} {trialDays === 1 ? 'day' : 'days'} left
+             </span>
+          )}
+        </div>
+      ) 
+    },
   ];
 
   return (

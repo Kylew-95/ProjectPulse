@@ -33,6 +33,20 @@ function SettingsPage() {
 
   const isIntegrationDisabled = !['pro', 'enterprise'].includes(profile?.subscription_tier?.toLowerCase());
 
+  // Helper
+  const getTrialDaysLeft = () => {
+    if (!profile?.trial_end) return 0;
+    const end = new Date(profile.trial_end);
+    const now = new Date();
+    const diffTime = end - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+  
+  const trialDays = getTrialDaysLeft();
+  const isCanceled = ['canceled', 'past_due', 'unpaid'].includes(profile?.status);
+  const isTrialing = !isCanceled && ((profile?.status === 'trialing') || (trialDays > 0 && trialDays < 30));
+
   return (
     <div className="animate-fade-in max-w-4xl">
       <h2 className="text-2xl font-bold mb-8">Workspace Settings</h2>
@@ -47,9 +61,28 @@ function SettingsPage() {
             Plan & Billing
           </h3>
           <div className="flex items-center justify-between p-4 rounded-xl bg-background border border-slate-800">
-            <div>
-              <p className="text-sm text-slate-400">Current Plan</p>
-              <p className="text-lg font-bold text-primary">{profile?.subscription_tier?.toUpperCase() || 'FREE'}</p>
+            <div className="flex flex-col items-start">
+              <p className="text-sm text-slate-400 mb-1">Current Plan</p>
+              
+              <div className="flex items-center gap-2">
+                 <p className="text-lg font-bold text-primary">{profile?.subscription_tier?.toUpperCase() || 'FREE'}</p>
+                 {isTrialing && (
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+                      Free Trial
+                    </span>
+                 )}
+                 {isCanceled && (
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+                      Canceled
+                    </span>
+                 )}
+              </div>
+              
+              {isTrialing && (
+                 <p className="text-sm font-medium text-slate-400 mt-0.5">
+                   {trialDays} {trialDays === 1 ? 'day' : 'days'} left
+                 </p>
+              )}
             </div>
             <button 
               onClick={() => navigate('/dashboard/settings/subscription')}
