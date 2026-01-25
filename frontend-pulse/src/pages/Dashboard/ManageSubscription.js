@@ -3,10 +3,20 @@ import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 
 function ManageSubscription() {
-  const { profile, loading } = useAuth();
+  const { profile, loading, profileLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Only show the ring if we're still determining the session
   if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // If session is found but profile is still loading, show a smaller indicator or wait
+  if (!profile && profileLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
