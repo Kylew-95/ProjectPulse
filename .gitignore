@@ -11,3 +11,4 @@ venv/
 env/
 pythonPulse/__pycache__/
 pythonPulse/venv/
+*.sql

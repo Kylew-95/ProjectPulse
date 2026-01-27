@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from services.supabase_client import get_messages_last_24h
+from services.supabase_client import get_messages_last_24h, check_guild_subscription
 from services.ai_service import generate_summary
 import os
 
@@ -16,41 +16,53 @@ class Summary(commands.Cog):
         self.scheduler.start()
 
     async def post_daily_summary(self):
-        # Find the target channel
-        # For now, we'll try to find a channel named 'general' or 'updates'
-        # In production, put CHANNEL_ID in .env
-        target_channel = discord.utils.get(self.bot.get_all_channels(), name='general')
+        print("🔍 Checking guilds for Daily Pulse...")
         
-        if not target_channel:
-            print("Summary Error: Could not find 'general' channel to post summary.")
-            return
+        for guild in self.bot.guilds:
+            # Plan Tier Enforcement
+            is_active, _ = check_guild_subscription(guild.id)
+            if not is_active:
+                continue
 
-        print("Generating Daily Pulse...")
-        
-        # 1. Fetch Logs
-        messages = get_messages_last_24h()
-        
-        if not messages:
-            await target_channel.send("📉 **The Daily Pulse**: No messages recorded in the last 24 hours.")
-            return
+            target_channel = discord.utils.get(guild.channels, name='general')
+            if not target_channel:
+                continue
 
-        # Format for AI
-        text_block = "\n".join([f"{m['username']}: {m['content']}" for m in messages])
+            print(f"📊 Generating Daily Pulse for {guild.name}...")
+            
+            # 1. Fetch Logs (This needs to be filtered by channel_id or guild if multi-tenant)
+            # For now, it fetches last 24h of all logs, which is fine for a start if it's one guild
+            messages = get_messages_last_24h()
+            
+            if not messages:
+                await target_channel.send("📉 **The Daily Pulse**: No messages recorded in the last 24 hours.")
+                continue
 
-        # 2. Generate Summary
-        summary = generate_summary(text_block)
+            # Format for AI
+            text_block = "\n".join([f"{m['username']}: {m['content']}" for m in messages])
 
-        # 3. Post
-        msg = f"""
-        📊 **The Daily Pulse: Executive Summary**
-        
-        {summary}
-        """
-        await target_channel.send(msg)
+            # 2. Generate Summary
+            summary = generate_summary(text_block)
+
+            # 3. Post
+            msg = f"""
+            📊 **The Daily Pulse: Executive Summary**
+            
+            {summary}
+            """
+            await target_channel.send(msg)
 
     @commands.command()
     async def force_summary(self, ctx):
         """Manually triggers the daily summary for testing."""
+        if not ctx.guild:
+            return
+
+        is_active, sub_msg = check_guild_subscription(ctx.guild.id)
+        if not is_active:
+            await ctx.send(f"⚠️ **Subscription Required**: {sub_msg}")
+            return
+
         await ctx.send("Generating summary manually...")
         await self.post_daily_summary()
 

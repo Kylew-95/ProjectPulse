@@ -55,6 +55,9 @@ async def create_checkout_session(data: dict):
         price = stripe.Price.retrieve(price_id, expand=['product'])
         product = price.product
         
+        # Extract trial days from product metadata (default to 0)
+        trial_days = product.metadata.get('trial_days', 0)
+        
         session_params = {
             'payment_method_types': ['card'],
             'customer_email': customer_email,
@@ -66,37 +69,56 @@ async def create_checkout_session(data: dict):
             'success_url': f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/dashboard?success=true",
             'cancel_url': f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/pricing?canceled=true",
             'metadata': {
-                'plan_id': product.metadata.get('plan_id'),
+                'plan_tier_id': product.metadata.get('plan_tier_id'),
                 'user_id': user_id
+            },
+            'subscription_data': {
+                'metadata': {
+                    'plan_tier_id': product.metadata.get('plan_tier_id'),
+                    'user_id': user_id
+                }
             }
         }
 
-        # Check for trial_days in metadata
-        trial_days = product.metadata.get('trial_days')
         if trial_days and int(trial_days) > 0:
+            print(f"DEBUG CHECKOUT: Target product has {trial_days} trial days. Checking for prior subs for {customer_email}...")
             # Enforce One-Time Trial Logic:
-            # Check if this customer email already exists in Stripe and has ANY subscription history
             customers = stripe.Customer.list(email=customer_email, limit=1)
             
             has_prior_subscription = False
+            active_sub = None
+
             if customers.data:
                 customer = customers.data[0]
                 # Check for any subscriptions (active, canceled, past due, etc.)
-                # We check 'all' status to catch previous trials that were canceled or expired
-                subscriptions = stripe.Subscription.list(customer=customer.id, status='all', limit=1)
-                if subscriptions.data:
-                    has_prior_subscription = True
+                subscriptions = stripe.Subscription.list(customer=customer.id, status='all', limit=5)
+                for sub in subscriptions.data:
+                    # If user has an ACTIVE or TRIALING subscription right now, redirect them to dashboard
+                    if sub.status in ['active', 'trialing']:
+                        active_sub = sub
+                        break
+                    if sub.status in ['active', 'trialing', 'canceled', 'past_due', 'unpaid']:
+                         has_prior_subscription = True
+
+            if active_sub:
+                print(f"DEBUG CHECKOUT: Active/Trialing subscription found for {customer_email}. Redirecting to Dashboard.")
+                # Optional: Force sync DB here to ensure access
+                # For now just redirect
+                return {"url": f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/dashboard"}
 
             if not has_prior_subscription:
-                session_params['subscription_data'] = {
-                    'trial_period_days': int(trial_days)
-                }
+                print(f"DEBUG CHECKOUT: Applying {trial_days} days trial for {customer_email}.")
+                if 'subscription_data' not in session_params:
+                    session_params['subscription_data'] = {}
+                session_params['subscription_data']['trial_period_days'] = int(trial_days)
             else:
                  print(f"User {customer_email} has a prior subscription. Trial skipped.")
 
+        print(f"DEBUG CHECKOUT: Creating session with params: {session_params}")
         session = stripe.checkout.Session.create(**session_params)
         return {"url": session.url}
     except Exception as e:
+        print(f"DEBUG CHECKOUT ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/create-portal-session")
@@ -111,6 +133,108 @@ async def create_portal_session(data: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/cancel-subscription")
+async def cancel_subscription(data: dict):
+    email = data.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email required")
+
+    try:
+        # 1. Find all customers with this email to handle potential duplicates
+        customers = stripe.Customer.list(email=email, limit=20)
+        if not customers.data:
+            raise HTTPException(status_code=404, detail="No customer found")
+        
+        target_sub = None
+        
+        # 2. Find the first Active or Trialing subscription
+        for cust in customers.data:
+            subs = stripe.Subscription.list(customer=cust.id, status='all', limit=10)
+            for sub in subs.data:
+                if sub.status in ['active', 'trialing']:
+                    target_sub = sub
+                    break
+            if target_sub:
+                break
+                
+        if not target_sub:
+             raise HTTPException(status_code=404, detail="No active subscription found")
+             
+        # 3. Cancel Immediately
+        deleted_sub = stripe.Subscription.delete(target_sub.id)
+        
+        # 4. Immediate Supabase Update
+        user_id = target_sub.metadata.get('user_id')
+        print(f"DEBUG CANCEL: Retrieved user_id from metadata: {user_id}", flush=True)
+        
+        # Fallback: Find user by email if metadata missing
+        if not user_id:
+             try:
+                from supabase import create_client
+                url: str = os.getenv("SUPABASE_URL")
+                key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
+                supabase_admin = create_client(url, key)
+                
+                # Use Admin API to list users by email (requires Service Role Key)
+                # Note: supabase-py doesn't have a direct 'get_user_by_email' in all versions, 
+                # but we can try listing or RPC. 
+                # However, for simplicity/robustness with GOTRUE:
+                response = supabase_admin.auth.admin.list_users()
+                # The response is usually a list-like object or has a 'users' attribute
+                users = getattr(response, 'users', response if isinstance(response, list) else [])
+                for u in users:
+                    if u.email == email:
+                        user_id = u.id
+                        print(f"DEBUG CANCEL: Found user_id {user_id} via Supabase Admin search.", flush=True)
+                        break
+                     
+             except Exception as auth_err:
+                 print(f"⚠️ CANCEL AUTH LOOKUP FAILED: {auth_err}", flush=True)
+
+        if user_id:
+            try:
+                from supabase import create_client
+                url = os.getenv("SUPABASE_URL")
+                # Prioritize Service Role Key for admin-level updates
+                key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
+                
+                if not key:
+                    print("⚠️ CANCEL DEBUG: No Supabase key found!", flush=True)
+                
+                supabase_admin = create_client(url, key)
+
+                update_data = {
+                    'id': user_id,
+                    'status': 'canceled',
+                    'subscription_tier': 'free', 
+                    'updated_at': 'now()'
+                }
+                # Use update instead of upsert to ensure we only touch existing records if possible, 
+                # but upsert is fine with ID.
+                response = supabase_admin.table('profiles').update(update_data).eq('id', user_id).execute()
+                print(f"✅ CANCEL: Force updated profile {user_id} to canceled. DB Response: {response}", flush=True)
+                
+            except Exception as db_err:
+                 print(f"⚠️ CANCEL DB UPDATE FAILED: {db_err}", flush=True)
+        else:
+             print("⚠️ CANCEL DEBUG: No user_id in subscription metadata. Cannot update profile.", flush=True)
+
+        # 5. Construct response
+        msg = "Subscription canceled immediately. Access has been revoked."
+     
+        return {
+            "status": "success", 
+            "message": msg, 
+            "sub_status": deleted_sub.status,
+            "cancel_at_period_end": False 
+        }
+
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=e.http_status, detail=str(e))
+    except Exception as e:
+        print(f"Cancel Error: {e}") 
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
 @app.post("/webhook")
 async def stripe_webhook(request: Request):
     payload = await request.body()
@@ -120,23 +244,26 @@ async def stripe_webhook(request: Request):
         event = stripe.Webhook.construct_event(
             payload, sig_header, os.getenv('STRIPE_WEBHOOK_SECRET')
         )
+        print(f"DEBUG WEBHOOK: Received event type '{event['type']}'", flush=True)
     except ValueError as e:
+        print(f"DEBUG WEBHOOK ERROR (Payload): {e}")
         raise HTTPException(status_code=400, detail='Invalid payload')
     except stripe.error.SignatureVerificationError as e:
+        print(f"DEBUG WEBHOOK ERROR (Signature): {e}")
         raise HTTPException(status_code=400, detail='Invalid signature')
 
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
         print(f"WEBHOOK: Session {session.get('id')} completed.", flush=True)
         
-        # Retrieve User ID and Plan ID from metadata
+        # Retrieve User ID and Plan Tier ID from metadata
         metadata = session.get('metadata', {})
-        plan_id = metadata.get('plan_id')
+        plan_tier_id = metadata.get('plan_tier_id')
         user_id = metadata.get('user_id')
         
-        print(f"WEBHOOK DEBUG: UserID: {user_id}, PlanID: {plan_id}. Metadata: {metadata}", flush=True)
+        print(f"WEBHOOK DEBUG: UserID: {user_id}, PlanTierID: {plan_tier_id}. Metadata: {metadata}", flush=True)
 
-        if plan_id and user_id:
+        if plan_tier_id and user_id:
             print(f"💰 Payment successful. Updating...", flush=True)
             
             # Fetch Subscription Details
@@ -147,12 +274,16 @@ async def stripe_webhook(request: Request):
             if subscription_id:
                 try:
                     sub = stripe.Subscription.retrieve(subscription_id)
+                    status = sub.status
                     if sub.status == 'trialing':
                         from datetime import datetime
                         trial_start = datetime.fromtimestamp(sub.trial_start).isoformat() if sub.trial_start else None
                         trial_end = datetime.fromtimestamp(sub.trial_end).isoformat() if sub.trial_end else None
                 except Exception as e:
                     print(f"Error fetching subscription: {e}", flush=True)
+                    status = 'active' # Fallback
+            else:
+                status = 'active'
 
             # Update Supabase
             from supabase import create_client, Client
@@ -169,22 +300,174 @@ async def stripe_webhook(request: Request):
 
             update_data = {
                 'id': user_id,
-                'subscription_tier': plan_id,
+                'subscription_tier': plan_tier_id,
                 'updated_at': 'now()',
                 'trial_start': trial_start,
                 'trial_end': trial_end,
-                'status': 'active' # Forced active for now
+                'status': status
             }
 
             # Use upsert to create profile if it's missing (failsafe)
             response = supabase.table('profiles').upsert(update_data).execute()
             print(f"✅ WEBHOOK UPDATE SUCCESS: {response}", flush=True)
         else:
-            print("❌ WEBHOOK ERROR: User ID or Plan ID missing in metadata.", flush=True)
+            print("❌ WEBHOOK ERROR: User ID or Plan Tier ID missing in metadata.", flush=True)
     else:
         print(f"WEBHOOK: Ignored event type {event['type']}", flush=True)
 
+    if event['type'] == 'customer.subscription.updated':
+        sub = event['data']['object']
+        # If user cancels mid-cycle, Stripe sets cancel_at_period_end = True
+        # but status remains 'active'.
+        # We want to show 'Canceled' badge in UI.
+        
+        user_id = sub.get('metadata', {}).get('user_id')
+        if user_id:
+             new_status = sub.get('status')
+             if sub.get('cancel_at_period_end'):
+                 new_status = 'canceled' # Force our DB to say canceled so UI shows Red Badge
+             
+             update_data = {
+                'id': user_id,
+                'status': new_status,
+                'updated_at': 'now()'
+             }
+             supabase.table('profiles').upsert(update_data).execute()
+             print(f"✅ WEBHOOK: Profile {user_id} updated via sync (Cancel={sub.get('cancel_at_period_end')}).", flush=True)
+
+    elif event['type'] == 'customer.subscription.deleted':
+        sub = event['data']['object']
+        print(f"WEBHOOK: Subscription {sub.get('id')} deleted.", flush=True)
+        
+        user_id = sub.get('metadata', {}).get('user_id')
+        if user_id:
+            update_data = {
+                'id': user_id,
+                'status': 'canceled',
+                'subscription_tier': 'free', 
+                'updated_at': 'now()'
+            }
+            supabase.table('profiles').upsert(update_data).execute()
+            print(f"✅ WEBHOOK: Profile {user_id} cancelled.", flush=True)
+
     return {"status": "success"}
+
+@app.post("/sync-subscription")
+async def sync_subscription(data: dict):
+    try:
+        email = data.get("email")
+        if not email:
+            raise HTTPException(status_code=400, detail="Email required")
+            
+        # 1. Find Customer
+        customers = stripe.Customer.list(email=email, limit=100)
+        target_sub = None
+        
+        # 2. Find Subscription
+        for cust in customers.data:
+            subs = stripe.Subscription.list(customer=cust.id, limit=5)
+            for sub in subs.data:
+                if sub.status in ['active', 'trialing', 'past_due', 'unpaid']:
+                    target_sub = sub
+                    break
+            if target_sub: break
+            
+        # 3. Determine Status
+        status = 'free'
+        trial_end = None
+        
+        if target_sub:
+            status = target_sub.status
+            # Logic: If canceling at period end, we treat it as 'cancelled' for the DB/UI
+            if target_sub.cancel_at_period_end:
+                status = 'cancelled'
+            
+            if target_sub.trial_end:
+                from datetime import datetime
+                try:
+                     trial_end = datetime.fromtimestamp(target_sub.trial_end).isoformat()
+                except:
+                     trial_end = None
+
+        # 4. Update Supabase
+        # Always resolve user_id by email from Supabase first to ensure we target the valid, current user
+        # (Handling case where user re-signed up but Stripe has old ID)
+        current_user_id = data.get("user_id") # Use ID provided by frontend if available (SUB ID)
+        
+        if not current_user_id:
+             try:
+                 from supabase import create_client
+                 url: str = os.getenv("SUPABASE_URL")
+                 key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
+                 supabase_admin = create_client(url, key)
+                 
+                 response = supabase_admin.auth.admin.list_users()
+                 users = getattr(response, 'users', response if isinstance(response, list) else [])
+                 for u in users:
+                     if u.email == email:
+                         current_user_id = u.id
+                         print(f"DEBUG SYNC: Resolved current user_id {current_user_id} via Supabase Admin search.", flush=True)
+                         break
+             except Exception as auth_err:
+                 print(f"⚠️ SYNC AUTH LOOKUP FAILED: {auth_err}", flush=True)
+
+        if not current_user_id and target_sub:
+             # Fallback to metadata ONLY if we couldn't find user by email/frontend
+             current_user_id = target_sub.metadata.get('user_id')
+
+        if current_user_id:
+             user_id = current_user_id # Use the resolved ID
+             from supabase import create_client
+             url: str = os.getenv("SUPABASE_URL")
+             key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
+             supabase = create_client(url, key)
+             
+             update_data = {
+                 'id': user_id,
+                 'status': status,
+                 'updated_at': 'now()',
+             }
+             
+             # Sync the tier if available in metadata
+             plan_tier_id = target_sub.metadata.get('plan_tier_id') if target_sub else None
+             
+             # Fallback: If plan_tier_id is missing but we have a subscription, check the Product metadata
+             if target_sub and not plan_tier_id:
+                 try:
+                     print(f"DEBUG SYNC: plan_tier_id missing on subscription {target_sub.id}. Fetching product...", flush=True)
+                     # target_sub.plan.product is usually an ID string unless expanded
+                     product_id = target_sub.plan.product
+                     if product_id:
+                         prod = stripe.Product.retrieve(product_id)
+                         print(f"DEBUG SYNC: Product {product_id} metadata: {prod.metadata}", flush=True)
+                         plan_tier_id = prod.metadata.get('plan_tier_id')
+                         print(f"DEBUG SYNC: Recovered plan_tier_id '{plan_tier_id}' from product {product_id}", flush=True)
+                 except Exception as e:
+                     print(f"⚠️ SYNC PRODUCT LOOKUP FAILED: {e}", flush=True)
+
+             if plan_tier_id:
+                 update_data['subscription_tier'] = plan_tier_id
+                 # If we have a paid tier, we'll treat the status as 'active' for the UI/DB
+                 # unless it's explicitly cancelled at period end
+                 if status != 'cancelled':
+                     update_data['status'] = 'active'
+                 print(f"DEBUG SYNC: Found tier {plan_tier_id} for {user_id}. Status set to: {update_data.get('status', status)}", flush=True)
+
+             if status == 'free' and not plan_tier_id:
+                 update_data['subscription_tier'] = 'free' # Explicitly reset tier
+
+             if trial_end:
+                 update_data['trial_end'] = trial_end
+                 
+             supabase.table('profiles').upsert(update_data).execute()
+             print(f"✅ SYNC: Force updated profile {user_id} to {status}", flush=True)
+             return {"status": "success", "profile_status": status}
+        
+        return {"status": "skipped", "message": "No linked user_id found"}
+
+    except Exception as e:
+        print(f"Sync Error: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

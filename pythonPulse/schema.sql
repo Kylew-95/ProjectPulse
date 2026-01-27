@@ -26,6 +26,11 @@ alter table knowledge_base enable row level security;
 create table if not exists profiles (
   id uuid primary key references auth.users(id), -- Changed to uuid to match auth.users
   subscription_tier text,
+  status text,
+  discord_guild_id text,
+  trial_start timestamp with time zone,
+  trial_end timestamp with time zone,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -48,19 +53,38 @@ create table if not exists tickets (
 alter table tickets enable row level security;
 
 -- 6. RLS Policies
+drop policy if exists "Users can view their own tickets" on tickets;
 create policy "Users can view their own tickets" 
   on tickets for select 
-  using (auth.uid() = user_id);
+  using (auth.uid()::text = user_id::text);
 
+drop policy if exists "Users can insert their own tickets" on tickets;
 create policy "Users can insert their own tickets" 
   on tickets for insert 
-  with check (auth.uid() = user_id);
+  with check (auth.uid()::text = user_id::text);
 
+drop policy if exists "Users can view their own profile" on profiles;
 create policy "Users can view their own profile" 
   on profiles for select 
-  using (auth.uid() = id);
+  using (auth.uid()::text = id::text);
 
+drop policy if exists "Users can update their own profile" on profiles;
 create policy "Users can update their own profile" 
   on profiles for update
-  using (auth.uid() = id);
+  using (auth.uid()::text = id::text);
+
+-- 7. Auto-create Profile Trigger
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, subscription_tier, status)
+  values (new.id, 'none', 'pending_payment');
+  return new;
+end;
+$$ language plpgsql security definer;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
 

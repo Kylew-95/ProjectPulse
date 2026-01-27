@@ -1,10 +1,21 @@
 import discord
 from discord.ext import commands
-from services.supabase_client import add_knowledge_base_item, search_knowledge_base
+from services.supabase_client import add_knowledge_base_item, search_knowledge_base, check_guild_subscription
 
 class Knowledge(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    async def cog_check(self, ctx):
+        """Global check for this cog: verify subscription."""
+        if not ctx.guild:
+            return True # Allow DMs if any
+        
+        is_active, sub_msg = check_guild_subscription(ctx.guild.id)
+        if not is_active:
+            await ctx.send(f"⚠️ **Subscription Required**: {sub_msg}")
+            return False
+        return True
 
     @commands.group(invoke_without_command=True)
     async def kb(self, ctx):

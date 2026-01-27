@@ -49,3 +49,32 @@ def search_knowledge_base(query: str):
     except Exception as e:
         print(f"Error searching KB: {e}")
         return []
+
+def check_guild_subscription(guild_id: int):
+    """Checks if the guild has a registered profile with a paid tier."""
+    try:
+        response = supabase.table("profiles") \
+            .select("subscription_tier, status") \
+            .eq("discord_guild_id", str(guild_id)) \
+            .execute()
+        
+        if not response.data:
+            return False, "This workspace is not yet registered with Project Pulse. Please sign up on our website and choose a plan!"
+
+        profile = response.data[0]
+        tier = (profile.get("subscription_tier") or "").lower()
+        status = profile.get("status")
+
+        # Strict paid-only check
+        paid_tiers = ['starter', 'pro', 'enterprise']
+        
+        if tier in paid_tiers and status in ["active", "trialing"]:
+            return True, "Registered"
+        
+        if tier not in paid_tiers:
+            return False, "This feature requires a paid subscription (Starter, Pro, or Enterprise). Please upgrade on our website!"
+            
+        return False, f"Your workspace status is currently '{status}'. Please ensure your account is in good standing to use the bot."
+    except Exception as e:
+        print(f"Error checking guild subscription: {e}")
+        return False, "Error verifying workspace status."

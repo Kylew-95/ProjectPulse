@@ -5,7 +5,7 @@ import asyncio
 import os
 import uvicorn
 from api import app as fastapi_app
-from sync_plans import sync_plans
+from plan_tiers import sync_plan_tiers
 
 import subprocess
 
@@ -42,8 +42,11 @@ async def run_fastapi():
     await server.serve()
 
 async def main():
-    # Sync Stripe plans at startup
-    sync_plans()
+    # Sync Stripe plan tiers at startup
+    try:
+        sync_plan_tiers()
+    except Exception as e:
+        print(f"⚠️ Failed to sync plan tiers on startup: {e}")
 
     # Auto-start Stripe Listener (Forwarding to local backend)
     try:

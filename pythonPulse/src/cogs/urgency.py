@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from services.ai_service import analyze_urgency, generate_followup_questions, generate_issue_summary
-from services.supabase_client import insert_message
+from services.supabase_client import insert_message, check_guild_subscription
 from services.ticket_service import get_ticket_service
 import json
 
@@ -10,6 +10,7 @@ class Urgency(commands.Cog):
         self.bot = bot
         self.active_reports = {}
         self.ticket_service = get_ticket_service()
+        self.notified_guilds = set() # Simple anti-spam for no-tier message
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -18,10 +19,12 @@ class Urgency(commands.Cog):
             return
 
         # ---------------------------------------------------------
-        # 1. HANDLE DM RESPONSES (The "Finish" Step)
+        # 1. HANDLE DM RESPONSES (The "Finish" Step) - NO TIER CHECK FOR DMs 
+        # (They are finishing a report already validated by server check)
         # ---------------------------------------------------------
         if isinstance(message.channel, discord.DMChannel):
             if message.author.id in self.active_reports:
+                # ... (rest of DM logic remains same)
                 # Retrieve the original issue data
                 original_data = self.active_reports.pop(message.author.id)
                 
@@ -63,7 +66,18 @@ class Urgency(commands.Cog):
         if not message.guild:
             return
 
-        # Log every message
+        # ---------------------------------------------------------
+        # 3. PLAN TIER ENFORCEMENT
+        # ---------------------------------------------------------
+        is_active, sub_msg = check_guild_subscription(message.guild.id)
+        if not is_active:
+            # Only notify once per bot session per guild to avoid spam
+            if message.guild.id not in self.notified_guilds:
+                await message.channel.send(f"⚠️ **Subscription Required**: {sub_msg}")
+                self.notified_guilds.add(message.guild.id)
+            return
+
+        # Log every message (Only for subscribed guilds)
         insert_message(message.author.id, message.channel.id, message.content, message.author.name)
 
         # Urgency Check 
