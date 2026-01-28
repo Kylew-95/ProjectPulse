@@ -1,60 +1,70 @@
-import { Share2 } from 'lucide-react';
+import { Share2, MessageSquare, Trello, Github, Slack } from 'lucide-react';
+import ProGate from '../ui/ProGate';
 
-interface IntegrationsSectionProps {
-  profile: any;
-}
-
-const IntegrationsSection = ({ profile }: IntegrationsSectionProps) => {
-  if (!['pro', 'enterprise'].includes(profile?.subscription_tier || '')) {
-    return null;
-  }
-
+const IntegrationsSection = () => {
   return (
-    <section className="mb-12">
+    <section className="relative mb-6">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
         <Share2 className="text-purple-400" size={24} /> Integrations
         </h2>
-        <div className="bg-surface border border-slate-800 rounded-xl p-6">
-            <p className="text-sm text-slate-400 mb-6">Connect your tools for automated ticket syncing.</p>
-            
-            <div className="space-y-6">
-                {/* Jira */}
-                <div className="p-4 border border-slate-700 rounded-lg bg-black/20">
-                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                            Jira Integration
-                    </h3>
-                    <div className="grid gap-4">
-                        <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1">Jira Domain URL</label>
-                            <input placeholder="https://your-company.atlassian.net" className="w-full bg-black/50 border border-slate-800 rounded-lg px-4 py-2 text-white text-sm" />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1">API Token / Email</label>
-                            <input type="password" placeholder="API Token" className="w-full bg-black/50 border border-slate-800 rounded-lg px-4 py-2 text-white text-sm" />
-                        </div>
-                        <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors border border-slate-700">Save Jira Config</button>
+        
+        <ProGate featureName="Integrations" description="Connect your favorite tools like Jira, Trello, and Slack. Upgrade to Pro to unlock integrations.">
+            <div className="bg-surface border border-slate-800 rounded-2xl p-6">
+                <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-slate-800">
+                    <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-[#0052CC] rounded-lg flex items-center justify-center">
+                        <MessageSquare className="text-white" size={24} />
                     </div>
+                    <div>
+                        <div className="font-semibold text-white">Jira</div>
+                        <div className="text-sm text-slate-500">Connect to your Jira workspace</div>
+                    </div>
+                    </div>
+                    <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors text-sm font-medium">Connect</button>
                 </div>
 
-                {/* Trello */}
-                <div className="p-4 border border-slate-700 rounded-lg bg-black/20">
-                        <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                            Trello Integration
-                    </h3>
-                    <div className="grid gap-4">
-                            <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1">API Key</label>
-                            <input className="w-full bg-black/50 border border-slate-800 rounded-lg px-4 py-2 text-white text-sm" />
-                        </div>
-                            <div>
-                            <label className="block text-xs font-medium text-slate-400 mb-1">API Token</label>
-                            <input type="password" className="w-full bg-black/50 border border-slate-800 rounded-lg px-4 py-2 text-white text-sm" />
-                        </div>
-                        <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors border border-slate-700">Save Trello Config</button>
+                <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-slate-800">
+                    <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-[#0079BF] rounded-lg flex items-center justify-center">
+                        <Trello className="text-white" size={24} />
                     </div>
+                    <div>
+                        <div className="font-semibold text-white">Trello</div>
+                        <div className="text-sm text-slate-500">Sync with Trello boards</div>
+                    </div>
+                    </div>
+                    <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors text-sm font-medium">Connect</button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-slate-800">
+                    <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-[#24292e] rounded-lg flex items-center justify-center">
+                        <Github className="text-white" size={24} />
+                    </div>
+                    <div>
+                        <div className="font-semibold text-white">GitHub</div>
+                        <div className="text-sm text-slate-500">Link pull requests to tickets</div>
+                    </div>
+                    </div>
+                    <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors text-sm font-medium">Connect</button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-slate-800">
+                    <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-[#4A154B] rounded-lg flex items-center justify-center">
+                        <Slack className="text-white" size={24} />
+                    </div>
+                    <div>
+                        <div className="font-semibold text-white">Slack</div>
+                        <div className="text-sm text-slate-500">Receive notifications in Slack</div>
+                    </div>
+                    </div>
+                    <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors text-sm font-medium">Connect</button>
+                </div>
                 </div>
             </div>
-        </div>
+        </ProGate>
     </section>
   );
 };

@@ -18,10 +18,14 @@ const AccountSection = ({ user, profile }: AccountSectionProps) => {
   }, [profile]);
 
   const handleUpdateGuildId = async () => {
+      // Input Validation: Numeric Only (Discord IDs are typically 17-20 digits)
+      const sanitized = guildId.trim();
+      // Length check is handled by button disabled state
+      
       if (!user) return;
       setUpdating(true);
       try {
-          const { error } = await supabase.from('profiles').update({ discord_guild_id: guildId }).eq('id', user.id);
+          const { error } = await supabase.from('profiles').update({ discord_guild_id: sanitized }).eq('id', user.id);
           if (error) throw error;
           alert('Guild ID updated successfully');
       } catch (err) {
@@ -48,13 +52,18 @@ const AccountSection = ({ user, profile }: AccountSectionProps) => {
                   <div className="flex gap-2">
                       <input 
                           value={guildId} 
-                          onChange={(e) => setGuildId(e.target.value)}
+                          onChange={(e) => {
+                              const val = e.target.value;
+                              if (/^\d*$/.test(val)) {
+                                  setGuildId(val);
+                              }
+                          }}
                           placeholder="Enter your Discord Server ID"
                           className="w-full bg-black/20 border border-slate-800 rounded-lg px-4 py-2 text-white focus:ring-1 focus:ring-primary outline-none" 
                       />
                       <button 
                           onClick={handleUpdateGuildId}
-                          disabled={updating || guildId === (profile?.discord_guild_id || '')}
+                          disabled={updating || guildId === (profile?.discord_guild_id || '') || guildId.length < 17 || guildId.length > 20}
                           className="px-4 py-2 bg-primary hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium whitespace-nowrap"
                       >
                           {updating ? 'Saving...' : 'Save ID'}

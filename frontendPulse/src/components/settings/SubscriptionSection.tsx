@@ -7,7 +7,7 @@ interface SubscriptionSectionProps {
 
 const SubscriptionSection = ({ profile, onManageClick }: SubscriptionSectionProps) => {
   return (
-    <section className="mb-12">
+    <section className="mb-6">
       <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
         <Rocket className="text-primary" size={24} /> Subscription
       </h2>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
-import { Plus, Search, Trash2, MoreHorizontal } from 'lucide-react';
+import { Plus, Search, Trash2 } from 'lucide-react';
 import CreateTicketModal from '../../components/tickets/CreateTicketModal';
 
 interface Ticket {
@@ -71,7 +71,7 @@ const Tickets = () => {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-8 max-w-7xl mx-auto relative min-h-screen">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Tickets</h1>

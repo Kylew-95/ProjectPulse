@@ -34,7 +34,7 @@ const Overview = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
            <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-           <p className="text-slate-400">Welcome back, {user?.user_metadata.name.split(' ')[0].slice(0, -2)}</p>
+           <p className="text-slate-400">Welcome back <span className="font-semibold text-white" >{user?.user_metadata.name.split(' ')[0].slice(0, -2)}</span>!</p>
         </div>
         
         {/* Subscription Status Banner */}

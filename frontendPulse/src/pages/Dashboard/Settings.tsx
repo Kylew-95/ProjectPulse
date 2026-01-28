@@ -6,6 +6,8 @@ import AccountSection from '../../components/settings/AccountSection';
 import SubscriptionModal from '../../components/settings/SubscriptionModal';
 
 
+import TeamSection from '../../components/settings/TeamSection';
+
 const Settings = () => {
   const { user, profile } = useAuth();
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
@@ -19,7 +21,9 @@ const Settings = () => {
         onManageClick={() => setShowSubscriptionModal(true)} 
       />
 
-      <IntegrationsSection profile={profile} />
+      <IntegrationsSection />
+
+      <TeamSection />
 
       <AccountSection user={user} profile={profile} />
 

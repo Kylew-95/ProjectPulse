@@ -1,6 +1,7 @@
 import React, { type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../supabaseClient';
 import HeartbeatLoader from '../ui/HeartbeatLoader';
 
 interface ProtectedRouteProps {
@@ -21,6 +22,21 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }, 2500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Safety Timeout: If loading for > 10s (e.g. user deleted in DB but session active), force logout
+  React.useEffect(() => {
+      if (session && !profile && !loading) {
+          const timeout = setTimeout(async () => {
+              console.warn("Profile load timeout - assume stale session. Logging out.");
+              // Force logout
+              const { error } = await supabase.auth.signOut();
+              if (error) console.error("Error signing out:", error);
+              // Force redirect just in case
+              window.location.href = '/'; 
+          }, 10000); // 10 seconds
+          return () => clearTimeout(timeout);
+      }
+  }, [session, profile, loading]);
 
   // If returning from Stripe successfully, poll for status update
   React.useEffect(() => {

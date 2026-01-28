@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 import stripe
 import os
+import time
 from dotenv import load_dotenv
 
 # Load environment variables explicitly
@@ -82,29 +83,34 @@ async def create_checkout_session(data: dict):
 
         if trial_days and int(trial_days) > 0:
             print(f"DEBUG CHECKOUT: Target product has {trial_days} trial days. Checking for prior subs for {customer_email}...")
-            # Enforce One-Time Trial Logic:
-            customers = stripe.Customer.list(email=customer_email, limit=1)
+            
+            # Enforce One-Time Trial Logic (Robust Check)
+            # 1. Search ALL customers with this email to avoid duplicates hiding history
+            customers = stripe.Customer.list(email=customer_email, limit=100)
             
             has_prior_subscription = False
             active_sub = None
 
             if customers.data:
-                customer = customers.data[0]
-                # Check for any subscriptions (active, canceled, past due, etc.)
-                subscriptions = stripe.Subscription.list(customer=customer.id, status='all', limit=5)
-                for sub in subscriptions.data:
-                    # If user has an ACTIVE or TRIALING subscription right now, redirect them to dashboard
-                    if sub.status in ['active', 'trialing']:
-                        active_sub = sub
+                for customer in customers.data:
+                    # Check for any subscriptions (active, canceled, past due, etc.)
+                    subscriptions = stripe.Subscription.list(customer=customer.id, status='all', limit=100)
+                    for sub in subscriptions.data:
+                        # If user has an ACTIVE or TRIALING subscription right now
+                        if sub.status in ['active', 'trialing']:
+                            active_sub = sub
+                        
+                        # Check for ANY history
+                        if sub.status in ['active', 'trialing', 'canceled', 'past_due', 'unpaid', 'incomplete_expired']:
+                             has_prior_subscription = True
+                             print(f"DEBUG: Found prior sub {sub.id} (status={sub.status}) for customer {customer.id}")
+                    
+                    if has_prior_subscription: 
                         break
-                    if sub.status in ['active', 'trialing', 'canceled', 'past_due', 'unpaid']:
-                         has_prior_subscription = True
 
             if active_sub:
-                print(f"DEBUG CHECKOUT: Active/Trialing subscription found for {customer_email}. Redirecting to Dashboard.")
-                # Optional: Force sync DB here to ensure access
-                # For now just redirect
-                return {"url": f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/dashboard"}
+                print(f"DEBUG CHECKOUT: Active/Trialing subscription found for {customer_email}. allowing switch.")
+                # We allow the user to proceed to Stripe to switch plans or manage billing.
 
             if not has_prior_subscription:
                 print(f"DEBUG CHECKOUT: Applying {trial_days} days trial for {customer_email}.")
@@ -112,7 +118,12 @@ async def create_checkout_session(data: dict):
                     session_params['subscription_data'] = {}
                 session_params['subscription_data']['trial_period_days'] = int(trial_days)
             else:
-                 print(f"User {customer_email} has a prior subscription. Trial skipped.")
+                 print(f"User {customer_email} has a prior subscription. FORCE SKIPPING TRIAL.")
+                 # To skip trial, we simply do not add trial_period_days or trial_end.
+                 # Assuming the Price object itself does not have a default trial set (since we use metadata).
+                 if 'subscription_data' in session_params:
+                     session_params['subscription_data'].pop('trial_period_days', None)
+                     session_params['subscription_data'].pop('trial_end', None)
 
         print(f"DEBUG CHECKOUT: Creating session with params: {session_params}")
         session = stripe.checkout.Session.create(**session_params)
@@ -124,7 +135,18 @@ async def create_checkout_session(data: dict):
 @app.post("/create-portal-session")
 async def create_portal_session(data: dict):
     try:
-        customer_id = data.get("customer_id") # We'll need to store Stripe customer IDs in profiles
+        customer_id = data.get("customer_id")
+        email = data.get("email")
+
+        if not customer_id and email:
+            # Fallback: find customer by email
+            customers = stripe.Customer.list(email=email, limit=1)
+            if customers.data:
+                customer_id = customers.data[0].id
+
+        if not customer_id:
+             raise HTTPException(status_code=400, detail="Customer ID not found. Please contact support.")
+
         session = stripe.billing_portal.Session.create(
             customer=customer_id,
             return_url=f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/dashboard/settings/subscription",
@@ -264,7 +286,31 @@ async def stripe_webhook(request: Request):
         print(f"WEBHOOK DEBUG: UserID: {user_id}, PlanTierID: {plan_tier_id}. Metadata: {metadata}", flush=True)
 
         if plan_tier_id and user_id:
-            print(f"💰 Payment successful. Updating...", flush=True)
+            print(f"💰 Payment successful. Processing Subscription Switch Logic...", flush=True)
+            
+            stripe_customer_id = session.get('customer')
+            new_subscription_id = session.get('subscription')
+            
+            # --- AUTO-CANCEL OLD SUBSCRIPTIONS ---
+            if stripe_customer_id and new_subscription_id:
+                try:
+                    # List all active/trialing subs for this customer
+                    existing_subs = stripe.Subscription.list(
+                        customer=stripe_customer_id, 
+                        status='all', # Check all to be safe, filter below
+                        limit=10
+                    )
+                    
+                    for sub in existing_subs.data:
+                        # If subscription is active/trialing AND it's NOT the one we just created
+                        if sub.status in ['active', 'trialing'] and sub.id != new_subscription_id:
+                            print(f"🔄 SWITCHING: Found old active subscription {sub.id}. Canceling...", flush=True)
+                            stripe.Subscription.delete(sub.id)
+                            print(f"✅ SWITCHING: Old subscription {sub.id} canceled.", flush=True)
+                            
+                except Exception as e:
+                    print(f"⚠️ SWITCHING ERROR: Failed to assistant cancel old subscriptions: {e}", flush=True)
+            # -------------------------------------
             
             # Fetch Subscription Details
             subscription_id = session.get('subscription')
@@ -298,8 +344,12 @@ async def stripe_webhook(request: Request):
 
             supabase: Client = create_client(url, key)
 
+            # Extract Stripe Customer ID
+            stripe_customer_id = session.get('customer')
+
             update_data = {
                 'id': user_id,
+                'stripe_customer_id': stripe_customer_id,
                 'subscription_tier': plan_tier_id,
                 'updated_at': 'now()',
                 'trial_start': trial_start,
