@@ -1,7 +1,15 @@
-import { Share2, MessageSquare, Trello, Github, Slack } from 'lucide-react';
+import { Share2, MessageSquare, Trello, Github, Slack, MessageCircle } from 'lucide-react';
 import ProGate from '../ui/ProGate';
 
 const IntegrationsSection = () => {
+    const handleConnectDiscord = () => {
+        const clientId = '1464385808914976923';
+        // Scopes: bot, applications.commands
+        // Permissions: 8 (Administrator) for full access, or you can use a specific bitmask
+        const url = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&permissions=8&scope=bot%20applications.commands`;
+        window.open(url, '_blank');
+    };
+
   return (
     <section className="relative mb-6">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
@@ -11,6 +19,25 @@ const IntegrationsSection = () => {
         <ProGate featureName="Integrations" description="Connect your favorite tools like Jira, Trello, and Slack. Upgrade to Pro to unlock integrations.">
             <div className="bg-surface border border-slate-800 rounded-2xl p-6">
                 <div className="space-y-4">
+                {/* Discord Integration */}
+                <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-slate-800 border-l-4 border-l-[#5865F2]">
+                    <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-[#5865F2] rounded-lg flex items-center justify-center">
+                        <MessageCircle className="text-white" size={24} />
+                    </div>
+                    <div>
+                        <div className="font-semibold text-white">Discord Bot</div>
+                        <div className="text-sm text-slate-500">Add the ProjectPulse bot to your server</div>
+                    </div>
+                    </div>
+                    <button 
+                        onClick={handleConnectDiscord}
+                        className="px-4 py-2 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-lg transition-colors text-sm font-medium shadow-lg shadow-[#5865F2]/20"
+                    >
+                        Add to Server
+                    </button>
+                </div>
+
                 <div className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-slate-800">
                     <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-[#0052CC] rounded-lg flex items-center justify-center">
@@ -70,3 +97,4 @@ const IntegrationsSection = () => {
 };
 
 export default IntegrationsSection;
+

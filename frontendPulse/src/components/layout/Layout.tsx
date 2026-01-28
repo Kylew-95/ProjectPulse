@@ -3,6 +3,7 @@ import { LayoutDashboard, Ticket, BarChart2, Settings, Users, LogOut } from 'luc
 
 import { supabase } from '../../supabaseClient';
 import SidebarProfile from './SidebarProfile';
+import CommandPalette from '../ui/CommandPalette';
 
 const Layout = () => {
   const location = useLocation();
@@ -21,12 +22,13 @@ const Layout = () => {
 
   return (
     <div className="flex h-screen bg-background text-white selection:bg-primary/30 scroll-smooth">
+      <CommandPalette />
       {/* Sidebar - Glassmorphism */}
       <aside className="w-64 border-r border-white/5 bg-slate-900/50 backdrop-blur-xl flex flex-col fixed inset-y-0 z-50 transition-all duration-300">
         <div className="p-6">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-blue-600 rounded-lg shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-shadow"></div>
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-400">
+            <img src="/src/assets/logo.png" alt="Pulse Logo" className="w-12 h-12 object-contain" />
+            <span className="text-2xl font-bold text-white tracking-tight">
               Pulse
             </span>
           </Link>

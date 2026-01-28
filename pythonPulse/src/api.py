@@ -52,6 +52,21 @@ async def create_checkout_session(data: dict):
         customer_email = data.get("email")
         user_id = data.get("user_id")
         
+        # 1. Try to find the existing Stripe Customer ID from Supabase
+        stripe_customer_id = None
+        try:
+            from supabase import create_client
+            supabase_url = os.getenv("SUPABASE_URL")
+            supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
+            supabase_client = create_client(supabase_url, supabase_key)
+            
+            profile_res = supabase_client.table('profiles').select('stripe_customer_id').eq('id', user_id).single().execute()
+            if profile_res.data:
+                stripe_customer_id = profile_res.data.get('stripe_customer_id')
+                print(f"DEBUG CHECKOUT: Found existing stripe_customer_id: {stripe_customer_id}")
+        except Exception as e:
+            print(f"DEBUG CHECKOUT: Error fetching customer_id from DB: {e}")
+
         # Retrieve the price to check for product metadata (trial_days)
         price = stripe.Price.retrieve(price_id, expand=['product'])
         product = price.product
@@ -61,7 +76,6 @@ async def create_checkout_session(data: dict):
         
         session_params = {
             'payment_method_types': ['card'],
-            'customer_email': customer_email,
             'line_items': [{
                 'price': price_id,
                 'quantity': 1,
@@ -80,6 +94,12 @@ async def create_checkout_session(data: dict):
                 }
             }
         }
+
+        # Use existing customer if found, else use email
+        if stripe_customer_id:
+            session_params['customer'] = stripe_customer_id
+        else:
+            session_params['customer_email'] = customer_email
 
         if trial_days and int(trial_days) > 0:
             print(f"DEBUG CHECKOUT: Target product has {trial_days} trial days. Checking for prior subs for {customer_email}...")
@@ -109,8 +129,8 @@ async def create_checkout_session(data: dict):
                         break
 
             if active_sub:
-                print(f"DEBUG CHECKOUT: Active/Trialing subscription found for {customer_email}. allowing switch.")
-                # We allow the user to proceed to Stripe to switch plans or manage billing.
+                print(f"DEBUG CHECKOUT: Active/Trialing subscription found for {customer_email}. Switch initiated.")
+                # We allow the user to proceed. The Webhook will handle canceling the OLD one.
 
             if not has_prior_subscription:
                 print(f"DEBUG CHECKOUT: Applying {trial_days} days trial for {customer_email}.")
@@ -119,9 +139,9 @@ async def create_checkout_session(data: dict):
                 session_params['subscription_data']['trial_period_days'] = int(trial_days)
             else:
                  print(f"User {customer_email} has a prior subscription. FORCE SKIPPING TRIAL.")
-                 # To skip trial, we simply do not add trial_period_days or trial_end.
-                 # Assuming the Price object itself does not have a default trial set (since we use metadata).
+                 # To skip trial, ensure NO trial params are present
                  if 'subscription_data' in session_params:
+                     # Remove any trial_period_days or trial_end from params
                      session_params['subscription_data'].pop('trial_period_days', None)
                      session_params['subscription_data'].pop('trial_end', None)
 
@@ -189,27 +209,20 @@ async def cancel_subscription(data: dict):
         user_id = target_sub.metadata.get('user_id')
         print(f"DEBUG CANCEL: Retrieved user_id from metadata: {user_id}", flush=True)
         
-        # Fallback: Find user by email if metadata missing
         if not user_id:
+             # Fallback lookup by email
              try:
                 from supabase import create_client
                 url: str = os.getenv("SUPABASE_URL")
                 key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
                 supabase_admin = create_client(url, key)
-                
-                # Use Admin API to list users by email (requires Service Role Key)
-                # Note: supabase-py doesn't have a direct 'get_user_by_email' in all versions, 
-                # but we can try listing or RPC. 
-                # However, for simplicity/robustness with GOTRUE:
                 response = supabase_admin.auth.admin.list_users()
-                # The response is usually a list-like object or has a 'users' attribute
                 users = getattr(response, 'users', response if isinstance(response, list) else [])
                 for u in users:
                     if u.email == email:
                         user_id = u.id
                         print(f"DEBUG CANCEL: Found user_id {user_id} via Supabase Admin search.", flush=True)
                         break
-                     
              except Exception as auth_err:
                  print(f"⚠️ CANCEL AUTH LOOKUP FAILED: {auth_err}", flush=True)
 
@@ -217,12 +230,7 @@ async def cancel_subscription(data: dict):
             try:
                 from supabase import create_client
                 url = os.getenv("SUPABASE_URL")
-                # Prioritize Service Role Key for admin-level updates
                 key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
-                
-                if not key:
-                    print("⚠️ CANCEL DEBUG: No Supabase key found!", flush=True)
-                
                 supabase_admin = create_client(url, key)
 
                 update_data = {
@@ -231,24 +239,16 @@ async def cancel_subscription(data: dict):
                     'subscription_tier': 'free', 
                     'updated_at': 'now()'
                 }
-                # Use update instead of upsert to ensure we only touch existing records if possible, 
-                # but upsert is fine with ID.
-                response = supabase_admin.table('profiles').update(update_data).eq('id', user_id).execute()
-                print(f"✅ CANCEL: Force updated profile {user_id} to canceled. DB Response: {response}", flush=True)
+                supabase_admin.table('profiles').update(update_data).eq('id', user_id).execute()
+                print(f"✅ CANCEL: Force updated profile {user_id} to canceled.", flush=True)
                 
             except Exception as db_err:
                  print(f"⚠️ CANCEL DB UPDATE FAILED: {db_err}", flush=True)
-        else:
-             print("⚠️ CANCEL DEBUG: No user_id in subscription metadata. Cannot update profile.", flush=True)
-
-        # 5. Construct response
-        msg = "Subscription canceled immediately. Access has been revoked."
-     
+        
         return {
             "status": "success", 
-            "message": msg, 
-            "sub_status": deleted_sub.status,
-            "cancel_at_period_end": False 
+            "message": "Subscription canceled immediately.", 
+            "sub_status": deleted_sub.status
         }
 
     except stripe.error.StripeError as e:
@@ -283,7 +283,7 @@ async def stripe_webhook(request: Request):
         plan_tier_id = metadata.get('plan_tier_id')
         user_id = metadata.get('user_id')
         
-        print(f"WEBHOOK DEBUG: UserID: {user_id}, PlanTierID: {plan_tier_id}. Metadata: {metadata}", flush=True)
+        print(f"WEBHOOK DEBUG: UserID: {user_id}, PlanTierID: {plan_tier_id}.", flush=True)
 
         if plan_tier_id and user_id:
             print(f"💰 Payment successful. Processing Subscription Switch Logic...", flush=True)
@@ -291,22 +291,26 @@ async def stripe_webhook(request: Request):
             stripe_customer_id = session.get('customer')
             new_subscription_id = session.get('subscription')
             
-            # --- AUTO-CANCEL OLD SUBSCRIPTIONS ---
+            # --- AUTO-CANCEL OLD SUBSCRIPTIONS (Strict) ---
             if stripe_customer_id and new_subscription_id:
                 try:
                     # List all active/trialing subs for this customer
                     existing_subs = stripe.Subscription.list(
                         customer=stripe_customer_id, 
-                        status='all', # Check all to be safe, filter below
-                        limit=10
+                        status='all', 
+                        limit=20
                     )
                     
                     for sub in existing_subs.data:
                         # If subscription is active/trialing AND it's NOT the one we just created
                         if sub.status in ['active', 'trialing'] and sub.id != new_subscription_id:
-                            print(f"🔄 SWITCHING: Found old active subscription {sub.id}. Canceling...", flush=True)
-                            stripe.Subscription.delete(sub.id)
-                            print(f"✅ SWITCHING: Old subscription {sub.id} canceled.", flush=True)
+                            print(f"🔄 SWITCHING: Found old subscription {sub.id} ({sub.status}). Canceling IMMEDIATELY...", flush=True)
+                            try:
+                                # Explicit DELETE implies immediate cancellation
+                                stripe.Subscription.delete(sub.id)
+                                print(f"✅ SWITCHING: Old subscription {sub.id} deleted.", flush=True)
+                            except Exception as delete_err:
+                                print(f"⚠️ SWITCHING: Failed to delete sub {sub.id}: {delete_err}", flush=True)
                             
                 except Exception as e:
                     print(f"⚠️ SWITCHING ERROR: Failed to assistant cancel old subscriptions: {e}", flush=True)
@@ -413,14 +417,22 @@ async def sync_subscription(data: dict):
         customers = stripe.Customer.list(email=email, limit=100)
         target_sub = None
         
-        # 2. Find Subscription
+        # 2. Find Subscription (Prioritize 'active')
+        sub_list = []
         for cust in customers.data:
-            subs = stripe.Subscription.list(customer=cust.id, limit=5)
-            for sub in subs.data:
-                if sub.status in ['active', 'trialing', 'past_due', 'unpaid']:
-                    target_sub = sub
-                    break
-            if target_sub: break
+            subs = stripe.Subscription.list(customer=cust.id, limit=10)
+            sub_list.extend(subs.data)
+        
+        # Sort so 'active' comes before 'trialing' etc.
+        def sub_priority(s):
+            if s.status == 'active': return 0
+            if s.status == 'trialing': return 1
+            if s.status in ['past_due', 'unpaid']: return 2
+            return 3
+        
+        sorted_subs = sorted(sub_list, key=sub_priority)
+        if sorted_subs:
+            target_sub = sorted_subs[0]
             
         # 3. Determine Status
         status = 'free'

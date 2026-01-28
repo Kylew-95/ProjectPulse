@@ -42,10 +42,12 @@ const Home = () => {
     <div className="min-h-screen bg-background text-white selection:bg-primary/30">
       {/* Navbar */}
       <nav className="border-b border-white/5 bg-slate-900/50 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-lg shadow-blue-500/20"></div>
-            <span className="text-xl font-bold tracking-tight">Pulse</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <img src="/src/assets/logo.png" alt="Pulse Logo" className="w-12 h-12 object-contain" />
+            <span className="text-2xl font-bold text-white tracking-tight">
+              Pulse
+            </span>
           </div>
           <div className="flex items-center gap-4">
             {user ? (
