@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Zap, Shield, Globe } from 'lucide-react';
 import { useState, useRef } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 const InteractivePulse = () => {
     const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -35,6 +36,7 @@ const InteractivePulse = () => {
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-background text-white selection:bg-primary/30">
@@ -46,9 +48,15 @@ const Home = () => {
             <span className="text-xl font-bold tracking-tight">Pulse</span>
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/login')} className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">Sign In</button>
-            <button onClick={() => navigate('/signup')} className="px-4 py-2 text-sm font-medium bg-white text-black rounded-full hover:bg-slate-200 transition-colors">Get Started</button>
-          </div>
+            {user ? (
+                <button onClick={() => navigate('/dashboard')} className="px-4 py-2 text-sm font-medium bg-white text-black rounded-full hover:bg-slate-200 transition-colors">Dashboard</button>
+            ) : (
+                <>
+                    <button onClick={() => navigate('/login')} className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">Sign In</button>
+                    <button onClick={() => navigate('/signup')} className="px-4 py-2 text-sm font-medium bg-white text-black rounded-full hover:bg-slate-200 transition-colors">Get Started</button>
+                </>
+            )}
+        </div>
         </div>
       </nav>
 
@@ -72,8 +80,8 @@ const Home = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
-            <button onClick={() => navigate('/signup')} className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-semibold transition-all shadow-lg shadow-blue-500/25 flex items-center gap-2 group">
-              Start for free <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            <button onClick={() => navigate(user ? '/dashboard' : '/signup')} className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-semibold transition-all shadow-lg shadow-blue-500/25 flex items-center gap-2 group">
+              {user ? 'Go to Dashboard' : 'Start for free'} <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </button>
             <button className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-full font-semibold transition-all backdrop-blur-sm border border-white/10">
               View Demo

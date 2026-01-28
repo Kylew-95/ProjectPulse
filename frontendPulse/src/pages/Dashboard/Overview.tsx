@@ -7,6 +7,8 @@ const Overview = () => {
   const { user, profile } = useAuth();
   const [stats, setStats] = useState({ total: 0, open: 0, closed: 0 });
 
+  console.log(user);
+
   useEffect(() => {
     const fetchStats = async () => {
       if (!user) return;
@@ -32,7 +34,7 @@ const Overview = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
            <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-           <p className="text-slate-400">Welcome back, {user?.email?.split('@')[0]}</p>
+           <p className="text-slate-400">Welcome back, {user?.user_metadata.name.split(' ')[0].slice(0, -2)}</p>
         </div>
         
         {/* Subscription Status Banner */}

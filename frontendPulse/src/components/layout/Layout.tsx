@@ -1,10 +1,10 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Ticket, BarChart2, Settings, Users, LogOut } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+
 import { supabase } from '../../supabaseClient';
+import SidebarProfile from './SidebarProfile';
 
 const Layout = () => {
-  const { user } = useAuth();
   const location = useLocation();
 
   const handleLogout = async () => {
@@ -55,15 +55,7 @@ const Layout = () => {
         </nav>
 
         <div className="p-4 border-t border-white/5 bg-slate-900/30">
-          <div className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl bg-white/5 border border-white/5">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center font-bold text-xs ring-2 ring-white/10">
-              {user?.email?.[0].toUpperCase() || 'U'}
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-medium truncate text-slate-200">{user?.email?.split('@')[0]}</p>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{user?.app_metadata?.subscription_tier || 'Free'} Plan</p>
-            </div>
-          </div>
+          <SidebarProfile />
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-2.5 w-full text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/5 rounded-xl transition-all duration-200 group mt-1"

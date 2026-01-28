@@ -13,7 +13,11 @@ const Pricing = () => {
     // If user is already active/trialing, maybe redirect to dashboard?
     // User asked to be sent to Pricing Page. Maybe they want to upgrade?
     // But typically if paid, go to dashboard.
-    if (['active', 'trialing'].includes(profile?.status || '')) {
+    // If user is already active/trialing, maybe redirect to dashboard?
+    // User asked to be sent to Pricing Page. Maybe they want to upgrade?
+    // But typically if paid, go to dashboard.
+    const isTrialActive = profile?.trial_end ? new Date(profile.trial_end) > new Date() : false;
+    if (['active', 'trialing'].includes(profile?.status || '') || isTrialActive) {
        navigate('/dashboard/overview');
     }
 

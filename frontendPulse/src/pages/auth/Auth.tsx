@@ -34,7 +34,7 @@ export const Login = () => {
               const { error } = await supabase.auth.signInWithOAuth({ 
                 provider: 'discord',
                 options: {
-                  redirectTo: `${window.location.origin}/pricing`
+                  redirectTo: `${window.location.origin}/dashboard/overview`
                 }
               });
               if (error) {
@@ -92,7 +92,7 @@ export const Signup = () => {
               const { error } = await supabase.auth.signInWithOAuth({ 
                 provider: 'discord',
                 options: {
-                  redirectTo: `${window.location.origin}/pricing`
+                  redirectTo: `${window.location.origin}/dashboard/overview`
                 }
               });
               if (error) {

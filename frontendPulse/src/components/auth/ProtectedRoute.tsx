@@ -1,44 +1,50 @@
 import React, { type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import HeartbeatLoader from '../ui/HeartbeatLoader';
 
 interface ProtectedRouteProps {
   children: ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { session, loading, profile } = useAuth();
+  const { session, loading, profile, refreshProfile } = useAuth();
   const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const isSuccess = query.get('success') === 'true';
+  const [minLoading, setMinLoading] = React.useState(true);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background text-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+  // Enforce minimum loading time of 2 seconds for better UX
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinLoading(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // If returning from Stripe successfully, poll for status update
+  React.useEffect(() => {
+    // Check trial validity for reload logic too
+    const isTrialActive = profile?.trial_end ? new Date(profile.trial_end) > new Date() : false;
+    if (isSuccess && profile?.status !== 'active' && profile?.status !== 'trialing' && !isTrialActive) {
+         const interval = setInterval(async () => {
+             // Use context refreshProfile to update state without reloading page
+             await refreshProfile();
+         }, 5000);
+         return () => clearInterval(interval);
+    }
+  }, [isSuccess, profile, refreshProfile]);
+
+  if (loading || (session && !profile) || minLoading) {
+    return <HeartbeatLoader />;
   }
 
   if (!session) {
     return <Navigate to="/login" replace />;
   }
 
-  const query = new URLSearchParams(location.search);
-  const isSuccess = query.get('success') === 'true';
-
-  // If returning from Stripe successfully, poll for status update
-  React.useEffect(() => {
-    if (isSuccess && profile?.status !== 'active' && profile?.status !== 'trialing') {
-         const interval = setInterval(() => {
-             // Force profile refresh logic would be ideal here if exposed from context
-             // For now, we rely on AuthContext maybe polling or we reload page?
-             // Since AuthContext doesn't expose 'refreshProfile', we can reload user session.
-             window.location.reload(); 
-         }, 3000); // Reload every 3s to check status
-         return () => clearInterval(interval);
-    }
-  }, [isSuccess, profile]);
-
-  const isPaid = ['active', 'trialing'].includes(profile?.status || '');
+  const isTrialActive = profile?.trial_end ? new Date(profile.trial_end) > new Date() : false;
+  const isPaid = ['active', 'trialing'].includes(profile?.status || '') || isTrialActive;
   const isPricingPage = location.pathname === '/pricing';
 
   if (!isPaid && !isPricingPage) {
@@ -46,8 +52,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           // Show loading state while waiting for webhook
           return (
             <div className="min-h-screen bg-background text-white flex flex-col items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
-                <h2 className="text-xl font-bold">Verifying Subscription...</h2>
+                <HeartbeatLoader />
+                <h2 className="text-xl font-bold mt-4">Verifying Subscription...</h2>
                 <p className="text-slate-400">Please wait while we confirm your payment.</p>
             </div>
           );
