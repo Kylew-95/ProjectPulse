@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from config import DISCORD_TOKEN, GUILD_ID
+from config import DISCORD_TOKEN
 import asyncio
 import os
 import uvicorn
@@ -21,20 +21,25 @@ async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
     
-    if GUILD_ID:
-        try:
-            guild = discord.Object(id=GUILD_ID)
-            bot.tree.copy_global_to(guild=guild)
-            await bot.tree.sync(guild=guild)
-            print(f"Commands synced to Guild ID: {GUILD_ID}")
-        except Exception as e:
-            print(f"Failed to sync commands: {e}")
+    # Sync commands globally for multi-server support
+    try:
+        await bot.tree.sync()
+        print("✅ Commands synced globally")
+    except discord.Forbidden:
+        print("⚠️ Warning: Could not sync commands globally (Missing Access).")
+        print("   This is expected if the bot was JUST added or permissions are limited.")
+        print("   Commands will still work in servers where the bot has permission.")
+    except Exception as e:
+        print(f"❌ Failed to sync commands: {e}")
+
+
 
 async def load_extensions():
     for filename in os.listdir('./src/cogs'):
-        if filename.endswith('.py'):
+        if filename.endswith('.py') and filename != 'knowledge.py':
             await bot.load_extension(f'cogs.{filename[:-3]}')
             print(f"Loaded extension: {filename}")
+
 
 async def run_fastapi():
     config = uvicorn.Config(fastapi_app, host="0.0.0.0", port=8000, log_level="info")

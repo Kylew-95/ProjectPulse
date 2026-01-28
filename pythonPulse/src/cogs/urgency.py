@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from services.ai_service import analyze_urgency, generate_followup_questions, generate_issue_summary
+from services.ai_service import analyze_urgency, generate_followup_questions, generate_detailed_ticket
 from services.supabase_client import insert_message, check_guild_subscription
 from services.ticket_service import get_ticket_service
 import json
@@ -28,20 +28,25 @@ class Urgency(commands.Cog):
                 # Retrieve the original issue data
                 original_data = self.active_reports.pop(message.author.id)
                 
-                # Generate AI Summary of the combined info
-                final_summary = generate_issue_summary(original_data['content'], message.content)
+                # Generate Structured AI Report
+                ai_report = generate_detailed_ticket(original_data['content'], message.content)
                 
                 # Construct the JSON summary
                 report = {
                     "user": message.author.name,
-                    "user_id": message.author.id,
+                    "user_id": str(message.author.id),
                     "original_issue": original_data['content'],
                     "follow_up_details": message.content,
-                    "final_summary": final_summary,
+                    "summary": ai_report.get("summary", "New report from Discord"),
+                    "type": ai_report.get("type", "Support"),
+                    "priority": ai_report.get("priority", "Medium"),
+                    "location": ai_report.get("location", "Unknown"),
+                    "solution": ai_report.get("solution", "Investigate conversation logs."),
                     "urgency_score": original_data['score'],
-                    "origin_channel_id": original_data['channel_id'],
-                    "status": "COMPLETED"
+                    "origin_channel_id": str(original_data['channel_id']),
+                    "status": "OPEN"
                 }
+
 
                 # CREATE TICKET via Integration
                 ticket_result = self.ticket_service.create_ticket(report)
@@ -53,8 +58,15 @@ class Urgency(commands.Cog):
                 print(json.dumps(report, indent=4))
                 print("="*50 + "\n")
 
-                # Thank the user
-                await message.channel.send(f"Thank you! Your report has been submitted. Status: **{ticket_result}**")
+                # Thank the user with a more detailed confirmation
+                await message.channel.send(
+                    f"✅ **Report Submitted!**\n\n"
+                    f"**Summary:** {report['summary']}\n"
+                    f"**Priority:** {report['priority']}\n"
+                    f"**Type:** {report['type']}\n\n"
+                    f"Our team has been notified. You can track this ticket on your dashboard. Status: **{ticket_result}**"
+                )
+
                 return
             else:
                 pass

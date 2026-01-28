@@ -274,6 +274,14 @@ async def stripe_webhook(request: Request):
         print(f"DEBUG WEBHOOK ERROR (Signature): {e}")
         raise HTTPException(status_code=400, detail='Invalid signature')
 
+    from supabase import create_client, Client
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
+    if not key:
+        print("❌ WEBHOOK CRASH: No SUPABASE_SERVICE_ROLE_KEY or SUPABASE_KEY found in .env", flush=True)
+        return {"status": "error", "message": "Backend Config Error"}
+    supabase: Client = create_client(url, key)
+
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
         print(f"WEBHOOK: Session {session.get('id')} completed.", flush=True)
@@ -336,19 +344,6 @@ async def stripe_webhook(request: Request):
                 status = 'active'
 
             # Update Supabase
-            from supabase import create_client, Client
-            url: str = os.getenv("SUPABASE_URL")
-            
-            # Robust Key Loading: Try Service Role first, then generic Key
-            key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
-            
-            if not key:
-                print("❌ WEBHOOK CRASH: No SUPABASE_SERVICE_ROLE_KEY or SUPABASE_KEY found in .env", flush=True)
-                return {"status": "error", "message": "Backend Config Error"}
-
-            supabase: Client = create_client(url, key)
-
-            # Extract Stripe Customer ID
             stripe_customer_id = session.get('customer')
 
             update_data = {
@@ -366,10 +361,8 @@ async def stripe_webhook(request: Request):
             print(f"✅ WEBHOOK UPDATE SUCCESS: {response}", flush=True)
         else:
             print("❌ WEBHOOK ERROR: User ID or Plan Tier ID missing in metadata.", flush=True)
-    else:
-        print(f"WEBHOOK: Ignored event type {event['type']}", flush=True)
 
-    if event['type'] == 'customer.subscription.updated':
+    elif event['type'] == 'customer.subscription.updated':
         sub = event['data']['object']
         # If user cancels mid-cycle, Stripe sets cancel_at_period_end = True
         # but status remains 'active'.
@@ -403,6 +396,12 @@ async def stripe_webhook(request: Request):
             }
             supabase.table('profiles').upsert(update_data).execute()
             print(f"✅ WEBHOOK: Profile {user_id} cancelled.", flush=True)
+    
+    else:
+        print(f"WEBHOOK: Ignored event type {event['type']}", flush=True)
+
+    return {"status": "success"}
+
 
     return {"status": "success"}
 

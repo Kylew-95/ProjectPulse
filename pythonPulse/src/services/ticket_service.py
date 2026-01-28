@@ -21,17 +21,40 @@ class LogTicketService(TicketService):
 
 class SupabaseTicketService(TicketService):
     def create_ticket(self, report_data):
+        import uuid
+        user_id = report_data.get("user_id")
+        discord_id = None
+        supabase_uuid = None
+
+        # Check if user_id is a valid UUID (Supabase) or just a Discord ID (string/int)
+        try:
+            if user_id:
+                uuid.UUID(str(user_id))
+                supabase_uuid = user_id
+        except ValueError:
+            # Not a UUID, treated as Discord ID
+            discord_id = str(user_id)
+
         data = {
-            "user_id": report_data["user_id"],
+            "reporter_id": supabase_uuid,
+            "discord_id": discord_id,
             "user_name": report_data["user"],
-            "issue": report_data["original_issue"],
-            "summary": report_data["final_summary"],
-            "urgency": report_data["urgency_score"],
-            "status": "OPEN"
+            "description": report_data["original_issue"],
+            "title": report_data.get("summary") or report_data.get("final_summary"),
+            "urgency": report_data.get("urgency_score", 5),
+            "status": "open",
+            "type": (report_data.get("type") or "support").lower(),
+            "priority": (report_data.get("priority") or "medium").lower(),
+            "solution": report_data.get("solution"),
+            "location": (report_data.get("location") or "unknown").lower()
+
         }
+
         try:
             supabase.table("tickets").insert(data).execute()
             return "Saved to Supabase Database"
+
+
         except Exception as e:
             print(f"Supabase Ticket Error: {e}")
             return "Failed to save to DB"

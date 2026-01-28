@@ -7,7 +7,8 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-GUILD_ID = int(os.getenv("GUILD_ID")) if os.getenv("GUILD_ID") else None
+# GUILD_ID is no longer needed for global sync
+
 
 # Ticketing Config
 TICKET_PROVIDER = os.getenv("TICKET_PROVIDER", "LOG").upper() # LOG, TRELLO, SUPABASE, GITHUB, JIRA

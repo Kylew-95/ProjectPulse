@@ -1,4 +1,5 @@
 import cohere
+import json
 from config import COHERE_API_KEY
 
 co = cohere.Client(COHERE_API_KEY)
@@ -76,6 +77,55 @@ def generate_issue_summary(original_issue: str, follow_up_response: str):
     except Exception as e:
         print(f"Cohere Summary Error: {e}")
         return "Could not generate summary."
+
+def generate_detailed_ticket(original_issue: str, follow_up_response: str):
+    """
+    Creates a structured JSON report of the incident.
+    """
+    prompt = f"""
+    Analyze this incident report and user follow-up to create a structured ticket.
+    
+    Original Report: "{original_issue}"
+    User's Follow-up Details: "{follow_up_response}"
+    
+    Return ONLY a JSON object with these keys:
+    - type: (one of: "Bug", "Feature Request", "UI/UX", "Support")
+    - priority: (one of: "Low", "Medium", "High", "Critical")
+    - summary: (concise technical summary)
+    - location: (where the issue is happening, e.g. "Landing Page", "Checkout", "Database", "Unknown")
+    - solution: (suggested steps to resolve or investigate)
+    
+    Example:
+    {{
+      "type": "Bug",
+      "priority": "High",
+      "summary": "Payment processing failing for Stripe users in UK",
+      "location": "Checkout API",
+      "solution": "Check stripe webhook logs for 403 errors and verify API keys."
+    }}
+    """
+    try:
+        response = co.chat(
+            message=prompt,
+            model="command-a-03-2025"
+        )
+        # Handle potential markdown in response
+        json_str = response.text.strip()
+        if json_str.startswith("```json"):
+            json_str = json_str[7:-3].strip()
+        elif json_str.startswith("```"):
+            json_str = json_str[3:-3].strip()
+        
+        return json.loads(json_str)
+    except Exception as e:
+        print(f"Cohere Detailed Ticket Error: {e}")
+        return {
+            "type": "Support",
+            "priority": "Medium",
+            "summary": "Report from Discord",
+            "location": "Unknown",
+            "solution": "Investigate conversation logs."
+        }
 
 def generate_summary(messages_text: str):
     """
