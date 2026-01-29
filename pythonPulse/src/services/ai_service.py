@@ -85,20 +85,39 @@ def generate_detailed_ticket(original_issue: str, follow_up_response: str):
     prompt = f"""
     Analyze this incident report and user follow-up to create a structured ticket.
     
+    SYSTEM CONTEXT:
+    - Application Name: Project Pulse
+    - Purpose: SaaS Dashboard for Project Management & Ticketing (similar to Jira/Trello).
+    - Critical Flows: Login, Payment/Subscription (Stripe), Ticket Creation, Data Sync.
+    
     Original Report: "{original_issue}"
     User's Follow-up Details: "{follow_up_response}"
     
+    PRIORITY DETERMINATION LOGIC (Context Matters!):
+    1. CONTEXTUAL CRITICALITY: If a feature is core to the app's purpose, it is High/Critical.
+       - Example: "Add Item button broken" on a Food Delivery App -> CRITICAL (Can't order).
+       - Example: "Add Item button broken" on a Profile Settings page -> MEDIUM.
+       - Example: "Login failed" -> CRITICAL (Blocker).
+       
+    2. SCOPE:
+       - "Localhost" / "My Machine" -> LOW (User environment issue).
+       - "Production" / "Everyone" -> HIGH/CRITICAL.
+       
+    3. SEVERITY:
+       - "Cosmetic / Typo" -> LOW.
+       - "Crash / 404 / 500 Error" -> HIGH.
+
     Return ONLY a JSON object with these keys:
     - type: (one of: "Bug", "Feature Request", "UI/UX", "Support")
-    - priority: (one of: "Low", "Medium", "High", "Critical")
+    - priority: (one of: "Low", "Medium", "Critical")
     - summary: (concise technical summary)
     - location: (where the issue is happening, e.g. "Landing Page", "Checkout", "Database", "Unknown")
     - solution: (suggested steps to resolve or investigate)
     
-    Example:
+    Example Output:
     {{
       "type": "Bug",
-      "priority": "High",
+      "priority": "Critical",
       "summary": "Payment processing failing for Stripe users in UK",
       "location": "Checkout API",
       "solution": "Check stripe webhook logs for 403 errors and verify API keys."
