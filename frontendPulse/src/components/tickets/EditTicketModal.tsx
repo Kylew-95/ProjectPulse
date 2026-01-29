@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { X, Loader2, User, ChevronDown } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
+import SearchableSelect from '../ui/SearchableSelect';
 
 interface Profile {
   id: string;
@@ -17,6 +18,7 @@ interface Ticket {
   priority: string;
   status: string;
   assignee_id: string | null;
+  team_id: string | null;
   urgency: number | null;
 }
 
@@ -24,11 +26,14 @@ interface EditTicketModalProps {
   ticket: Ticket;
   onClose: () => void;
   onTicketUpdated: () => void;
+  userTeams: { id: string; name: string }[];
 }
 
-const EditTicketModal = ({ ticket, onClose, onTicketUpdated }: EditTicketModalProps) => {
+const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTicketModalProps) => {
   const [loading, setLoading] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>(ticket.team_id || '');
+  const [autoAssign, setAutoAssign] = useState(false);
   const [formData, setFormData] = useState({
     title: ticket.title,
     description: ticket.description || '',
@@ -37,6 +42,58 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated }: EditTicketModalPr
     assignee_id: ticket.assignee_id || '',
     urgency: ticket.urgency || 0
   });
+
+  useEffect(() => {
+    if (autoAssign && selectedTeamId) {
+      handleAutoAssign(selectedTeamId);
+    }
+  }, [selectedTeamId, autoAssign]);
+
+  const handleAutoAssign = async (tId: string) => {
+    if (!tId) return;
+    setLoading(true);
+    try {
+      const { data: members, error: membersError } = await supabase
+        .from('team_members')
+        .select('user_id')
+        .eq('team_id', tId);
+      
+      if (membersError) throw membersError;
+      if (!members || members.length === 0) return;
+
+      const { data: tickets, error: ticketsError } = await supabase
+        .from('tickets')
+        .select('assignee_id')
+        .eq('team_id', tId)
+        .neq('status', 'done');
+      
+      if (ticketsError) throw ticketsError;
+
+      const workload: Record<string, number> = {};
+      members.forEach(m => workload[m.user_id] = 0);
+      tickets?.forEach(t => {
+        if (t.assignee_id && workload[t.assignee_id] !== undefined) {
+          workload[t.assignee_id]++;
+        }
+      });
+
+      let leastBusyId = members[0].user_id;
+      let minTickets = workload[leastBusyId];
+
+      Object.entries(workload).forEach(([uid, count]) => {
+        if (count < minTickets) {
+          minTickets = count;
+          leastBusyId = uid;
+        }
+      });
+
+      setFormData(prev => ({ ...prev, assignee_id: leastBusyId }));
+    } catch (err) {
+      console.error('Error auto-assigning:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProfiles = async () => {
@@ -67,6 +124,7 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated }: EditTicketModalPr
           priority: formData.priority,
           status: formData.status,
           assignee_id: formData.assignee_id === '' ? null : formData.assignee_id,
+          team_id: selectedTeamId,
           urgency: formData.urgency,
           updated_at: new Date().toISOString()
         })
@@ -118,58 +176,53 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated }: EditTicketModalPr
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Priority</label>
-              <div className="relative">
-                <select
-                  value={formData.priority}
-                  onChange={e => setFormData({ ...formData, priority: e.target.value })}
-                  className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-primary/50 outline-none transition-all appearance-none"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="critical">Critical</option>
-                </select>
-                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
-              </div>
+              <SearchableSelect
+                options={[
+                  { value: 'low', label: 'Low' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'high', label: 'High' },
+                  { value: 'critical', label: 'Critical' }
+                ]}
+                value={formData.priority}
+                onChange={val => setFormData({ ...formData, priority: val })}
+              />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label>
-              <div className="relative">
-                <select
-                  value={formData.status}
-                  onChange={e => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-primary/50 outline-none transition-all appearance-none"
-                >
-                  <option value="open">Open</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="done">Done</option>
-                </select>
-                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
-              </div>
+              <SearchableSelect
+                options={[
+                  { value: 'in_progress', label: 'In Progress' },
+                  { value: 'done', label: 'Done' }
+                ]}
+                value={formData.status}
+                onChange={val => setFormData({ ...formData, status: val })}
+              />
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assignee</label>
-            <div className="relative">
-              <select
-                value={formData.assignee_id}
-                onChange={e => setFormData({ ...formData, assignee_id: e.target.value })}
-                className="w-full bg-slate-950/50 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white focus:border-primary/50 outline-none transition-all appearance-none"
-              >
-                <option value="">Unassigned</option>
-                {profiles.map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.full_name || p.email?.split('@')[0] || p.discord_id || 'User'}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
-                <User size={16} />
-              </div>
-              <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Team</label>
+              <SearchableSelect
+                options={userTeams.map(t => ({ value: t.id, label: t.name }))}
+                value={selectedTeamId}
+                onChange={val => setSelectedTeamId(val)}
+                placeholder="Select team..."
+              />
+            </div>
+            <div className="flex items-end">
+              <label className="flex items-center gap-2 mb-2 cursor-pointer group">
+                <input 
+                  type="checkbox" 
+                  checked={autoAssign}
+                  onChange={(e) => setAutoAssign(e.target.checked)}
+                  className="w-4 h-4 rounded border-white/10 bg-slate-950/50 text-primary focus:ring-primary"
+                />
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider group-hover:text-slate-300 transition-colors">Auto-assign</span>
+              </label>
             </div>
           </div>
+
 
           <div className="flex justify-end gap-3 mt-8">
             <button

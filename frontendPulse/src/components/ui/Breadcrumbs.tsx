@@ -7,8 +7,9 @@ const Breadcrumbs = () => {
     { path: '/', breadcrumb: null },
     { path: '/dashboard', breadcrumb: 'Home' },
     { path: '/dashboard/overview', breadcrumb: 'Overview' },
-    { path: '/dashboard/team', breadcrumb: 'People' },
-    { path: '/dashboard/tickets', breadcrumb: 'Work items' },
+    { path: '/dashboard/team', breadcrumb: 'Teams' },
+    { path: '/dashboard/team/:teamId', breadcrumb: 'Members' },
+    { path: '/dashboard/tickets', breadcrumb: 'Tickets' },
     { path: '/dashboard/analytics', breadcrumb: 'Analytics' },
     { path: '/dashboard/settings', breadcrumb: 'Settings' },
   ]);
@@ -22,9 +23,9 @@ const Breadcrumbs = () => {
             to={match.pathname}
             className={({ isActive }) => 
               `transition-colors flex-shrink-0 ${
-                isActive 
+                isActive && index === breadcrumbs.length - 1
                   ? 'text-slate-300 pointer-events-none' 
-                  : 'hover:text-slate-300 text-slate-500'
+                  : 'hover:text-slate-300 text-slate-500 cursor-pointer'
               }`
             }
           >

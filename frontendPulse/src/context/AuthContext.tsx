@@ -8,7 +8,6 @@ export interface Profile {
   email: string | null;
   subscription_tier: string; // 'free', 'pro', etc.
   status: string; // 'active', 'trialing', etc.
-  discord_guild_id: string | null;
   trial_end: string | null;
   // Add other fields as needed
 }

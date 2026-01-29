@@ -37,6 +37,7 @@ function App() {
              <Route path="tickets" element={<Tickets />} />
              <Route path="analytics" element={<Analytics />} />
              <Route path="team" element={<Team />} />
+             <Route path="team/:teamId" element={<Team />} />
              <Route path="settings" element={<Settings />} />
           </Route>
           

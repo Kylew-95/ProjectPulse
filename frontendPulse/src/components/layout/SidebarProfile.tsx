@@ -3,7 +3,6 @@ import { useAuth } from '../../context/AuthContext';
 const SidebarProfile = () => {
     const { user,profile } = useAuth();
 
-    console.log(profile?.subscription_tier);
 
     return (
         <div className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl bg-white/5 border border-white/5">

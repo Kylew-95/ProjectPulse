@@ -25,8 +25,6 @@ const TeamSection = () => {
   const [loading, setLoading] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteDiscord, setInviteDiscord] = useState('');
-  const [createName, setCreateName] = useState('');
-  const [creating, setCreating] = useState(false);
   const [inviting, setInviting] = useState(false);
   const [error, setError] = useState('');
 
@@ -73,34 +71,6 @@ const TeamSection = () => {
     if (data) setMembers(data);
   };
 
-  const handleCreateTeam = async () => {
-    if (!createName.trim()) return;
-    setCreating(true);
-    try {
-      const { data, error } = await supabase
-        .from('teams')
-        .insert([{ name: createName, owner_id: user?.id }])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      if (data) {
-        setTeam(data);
-        await supabase.from('team_members').insert({
-            team_id: data.id,
-            user_id: user?.id,
-            email: user?.email || '',
-            role: 'Admin',
-            status: 'active'
-        });
-        await fetchMembers(data.id);
-      }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setCreating(false);
-    }
-  };
 
   const handleInvite = async () => {
     if (!inviteEmail.trim() || !team) return;
@@ -149,23 +119,7 @@ const TeamSection = () => {
                 </div>
             ) : !team ? (
                 <div className="text-center py-8">
-                    <h3 className="text-lg font-medium text-white mb-2">Create a Team</h3>
-                    <p className="text-slate-400 mb-2">Collaborate with others by creating a team.</p>
-                    <div className="flex max-w-md mx-auto gap-5">
-                        <input 
-                            value={createName}
-                            onChange={(e) => setCreateName(e.target.value)}
-                            placeholder="Team Name"
-                            className="flex-1 bg-black/20 border border-slate-800 rounded-lg px-4 py-2 text-white focus:ring-1 focus:ring-primary outline-none"
-                        />
-                        <button 
-                            onClick={handleCreateTeam}
-                            disabled={creating}
-                            className="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                        >
-                            {creating ? 'Creating...' : 'Create Team'}
-                        </button>
-                    </div>
+                    <p className="text-slate-400 mb-2">You haven't created a primary team yet. Go to the Teams page to manage your teams.</p>
                 </div>
             ) : (
                 <div>

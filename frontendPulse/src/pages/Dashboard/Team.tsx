@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
 import { 
   Shield, 
-  MoreVertical, 
   UserPlus, 
   Search, 
   Download, 
@@ -18,18 +18,22 @@ import {
   Check,
   Clock,
   Mail,
-  Calendar
+  Calendar,
+  Trash2
 } from 'lucide-react';
 import ProGate from '../../components/ui/ProGate';
 import Breadcrumbs from '../../components/ui/Breadcrumbs';
 import FilterDropdown from '../../components/ui/FilterDropdown';
 import { exportToCSV } from '../../utils/exportUtils';
+import CreateTeamModal from '../../components/teams/CreateTeamModal';
+import SearchableSelect from '../../components/ui/SearchableSelect';
+import { TEAM_ROLES } from '../../constants/roles';
 
 interface TeamMember {
-    id: string;
+    id: number;
     user_id: string;
     role: string;
-    created_at: string;
+    joined_at: string;
     status: string;
     email?: string;
     discord_id?: string;
@@ -43,6 +47,8 @@ interface TeamMember {
 
 const Team = () => {
   const { user } = useAuth();
+  const { teamId } = useParams();
+  const navigate = useNavigate();
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,119 +56,123 @@ const Team = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
-  const [currentTeam, setCurrentTeam] = useState<{ id: string } | null>(null);
+  const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState<{ id: string; name: string } | null>(null);
+  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
   const [inviteIdentifier, setInviteIdentifier] = useState(''); // Email or Discord ID
-  const [inviteRole, setInviteRole] = useState('Member');
+  const [inviteRole, setInviteRole] = useState('Developer');
 
   // Real Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const pageSize = 10;
+  
+  const viewMode = teamId ? 'members' : 'teams';
 
   useEffect(() => {
-    const syncAndFetchTeam = async () => {
+    const fetchData = async () => {
         if (!user) return;
         setLoading(true);
         try {
-            // 1. Ensure user is in team
-            const { data: existing } = await supabase
-                .from('team_members')
-                .select('id')
-                .eq('user_id', user.id)
-                .maybeSingle();
+            if (viewMode === 'teams') {
+                // Fetch all teams user belongs to
+                const { data: memberRecords, error: memberError } = await supabase
+                    .from('team_members')
+                    .select('team_id, teams(id, name)')
+                    .eq('user_id', user.id);
 
-            if (!existing) {
-                // If no team member record, and we are user, let's create a default team or join one
-                const { data: teamsOwned } = await supabase.from('teams').select('id').eq('owner_id', user.id).maybeSingle();
-                let teamId = teamsOwned?.id;
+                if (memberError) throw memberError;
 
-                if (!teamId) {
-                    const { data: newTeam, error: createError } = await supabase.from('teams').insert({
-                        name: `${user.user_metadata?.name || 'Personal'}'s Team`,
-                        owner_id: user.id
-                    }).select().single();
-                    if (!createError) teamId = newTeam.id;
+                const userTeams = memberRecords?.map(m => {
+                    const t = Array.isArray(m.teams) ? m.teams[0] : m.teams;
+                    return { id: t.id, name: t.name };
+                }) || [];
+
+                setTeams(userTeams);
+                setTotalCount(userTeams.length);
+                setMembers([]); // Clear members in team view
+            } else if (viewMode === 'members' && teamId) {
+                // First fetch team details if not already set or different
+                if (!selectedTeam || selectedTeam.id !== teamId) {
+                  const { data: teamData, error: teamError } = await supabase
+                    .from('teams')
+                    .select('id, name')
+                    .eq('id', teamId)
+                    .single();
+                  
+                  if (!teamError && teamData) {
+                    setSelectedTeam(teamData);
+                  }
                 }
 
-                if (teamId) {
-                    await supabase.from('team_members').insert({
-                        team_id: teamId,
-                        user_id: user.id,
-                        role: 'Admin',
+                // 2. Fetch total count with filters for THIS team
+                let countQuery = supabase
+                    .from('team_members')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('team_id', teamId);
+                
+                if (roleFilter !== 'all') countQuery = countQuery.eq('role', roleFilter);
+                
+                const { count: total } = await countQuery;
+                setTotalCount(total || 0);
+
+                // 3. Fetch paginated members for THIS team
+                const from = (currentPage - 1) * pageSize;
+                const to = from + pageSize - 1;
+
+                let dataQuery = supabase
+                    .from('team_members')
+                    .select('*')
+                    .eq('team_id', teamId);
+                
+                if (roleFilter !== 'all') dataQuery = dataQuery.eq('role', roleFilter);
+
+                const { data: teamData, error: teamError } = await dataQuery
+                    .order('joined_at', { ascending: false })
+                    .range(from, to);
+                
+                if (teamError) throw teamError;
+
+                // 4. Fetch profiles for these users
+                const userIds = teamData?.map(m => m.user_id) || [];
+                
+                if (userIds.length > 0) {
+                     let profilesQuery = supabase
+                        .from('profiles')
+                        .select('id, full_name, email, avatar_url, subscription_tier, discord_id');
+                    
+                    if (searchQuery) {
+                        profilesQuery = profilesQuery.or(`full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
+                    }
+
+                    const { data: profilesData, error: profilesError } = await profilesQuery.in('id', userIds);
+                    
+                    if (profilesError) throw profilesError;
+
+                    // Merge
+                    const merged = teamData?.map(member => {
+                        const profile = profilesData?.find(p => p.id === member.user_id);
+                        return { ...member, profiles: profile };
                     });
+                    
+                    setMembers(merged || []);
+                } else {
+                    setMembers([]);
                 }
             }
-
-            // Get current team context
-            const { data: memberRecord } = await supabase.from('team_members').select('team_id').eq('user_id', user.id).maybeSingle();
-            if (memberRecord) setCurrentTeam({ id: memberRecord.team_id });
-
-            // 2. Fetch total count with filters
-            let countQuery = supabase
-                .from('team_members')
-                .select('*', { count: 'exact', head: true });
-            
-            if (roleFilter !== 'all') countQuery = countQuery.eq('role', roleFilter);
-            
-            const { count: total } = await countQuery;
-            setTotalCount(total || 0);
-
-            // 3. Fetch paginated members
-            const from = (currentPage - 1) * pageSize;
-            const to = from + pageSize - 1;
-
-            let dataQuery = supabase
-                .from('team_members')
-                .select('*');
-            
-            if (roleFilter !== 'all') dataQuery = dataQuery.eq('role', roleFilter);
-
-            const { data: teamData, error: teamError } = await dataQuery
-                .order('created_at', { ascending: false })
-                .range(from, to);
-            
-            if (teamError) throw teamError;
-
-            // 4. Fetch profiles for these users
-            const userIds = teamData?.map(m => m.user_id) || [];
-            
-            if (userIds.length > 0) {
-                 let profilesQuery = supabase
-                    .from('profiles')
-                    .select('id, full_name, email, avatar_url, subscription_tier, discord_id');
-                
-                if (searchQuery) {
-                    profilesQuery = profilesQuery.or(`full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
-                }
-
-                const { data: profilesData, error: profilesError } = await profilesQuery.in('id', userIds);
-                
-                if (profilesError) throw profilesError;
-
-                // Merge
-                const merged = teamData?.map(member => {
-                    const profile = profilesData?.find(p => p.id === member.user_id);
-                    return { ...member, profiles: profile };
-                });
-                
-                setMembers(merged || []);
-            } else {
-                setMembers([]);
-            }
-
         } catch (err) {
-            console.error('Error syncing team:', err);
+            console.error('Error fetching data:', err);
         } finally {
             setLoading(false);
         }
     };
 
-    syncAndFetchTeam();
-  }, [user, currentPage, roleFilter, searchQuery]); // Re-fetch on filter change
+    fetchData();
+  }, [user, currentPage, roleFilter, searchQuery, viewMode, teamId]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentTeam || !inviteIdentifier) {
+    if (!selectedTeam || !inviteIdentifier) {
         alert('Missing team context or identifier');
         return;
     }
@@ -172,7 +182,7 @@ const Team = () => {
       const isDiscord = !inviteIdentifier.includes('@');
       
       const { error } = await supabase.from('team_members').insert({
-        team_id: currentTeam.id,
+        team_id: selectedTeam.id,
         [isDiscord ? 'discord_id' : 'email']: inviteIdentifier,
         role: inviteRole,
         status: 'invited'
@@ -193,10 +203,80 @@ const Team = () => {
     }
   };
 
+  const handleUpdateRole = async (memberId: number, newRole: string) => {
+    if (!confirm(`Are you sure you want to change this member's role to ${newRole}?`)) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('team_members')
+        .update({ role: newRole })
+        .eq('id', memberId);
+
+      if (error) throw error;
+      
+      // Update local state
+      setMembers(prev => prev.map(m => m.id === memberId ? { ...m, role: newRole } : m));
+      alert('Role updated successfully!');
+    } catch (err: any) {
+      console.error('Error updating role:', err);
+      alert(`Error updating role: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveMember = async (memberId: number, memberName: string) => {
+    if (!confirm(`Are you sure you want to remove ${memberName} from the team?`)) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('team_members')
+        .delete()
+        .eq('id', memberId);
+
+      if (error) throw error;
+      
+      setMembers(prev => prev.filter(m => m.id !== memberId));
+      alert('Member removed successfully.');
+    } catch (err: any) {
+      console.error('Error removing member:', err);
+      alert(`Error removing member: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteTeam = async (teamId: string, teamName: string) => {
+    if (!confirm(`Are you sure you want to delete the team "${teamName}"? This action cannot be undone and will remove all members from the team.`)) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('teams')
+        .delete()
+        .eq('id', teamId);
+
+      if (error) throw error;
+      
+      setTeams(prev => prev.filter(t => t.id !== teamId));
+      setTotalCount(prev => prev - 1);
+      alert('Team deleted successfully.');
+    } catch (err: any) {
+      console.error('Error deleting team:', err);
+      alert(`Error deleting team: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getRoleColor = (role: string) => {
     switch (role?.toLowerCase()) {
       case 'admin': return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-      default: return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      case 'it': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+      case 'developer': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+      default: return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
     }
   };
 
@@ -207,7 +287,7 @@ const Team = () => {
       Discord: m.profiles?.discord_id || m.discord_id || 'None',
       Role: m.role,
       Status: m.status || 'Active',
-      Joined: new Date(m.created_at).toLocaleDateString()
+      Joined: new Date(m.joined_at).toLocaleDateString()
     }));
     exportToCSV(exportData, `team-export-${new Date().toISOString().split('T')[0]}`);
   };
@@ -222,7 +302,24 @@ const Team = () => {
       {/* Header Section */}
       <div className="flex justify-between items-end mb-8 px-2">
         <div>
-          <h1 className="text-4xl font-extrabold text-white tracking-tight">People</h1>
+          <div className="flex items-center gap-2 text-slate-500 mb-1">
+            {viewMode === 'members' && (
+              <button 
+                onClick={() => navigate('/dashboard/team')}
+                className="hover:text-white transition-colors flex items-center gap-1 text-xs font-bold uppercase tracking-widest"
+              >
+                <ChevronLeft size={14} /> Back to Teams
+              </button>
+            )}
+          </div>
+          <h1 className="text-4xl font-extrabold text-white tracking-tight">
+            {viewMode === 'teams' ? 'Teams' : selectedTeam?.name}
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            {viewMode === 'teams' 
+              ? 'Select a team to manage its members and settings' 
+              : 'Manage your team members and roles'}
+          </p>
         </div>
         <div className="flex items-center gap-3">
             <button 
@@ -237,11 +334,19 @@ const Team = () => {
               <UserPlus size={16} />
             </button>
             <button 
-              onClick={() => setIsInviteModalOpen(true)}
-              className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg transition-all font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]"
+              onClick={() => setIsCreateTeamModalOpen(true)}
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-all font-bold border border-white/5"
             >
-              <UserPlus size={18} strokeWidth={3} /> Invite
+              <Users size={18} /> Create Team
             </button>
+            {viewMode === 'members' && (
+              <button 
+                onClick={() => setIsInviteModalOpen(true)}
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg transition-all font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <UserPlus size={18} strokeWidth={3} /> Invite
+              </button>
+            )}
         </div>
       </div>
 
@@ -260,23 +365,24 @@ const Team = () => {
               />
             </div>
 
-            <FilterDropdown 
-                label="Role" 
+            <div className="min-w-[200px]">
+              <SearchableSelect
                 options={[
-                    { id: 'all', label: 'All Roles' },
-                    { id: 'Admin', label: 'Admin', icon: <Shield size={14} /> },
-                    { id: 'Member', label: 'Member', icon: <Users size={14} /> },
-                ]} 
-                selectedId={roleFilter} 
-                onSelect={setRoleFilter} 
-            />
+                  { value: 'all', label: 'All Roles' },
+                  ...TEAM_ROLES.map(role => ({ value: role, label: role }))
+                ]}
+                value={roleFilter}
+                onChange={setRoleFilter}
+                placeholder="Filter by Role"
+              />
+            </div>
 
             <FilterDropdown 
                 label="Status" 
                 options={[
                     { id: 'all', label: 'All Statuses' },
                     { id: 'active', label: 'Active', icon: <UserCheck size={14} className="text-emerald-400" /> },
-                    { id: 'inactive', label: 'Inactive', icon: <UserX size={14} className="text-slate-500" /> },
+                    { id: 'inactive', label: 'Inactive', icon: <UserX size={14} className="text-slate-500" /> }
                 ]} 
                 selectedId={statusFilter} 
                 onSelect={setStatusFilter} 
@@ -297,12 +403,23 @@ const Team = () => {
             <table className="w-full text-left border-collapse min-w-[1000px]">
               <thead className="sticky top-0 bg-slate-900 z-10">
                 <tr className="text-slate-500 text-[11px] uppercase tracking-wider font-bold border-b border-white/5">
-                  <th className="px-6 py-4">Name</th>
-                  <th className="px-6 py-4 w-64">Contact</th>
-                  <th className="px-6 py-4 w-32">Role</th>
-                  <th className="px-6 py-4 w-40">Status</th>
-                  <th className="px-6 py-4 w-40">Joined</th>
-                  <th className="px-6 py-4 w-12"></th>
+                  {viewMode === 'teams' ? (
+                    <>
+                      <th className="px-6 py-4">Team Name</th>
+                      <th className="px-6 py-4">Role in Team</th>
+                      <th className="px-6 py-4">Tickets</th>
+                      <th className="px-6 py-4 text-right">Action</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="px-6 py-4">Name</th>
+                      <th className="px-6 py-4 w-64">Contact</th>
+                      <th className="px-6 py-4 w-32">Role</th>
+                      <th className="px-6 py-4 w-40">Status</th>
+                      <th className="px-6 py-4 w-40">Joined</th>
+                      <th className="px-6 py-4 w-12"></th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.03]">
@@ -315,16 +432,63 @@ const Team = () => {
                         </div>
                     </td>
                   </tr>
-                ) : currentMembers.length === 0 ? (
+                ) : (viewMode === 'teams' ? teams : currentMembers).length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-24 text-center">
                         <div className="max-w-xs mx-auto text-slate-500">
                             <Users className="mx-auto mb-4 opacity-10" size={48} />
-                            <p className="font-bold text-slate-400 mb-1">No members found</p>
-                            <p className="text-xs">Try adjusting your search or invite a new teammate.</p>
+                            <p className="font-bold text-slate-400 mb-1">No {viewMode} found</p>
+                            <p className="text-xs">
+                              {viewMode === 'teams' 
+                                ? 'Create a team to start collaborating.' 
+                                : 'Try adjusting your search or invite a new teammate.'}
+                            </p>
                         </div>
                     </td>
                   </tr>
+                ) : viewMode === 'teams' ? (
+                  teams.map((team) => (
+                    <tr 
+                      key={team.id} 
+                      onClick={() => {
+                        navigate(`/dashboard/team/${team.id}`);
+                        setCurrentPage(1);
+                      }}
+                      className="group hover:bg-white/[0.02] transition-colors cursor-pointer"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-slate-800 border border-white/5 flex items-center justify-center text-xs font-bold text-white uppercase bg-gradient-to-br from-blue-500 to-indigo-600">
+                            {team.name[0]}
+                          </div>
+                          <span className="text-sm font-bold text-slate-200">{team.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                         <span className="text-xs text-slate-400">Owner/Admin</span>
+                      </td>
+                      <td className="px-6 py-4">
+                         <span className="text-xs text-slate-400">--</span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                         <div className="flex justify-end gap-2 text-right">
+                             <button className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all">
+                                View Details <ExternalLink size={10} />
+                             </button>
+                             <button 
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleDeleteTeam(team.id, team.name);
+                               }}
+                               className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-all border border-red-500/20"
+                               title="Delete Team"
+                             >
+                                <Trash2 size={14} />
+                             </button>
+                         </div>
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   currentMembers.map((member) => {
                     const profile = member.profiles || { full_name: 'Unknown', email: 'No Email', avatar_url: '' };
@@ -358,11 +522,19 @@ const Team = () => {
                              )}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1.5 w-fit ${getRoleColor(member.role)}`}>
-                              {member.role === 'Admin' && <Shield size={10} />}
-                              {member.role}
-                          </span>
+                        <td className="px-6 py-4 min-w-[180px]">
+                          {member.role === 'Admin' ? (
+                            <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1.5 w-fit ${getRoleColor(member.role)}`}>
+                                <Shield size={10} /> {member.role}
+                            </span>
+                          ) : (
+                            <SearchableSelect
+                              options={TEAM_ROLES.map(role => ({ value: role, label: role }))}
+                              value={member.role}
+                              onChange={(newRole) => handleUpdateRole(member.id, newRole)}
+                              className="text-xs"
+                            />
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <div className={`flex items-center gap-2 ${member.status === 'invited' ? 'text-amber-400' : 'text-green-400'}`}>
@@ -375,12 +547,16 @@ const Team = () => {
                         <td className="px-6 py-4">
                            <div className="flex items-center gap-2 text-slate-500 text-xs">
                               <Calendar size={12} className="opacity-50" />
-                              {new Date(member.created_at).toLocaleDateString()}
+                              {new Date(member.joined_at).toLocaleDateString()}
                            </div>
                         </td>
                         <td className="px-6 py-4 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="text-slate-600 hover:text-white transition-colors p-2">
-                              <MoreVertical size={16} />
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleRemoveMember(member.id, profile.full_name || member.email || 'this member'); }}
+                            className="text-slate-600 hover:text-red-500 transition-colors p-2"
+                            title="Remove member"
+                          >
+                              <UserX size={16} />
                           </button>
                         </td>
                       </tr>
@@ -459,14 +635,12 @@ const Team = () => {
                </div>
                <div>
                   <label className="block text-sm font-medium text-slate-400 mb-1.5">Role</label>
-                  <select 
+                  <SearchableSelect
+                    options={TEAM_ROLES.map(role => ({ value: role, label: role }))}
                     value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value)}
-                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-primary transition-all appearance-none"
-                  >
-                    <option value="Member">Member</option>
-                    <option value="Admin">Admin</option>
-                  </select>
+                    onChange={setInviteRole}
+                    placeholder="Select a role..."
+                  />
                </div>
                <div className="pt-4 flex gap-3">
                   <button type="button" onClick={() => setIsInviteModalOpen(false)} className="flex-1 py-2.5 text-sm font-bold text-slate-400 hover:text-white transition-colors">Cancel</button>
@@ -506,8 +680,8 @@ const Team = () => {
                   <div>
                      <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 border-b border-white/5 pb-2">Member</h3>
                      <ul className="space-y-3 text-sm text-slate-300">
-                        <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400" /> Create work items</li>
-                        <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400" /> Edit assigned items</li>
+                        <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400" /> Create tickets</li>
+                        <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400" /> Edit assigned tickets</li>
                         <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400" /> Comment on tasks</li>
                         <li className="flex items-center gap-2 text-slate-600 italic">No admin access</li>
                      </ul>
@@ -519,6 +693,18 @@ const Team = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Create Team Modal */}
+      {isCreateTeamModalOpen && (
+        <CreateTeamModal 
+          onClose={() => setIsCreateTeamModalOpen(false)}
+          onTeamCreated={(_teamId) => {
+            // Trigger re-fetch
+            setCurrentPage(1);
+            setRoleFilter(prev => prev); 
+          }}
+        />
       )}
     </div>
   );

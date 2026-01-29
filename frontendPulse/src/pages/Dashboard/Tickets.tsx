@@ -27,7 +27,7 @@ import {
 import CreateTicketModal from '../../components/tickets/CreateTicketModal';
 import EditTicketModal from '../../components/tickets/EditTicketModal';
 import Breadcrumbs from '../../components/ui/Breadcrumbs';
-import FilterDropdown from '../../components/ui/FilterDropdown';
+import SearchableSelect from '../../components/ui/SearchableSelect';
 import { exportToCSV } from '../../utils/exportUtils';
 
 interface Ticket {
@@ -44,6 +44,7 @@ interface Ticket {
   urgency: number | null;
   assignee_profile?: { full_name: string; avatar_url: string };
   reporter_profile?: { full_name: string; avatar_url: string };
+  teams?: { name: string };
 }
 
 const Tickets = () => {
@@ -55,41 +56,44 @@ const Tickets = () => {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
+  const [userTeams, setUserTeams] = useState<{ id: string; name: string }[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>('all');
+  
   // Real Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [userTeamId, setUserTeamId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUserTeam = async () => {
+    const fetchUserTeams = async () => {
       if (!session?.user?.id) return;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('team_members')
-        .select('team_id')
-        .eq('user_id', session.user.id)
-        .eq('status', 'active')
-        .limit(1)
-        .single();
+        .select('team_id, teams(id, name)')
+        .eq('user_id', session.user.id);
       
-      if (data) setUserTeamId(data.team_id);
+      if (error) {
+        console.error('Error fetching user teams:', error);
+        return;
+      }
+
+      const teams = data?.map(m => {
+        const t = Array.isArray(m.teams) ? m.teams[0] : m.teams;
+        return { id: t.id, name: t.name };
+      }) || [];
+
+      setUserTeams(teams);
+      if (teams.length > 0 && selectedTeamId === 'all') {
+        // Optionally default to first team or keep 'all'
+      }
     };
-    fetchUserTeam();
+    fetchUserTeams();
   }, [session]);
   const pageSize = 10;
 
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
-  const [assigneeFilter, setAssigneeFilter] = useState('all');
   const [viewMode, setViewMode] = useState<'table' | 'list'>('table');
-  const [allProfiles, setAllProfiles] = useState<{id: string, full_name: string}[]>([]);
 
-  useEffect(() => {
-    const fetchProfiles = async () => {
-      const { data } = await supabase.from('profiles').select('id, full_name');
-      if (data) setAllProfiles(data);
-    };
-    fetchProfiles();
-  }, []);
 
   const fetchTickets = async () => {
     if (!session) return;
@@ -103,10 +107,14 @@ const Tickets = () => {
         .select(`
           *,
           assignee_profile:profiles!tickets_assignee_id_fkey(full_name, avatar_url),
-          reporter_profile:profiles!tickets_reporter_id_fkey(full_name, avatar_url)
+          reporter_profile:profiles!tickets_reporter_id_fkey(full_name, avatar_url),
+          teams(name)
         `, { count: 'exact' });
 
       // Apply Filters
+      if (selectedTeamId !== 'all') {
+        query = query.eq('team_id', selectedTeamId);
+      }
       if (searchQuery) {
         query = query.ilike('title', `%${searchQuery}%`);
       }
@@ -115,9 +123,6 @@ const Tickets = () => {
       }
       if (priorityFilter !== 'all') {
         query = query.eq('priority', priorityFilter);
-      }
-      if (assigneeFilter !== 'all') {
-        query = query.eq('assignee', assigneeFilter);
       }
 
       const { data, error, count } = await query
@@ -136,7 +141,7 @@ const Tickets = () => {
 
   useEffect(() => {
     fetchTickets();
-  }, [session, currentPage, statusFilter, priorityFilter, assigneeFilter]); // Re-fetch on filter change
+  }, [session, currentPage, statusFilter, priorityFilter, selectedTeamId]); // Re-fetch on filter change
 
   // Handle Search Debounce (Simpler version for now)
   useEffect(() => {
@@ -159,9 +164,10 @@ const Tickets = () => {
     { id: 'critical', label: 'Critical', icon: <AlertCircle size={14} className="text-red-400" /> },
   ];
 
-  const assigneeOptions = [
-    { id: 'all', label: 'All Assignees' },
-    ...allProfiles.map(p => ({ id: p.id, label: p.full_name }))
+
+  const teamOptions = [
+    { id: 'all', label: 'All Teams', icon: <Users size={14} /> },
+    ...userTeams.map(t => ({ id: t.id, label: t.name, icon: <Users size={14} /> }))
   ];
 
   const handleExport = () => {
@@ -171,7 +177,6 @@ const Tickets = () => {
       Status: t.status,
       Priority: t.priority,
       Urgency: t.urgency || 0,
-      Assignee: t.assignee_profile?.full_name || 'Unassigned',
       Reporter: t.reporter_profile?.full_name || 'System',
       Created: new Date(t.created_at).toLocaleDateString()
     }));
@@ -211,9 +216,9 @@ const Tickets = () => {
                 <span className="hidden md:inline">Export tickets</span>
                 <ChevronDown size={14} />
             </button>
-            <button className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 hover:bg-slate-800 text-slate-300 rounded-lg transition-all text-sm font-medium border border-white/5">
+            {/* <button className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 hover:bg-slate-800 text-slate-300 rounded-lg transition-all text-sm font-medium border border-white/5">
                 Go to advanced search
-            </button>
+            </button> */}
             <button className="flex items-center gap-2 px-3 py-2 bg-slate-800 text-slate-300 rounded-lg transition-all text-sm font-medium border border-white/5 md:hidden">
               <Plus size={16} />
             </button>
@@ -240,27 +245,33 @@ const Tickets = () => {
             />
           </div>
 
-          <FilterDropdown 
-            label="Assignee" 
-            options={assigneeOptions} 
-            selectedId={assigneeFilter} 
-            onSelect={setAssigneeFilter} 
-            icon={<Users size={14} />}
-          />
           
-          <FilterDropdown 
-            label="Status" 
-            options={statusOptions} 
-            selectedId={statusFilter} 
-            onSelect={setStatusFilter} 
-          />
+          <div className="min-w-[180px]">
+            <SearchableSelect 
+              placeholder="Team" 
+              options={teamOptions.map(o => ({ value: o.id, label: o.label }))} 
+              value={selectedTeamId} 
+              onChange={setSelectedTeamId} 
+            />
+          </div>
 
-          <FilterDropdown 
-            label="Priority" 
-            options={priorityOptions} 
-            selectedId={priorityFilter} 
-            onSelect={setPriorityFilter}
-          />
+          <div className="min-w-[150px]">
+            <SearchableSelect 
+              placeholder="Status" 
+              options={statusOptions.map(o => ({ value: o.id, label: o.label }))} 
+              value={statusFilter} 
+              onChange={setStatusFilter} 
+            />
+          </div>
+
+          <div className="min-w-[150px]">
+            <SearchableSelect 
+              placeholder="Priority" 
+              options={priorityOptions.map(o => ({ value: o.id, label: o.label }))} 
+              value={priorityFilter} 
+              onChange={setPriorityFilter}
+            />
+          </div>
           
           <div className="h-6 w-px bg-white/10 mx-1 hidden lg:block"></div>
 
@@ -310,7 +321,7 @@ const Tickets = () => {
                       <ChevronDown size={12} className="opacity-0 group-hover/urgency:opacity-100 transition-opacity" />
                     </div>
                   </th>
-                  <th className="px-6 py-4 w-32">Assignee</th>
+                  <th className="px-6 py-4 w-32 text-center">Team</th>
                   <th className="px-6 py-4 w-32">Reporter</th>
                   <th className="px-6 py-4 w-32">Status</th>
                   <th className="px-6 py-4 w-32">Priority</th>
@@ -320,7 +331,7 @@ const Tickets = () => {
               <tbody className="divide-y divide-white/[0.03]">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-24 text-center">
+                    <td colSpan={9} className="px-6 py-24 text-center">
                         <div className="flex flex-col items-center gap-3">
                             <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
                             <span className="text-slate-500 text-sm font-medium">Loading items...</span>
@@ -329,10 +340,10 @@ const Tickets = () => {
                   </tr>
                 ) : tickets.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-24 text-center">
+                    <td colSpan={9} className="px-6 py-24 text-center">
                         <div className="max-w-xs mx-auto text-slate-500">
                             <TicketIcon className="mx-auto mb-4 opacity-10" size={48} />
-                            <p className="font-bold text-slate-400 mb-1">No work items found</p>
+                            <p className="font-bold text-slate-400 mb-1">No tickets found</p>
                             <p className="text-xs">Try adjusting your filters or create a new ticket to get started.</p>
                         </div>
                     </td>
@@ -358,19 +369,8 @@ const Tickets = () => {
                             {ticket.urgency || 0}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                             <div className="w-6 h-6 rounded-full bg-slate-800 border border-white/5 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden uppercase">
-                                {ticket.assignee_profile?.avatar_url ? (
-                                    <img src={ticket.assignee_profile.avatar_url} alt="A" className="w-full h-full object-cover" />
-                                ) : (
-                                    <span>{ticket.assignee_profile?.full_name?.[0] || '?'}</span>
-                                )}
-                             </div>
-                             <span className="text-xs text-slate-400 truncate max-w-[80px]">
-                                {ticket.assignee_profile?.full_name || 'Unassigned'}
-                             </span>
-                          </div>
+                        <td className="px-6 py-4 text-center">
+                           <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{ticket.teams?.name || 'N/A'}</span>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
@@ -543,7 +543,8 @@ const Tickets = () => {
         <CreateTicketModal 
           onClose={() => setIsModalOpen(false)} 
           onTicketCreated={fetchTickets}
-          teamId={userTeamId}
+          teamId={selectedTeamId === 'all' ? (userTeams[0]?.id || null) : selectedTeamId}
+          userTeams={userTeams}
         />
       )}
 
@@ -552,6 +553,7 @@ const Tickets = () => {
           ticket={selectedTicket}
           onClose={() => { setIsEditModalOpen(false); setSelectedTicket(null); }} 
           onTicketUpdated={fetchTickets}
+          userTeams={userTeams}
         />
       )}
     </div>

@@ -15,7 +15,7 @@ const Layout = () => {
 
   const navItems = [
     { icon: LayoutDashboard, label: 'Overview', path: '/dashboard/overview' },
-    { icon: Users, label: 'Team', path: '/dashboard/team' },
+    { icon: Users, label: 'Teams', path: '/dashboard/team' },
     { icon: Ticket, label: 'Tickets', path: '/dashboard/tickets' },
     { icon: BarChart2, label: 'Analytics', path: '/dashboard/analytics' },
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' },

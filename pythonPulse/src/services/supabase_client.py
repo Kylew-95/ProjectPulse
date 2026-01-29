@@ -27,10 +27,4 @@ def get_messages_last_24h():
         print(f"Error fetching messages: {e}")
         return []
 
-def check_guild_subscription(guild_id: int):
-    """Checks if the bot is authorized. Now returns True by default to support multi-server use."""
-    return True, "Registered"
-
-    """Checks if the bot is authorized. Now returns True by default to support multi-server use."""
-    return True, "Registered"
 
