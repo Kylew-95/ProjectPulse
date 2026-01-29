@@ -34,6 +34,8 @@ class Urgency(commands.Cog):
                 # Construct the JSON summary
                 report = {
                     "user": message.author.name,
+                    "full_name": message.author.display_name,
+                    "avatar_url": str(message.author.display_avatar.url),
                     "user_id": str(message.author.id),
                     "original_issue": original_data['content'],
                     "follow_up_details": message.content,
@@ -90,7 +92,9 @@ class Urgency(commands.Cog):
             return
 
         # Log every message (Only for subscribed guilds)
-        insert_message(message.author.id, message.channel.id, message.content, message.author.name)
+        full_name = message.author.display_name
+        avatar_url = str(message.author.display_avatar.url)
+        insert_message(message.author.id, message.channel.id, message.content, message.author.name, full_name, avatar_url)
 
         # Urgency Check 
         if len(message.content) > 10: 

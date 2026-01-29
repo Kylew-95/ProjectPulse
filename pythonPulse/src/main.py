@@ -21,6 +21,16 @@ async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
     
+    # Create "report-an-issue" channel in each guild if it doesn't exist
+    for guild in bot.guilds:
+        channel = discord.utils.get(guild.text_channels, name="report-an-issue")
+        if not channel:
+            try:
+                await guild.create_text_channel("report-an-issue")
+                print(f"Created #report-an-issue in {guild.name}")
+            except Exception as e:
+                print(f"Failed to create channel in {guild.name}: {e}")
+    
     # Sync commands globally for multi-server support
     try:
         await bot.tree.sync()
@@ -31,6 +41,17 @@ async def on_ready():
         print("   Commands will still work in servers where the bot has permission.")
     except Exception as e:
         print(f"❌ Failed to sync commands: {e}")
+        
+@bot.event
+async def on_guild_join(guild):
+    """Automatically create the required channel when joining a new server."""
+    channel = discord.utils.get(guild.text_channels, name="report-an-issue")
+    if not channel:
+        try:
+            await guild.create_text_channel("report-an-issue")
+            print(f"Created #report-an-issue in {guild.name} (on join)")
+        except Exception as e:
+            print(f"Failed to create channel in {guild.name} on join: {e}")
 
 
 
