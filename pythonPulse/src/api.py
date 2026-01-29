@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request
+
 from fastapi.middleware.cors import CORSMiddleware
 import stripe
 import os
@@ -7,7 +8,6 @@ from dotenv import load_dotenv
 
 # Load environment variables explicitly
 load_dotenv()
-
 stripe.api_key = os.getenv("STRIPE_KEY")
 app = FastAPI()
 
@@ -529,6 +529,64 @@ async def sync_subscription(data: dict):
     except Exception as e:
         print(f"Sync Error: {e}", flush=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/send-invite")
+async def send_invite(data: dict):
+    email = data.get("email")
+    role = data.get("role")
+    
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+
+    try:
+        # Standard SMTP Configuration (Gmail Example)
+        SMTP_SERVER = "smtp.gmail.com"
+        SMTP_PORT = 587
+        SENDER_EMAIL = os.getenv("EMAIL_USER")
+        SENDER_PASSWORD = os.getenv("EMAIL_PASSWORD") 
+        
+        if not SENDER_EMAIL or not SENDER_PASSWORD:
+             raise HTTPException(status_code=500, detail="Server email configuration missing (EMAIL_USER/EMAIL_PASSWORD)")
+
+        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+        invite_link = f"{frontend_url}/signup?email={email}"
+        
+        # Construct Email
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+
+        msg = MIMEMultipart()
+        msg['From'] = f"Project Pulse <{SENDER_EMAIL}>"
+        msg['To'] = email
+        msg['Subject'] = "You've been invited to join the team on Project Pulse!"
+
+        html_content = f"""
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #4F46E5;">Welcome to the Team!</h1>
+            <p>You've been invited to join Project Pulse as a <strong>{role}</strong>.</p>
+            <p>Click the button below to accept your invitation and get started.</p>
+            <a href="{invite_link}" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 16px;">Accept Invitation</a>
+            <p style="margin-top: 24px; color: #666; font-size: 12px;">If you were not expecting this invite, please ignore this email.</p>
+        </div>
+        """
+        
+        msg.attach(MIMEText(html_content, 'html'))
+
+        # Send Email
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        server.login(SENDER_EMAIL, SENDER_PASSWORD)
+        server.send_message(msg)
+        server.quit()
+
+        print(f"✅ EMAIL (SMTP): Invite sent to {email}", flush=True)
+        return {"status": "success"}
+        
+    except Exception as e:
+        print(f"❌ EMAIL ERROR: {e}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+
 
 if __name__ == "__main__":
     import uvicorn
