@@ -66,16 +66,17 @@ const MemberListItem = ({ member, onUpdateRole, onRemoveMember, fixDuplicatedAva
                </span>
             </div>
             {/* Role Selector */}
-            <div className="w-32">
+            {/* <div className="w-32">
                <SearchableSelect
                   options={TEAM_ROLES.map(r => ({ value: r, label: r }))}
                   value={member.role}
                   onChange={(role) => onUpdateRole(member.id, role)}
                   className="h-8 text-xs"
                />
-            </div>
+            </div> */}
          </div>
 
+        {member.role !== 'Admin' && ( 
          <button 
             onClick={() => onRemoveMember(member.id)}
             className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
@@ -83,9 +84,12 @@ const MemberListItem = ({ member, onUpdateRole, onRemoveMember, fixDuplicatedAva
          >
             <Trash2 size={16} />
          </button>
+        )}
       </div>
     </div>
+
   );
 };
+
 
 export default MemberListItem;
