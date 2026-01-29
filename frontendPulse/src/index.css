@@ -1,12 +1,78 @@
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border-main: var(--border-main);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-primary: #3B82F6;
+  --color-secondary: #0D9488;
+}
 
 :root {
+  --background: #f1f5f9; /* Slate 100 - consistent background */
+  --surface: #ffffff;    /* Pure white for ALL cards and containers */
+  --border-main: #e2e8f0; /* Slate 200 */
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  color-scheme: light;
+}
+
+:root.dark {
+  --background: #020617;
+  --surface: #0f172a;    /* Navy surface for ALL cards */
+  --border-main: rgba(255, 255, 255, 0.08);
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
   color-scheme: dark;
 }
 
-body {
-  margin: 0;
-  background-color: #0f172a;
-  color: #fff;
-  font-family: 'Inter', system-ui, sans-serif;
+@layer base {
+  body {
+    margin: 0;
+    background-color: var(--background);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, sans-serif;
+    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+  }
+
+  /* Core Card Layout - Uniform across app */
+  .app-card {
+    background-color: var(--surface);
+    border: 1px solid var(--border-main);
+    border-radius: 1.5rem; /* Standard 24px/3xl */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .dark .app-card {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-main);
+  border-radius: 20px;
+  border: 3px solid var(--background);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
 }

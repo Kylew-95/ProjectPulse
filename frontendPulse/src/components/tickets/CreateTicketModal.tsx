@@ -20,7 +20,7 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
     description: '',
     priority: 'medium',
     status: 'open',
-    urgency: 50,
+    urgency_score: 5,
     assignee_id: ''
   });
 
@@ -91,7 +91,11 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
 
       const { error } = await supabase.from('tickets').insert([
         {
-          ...formData,
+          title: formData.title,
+          description: formData.description,
+          priority: formData.priority,
+          status: formData.status,
+          urgency_score: formData.urgency_score,
           reporter_id: session?.user?.id,
           team_id: selectedTeamId,
           assignee_id: formData.assignee_id || null

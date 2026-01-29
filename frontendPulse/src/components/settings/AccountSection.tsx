@@ -11,7 +11,7 @@ const AccountSection = ({ user }: AccountSectionProps) => {
       <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
         <CreditCard className="text-slate-400" size={24} /> Account Details
       </h2>
-      <div className="bg-surface border border-slate-800 rounded-xl p-6">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl p-6">
           <div className="grid gap-6">
               <div>
                   <label className="block text-sm font-medium text-slate-400 mb-1">Email</label>

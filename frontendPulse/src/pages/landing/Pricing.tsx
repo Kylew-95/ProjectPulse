@@ -85,7 +85,7 @@ const Pricing = () => {
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
 
       <div className="text-center max-w-3xl mx-auto mb-16 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight">
+        <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">
           Simple, Transparent <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Pricing</span>
         </h1>
         <p className="text-xl text-slate-400 max-w-2xl mx-auto">

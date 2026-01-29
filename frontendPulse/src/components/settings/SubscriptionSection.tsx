@@ -12,7 +12,7 @@ const SubscriptionSection = ({ profile, onManageClick }: SubscriptionSectionProp
         <Rocket className="text-primary" size={24} /> Subscription
       </h2>
       
-      <div className="bg-surface border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl overflow-hidden">
          <div className="p-6 border-b border-slate-800 flex justify-between items-center">
            <div>
               <p className="text-sm text-slate-400">Current Plan</p>

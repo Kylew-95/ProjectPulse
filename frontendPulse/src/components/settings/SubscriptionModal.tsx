@@ -112,11 +112,11 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="relative w-full max-w-md bg-surface border-l border-slate-800 h-full p-6 overflow-y-auto shadow-2xl"
+                className="relative w-full max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 h-full p-6 overflow-y-auto shadow-2xl"
             >
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold">Manage Subscription</h2>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                         <X size={20} />
                     </button>
                 </div>
@@ -126,23 +126,23 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
                     <div className="p-4 bg-primary/10 border border-primary/20 rounded-xl">
                         <p className="text-sm text-primary font-medium mb-1">My Current Plan</p>
                         <div className="flex justify-between items-baseline">
-                             <h3 className="text-2xl font-bold">{profile?.subscription_tier?.toUpperCase() || 'NO PLAN'}</h3>
+                             <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{profile?.subscription_tier?.toUpperCase() || 'NO PLAN'}</h3>
                              <span className="text-sm font-medium px-2 py-0.5 bg-primary/20 text-primary rounded-full">{profile?.status?.toUpperCase()}</span>
                         </div>
                     </div>
 
-                    <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Available Plans</h3>
+                    <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Available Plans</h3>
                     
                     <div className="space-y-4">
                         {plans.map((plan) => (
                              <div key={plan.name} className={`p-4 rounded-xl border transition-colors ${
-                                 plan.active ? 'border-primary bg-primary/5' : 'border-slate-800 bg-black/20 hover:border-slate-700'
+                                 plan.active ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-black/20 hover:border-slate-300 dark:hover:border-slate-700'
                              }`}>
                                 <div className="flex justify-between items-start mb-3">
                                     <div>
-                                        <h4 className="font-bold">{plan.name}</h4>
+                                        <h4 className="font-bold text-slate-900 dark:text-white">{plan.name}</h4>
                                         <div className="flex items-baseline gap-1">
-                                            <span className="text-lg font-bold">{plan.price}</span>
+                                            <span className="text-lg font-bold text-slate-900 dark:text-white">{plan.price}</span>
                                             <span className="text-xs text-slate-500">{plan.period}</span>
                                         </div>
                                     </div>
@@ -161,14 +161,14 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
                                 </ul>
 
                                 {plan.active ? (
-                                    <button disabled className="w-full py-2 bg-slate-800 text-slate-500 rounded-lg text-sm font-medium border border-slate-700 cursor-default">Current Plan</button>
+                                    <button disabled className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-lg text-sm font-medium border border-slate-200 dark:border-slate-700 cursor-default">Current Plan</button>
                                 ) : (
                                     <button 
                                         onClick={() => plan.isEnterprise ? null : handleSubscribe(plan.priceId)}
                                         className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${
                                             plan.isEnterprise 
-                                            ? 'bg-slate-800 text-white hover:bg-slate-700 border border-slate-700'
-                                            : 'bg-white text-black hover:bg-slate-200'
+                                            ? 'bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700'
+                                            : 'bg-white text-black hover:bg-slate-50 border border-slate-200'
                                         }`}
                                     >
                                         {plan.isEnterprise ? 'Contact Sales' : loading ? 'Processing...' : 'Switch to this plan'}
@@ -178,10 +178,10 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
                         ))}
                     </div>
 
-                    <div className="pt-6 border-t border-slate-800">
+                    <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
                          <button 
                             onClick={handlePortal}
-                            className="w-full py-3 flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all text-sm font-medium"
+                            className="w-full py-3 flex items-center justify-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all text-sm font-medium"
                          >
                              Manage Billing Settings <ExternalLink size={16} />
                          </button>

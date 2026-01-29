@@ -39,7 +39,7 @@ const Home = () => {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background text-white selection:bg-primary/30">
+    <div className="min-h-screen bg-background selection:bg-primary/30">
       {/* Navbar */}
       <nav className="border-b border-white/5 bg-slate-900/50 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
@@ -73,7 +73,7 @@ const Home = () => {
             v2.0 is now live
           </div>
           
-          <h1 className="text-5xl sm:text-7xl font-bold tracking-tight mb-8 text-white animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+          <h1 className="text-5xl sm:text-7xl font-bold tracking-tight mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
             The heart of a business needs a <InteractivePulse />
           </h1>
           
@@ -100,7 +100,7 @@ const Home = () => {
                 { icon: Shield, title: "Enterprise Security", desc: "Bank-grade encryption for your data." },
                 { icon: Globe, title: "Global CDN", desc: "Lightning fast access from anywhere." }
             ].map((feature, i) => (
-                <div key={i} className="p-6 rounded-2xl bg-slate-900/50 border border-white/5 hover:border-blue-500/30 transition-colors group backdrop-blur-sm">
+                <div key={i} className="p-6 rounded-2xl bg-slate-900/50 border border-white/5 hover:border-blue-500/30 transition-colors group backdrop-blur-sm text-white">
                     <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 mb-4 group-hover:scale-110 transition-transform">
                         <feature.icon size={24} />
                     </div>

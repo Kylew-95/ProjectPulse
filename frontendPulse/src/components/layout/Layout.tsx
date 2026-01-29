@@ -1,13 +1,19 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Ticket, BarChart2, Settings, Users, LogOut } from 'lucide-react';
+import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, Button, AppBar } from '@mui/material';
 
 import { supabase } from '../../supabaseClient';
 import SidebarProfile from './SidebarProfile';
+import ThemeToggle from '../ui/ThemeToggle';
 import CommandPalette from '../ui/CommandPalette';
 import OnboardingTour from '../ui/OnboardingTour';
+import { useTheme } from '../../context/ThemeContext';
+
+const drawerWidth = 260;
 
 const Layout = () => {
   const location = useLocation();
+  const { theme } = useTheme();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -22,61 +28,162 @@ const Layout = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-background text-white selection:bg-primary/30 scroll-smooth">
+    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       <OnboardingTour />
       <CommandPalette />
-      {/* Sidebar - Glassmorphism */}
-      <aside className="w-64 border-r border-white/5 bg-slate-900/50 backdrop-blur-xl flex flex-col fixed inset-y-0 z-50 transition-all duration-300">
-        <div className="p-6">
-          <Link to="/" className="flex items-center gap-3 group">
-            <img src="/src/assets/logo.png" alt="Pulse Logo" className="w-12 h-12 object-contain" />
-            <span className="text-2xl font-bold text-white tracking-tight">
-              Pulse
-            </span>
+      
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+            backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
+            borderRight: theme === 'dark' ? '1px solid rgba(255,255,255,0.05)' : '1px solid #e2e8f0',
+            color: theme === 'dark' ? 'white' : '#0f172a',
+            transition: 'background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease'
+          },
+        }}
+      >
+        <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Link to="/" className="flex items-center gap-3 no-underline text-inherit" title="Return to home">
+             <img src="/src/assets/logo.png" alt="Pulse Loop" style={{ width: 40, height: 40, objectFit: 'contain' }} />
+             <Typography variant="h6" fontWeight="bold" sx={{ letterSpacing: '-0.02em', color: theme === 'dark' ? 'white' : '#0f172a' }}>
+               Pulse
+             </Typography>
           </Link>
-        </div>
+        </Box>
 
-        <nav className="flex-1 px-4 space-y-2 mt-4">
+        <List sx={{ px: 2, flex: 1, mt: 2 }}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname.startsWith(item.path);
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden ${
-                  isActive 
-                    ? 'bg-primary/10 text-primary shadow-[0_0_20px_rgba(59,130,246,0.15)] ring-1 ring-primary/20' 
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Icon size={20} className={`relative z-10 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                <span className="relative z-10 font-medium">{item.label}</span>
-                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3/4 bg-primary rounded-r-full shadow-[0_0_10px_currentColor]"></div>}
-              </Link>
+              <ListItem key={item.path} disablePadding sx={{ mb: 1 }}>
+                <ListItemButton
+                  component={Link}
+                  to={item.path}
+                  selected={isActive}
+                  sx={{
+                    borderRadius: 3,
+                    py: 1.5,
+                    px: 2,
+                    color: theme === 'dark' ? '#94a3b8' : '#64748b',
+                    '&.Mui-selected': {
+                      backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.15)' : '#eff6ff', // blue-50 light
+                      border: '1px solid',
+                      borderColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.3)' : '#bfdbfe', // blue-200 light
+                      color: theme === 'dark' ? 'white' : '#1e40af', // blue-800 light
+                      '&:hover': {
+                        backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.25)' : '#dbeafe', // blue-100 light
+                      },
+                      '& .MuiListItemIcon-root': {
+                        color: '#60a5fa', // blue-400 (keep consistent or adjust)
+                      }
+                    },
+                    '&:hover': {
+                      backgroundColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9', // slate-100 light
+                      color: theme === 'dark' ? 'white' : '#0f172a',
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 40, color: isActive ? '#3b82f6' : (theme === 'dark' ? '#94a3b8' : '#94a3b8') }}>
+                    <Icon size={20} />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={item.label} 
+                    primaryTypographyProps={{ 
+                      fontSize: '0.95rem', 
+                      fontWeight: isActive ? 700 : 500
+                    }} 
+                  />
+                  {isActive && (
+                    <Box 
+                      sx={{ 
+                        position: 'absolute', 
+                        left: 0, 
+                        width: 4, 
+                        height: '60%', 
+                        bgcolor: '#3b82f6', 
+                        borderTopRightRadius: 4, 
+                        borderBottomRightRadius: 4 
+                      }} 
+                    />
+                  )}
+                </ListItemButton>
+              </ListItem>
             );
           })}
-        </nav>
+        </List>
 
-        <div className="p-4 border-t border-white/5 bg-slate-900/30">
+        <Box sx={{ 
+          p: 2, 
+          borderTop: '1px solid',
+          borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#e2e8f0',
+          bgcolor: theme === 'dark' ? 'rgba(15, 23, 42, 0.5)' : '#f8fafc' // slate-50 light
+        }}>
           <SidebarProfile />
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-2.5 w-full text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/5 rounded-xl transition-all duration-200 group mt-1"
-          >
-            <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
-            Sign Out
-          </button>
-        </div>
-      </aside>
+           <Button
+             fullWidth
+             onClick={handleLogout}
+             startIcon={<LogOut size={18} />}
+             sx={{
+               mt: 1,
+               justifyContent: 'flex-start',
+               color: theme === 'dark' ? '#94a3b8' : '#64748b',
+               textTransform: 'none',
+               fontWeight: 'bold',
+               px: 2,
+               py: 1,
+               borderRadius: 3,
+               '&:hover': {
+                 color: '#ef4444', // red-500
+                 backgroundColor: theme === 'dark' ? 'rgba(239, 68, 68, 0.05)' : '#fef2f2', // red-50 light
+               }
+             }}
+           >
+             Sign Out
+           </Button>
+        </Box>
+      </Drawer>
 
-      {/* Main Content */}
-      <main className="flex-1 ml-64 overflow-y-auto bg-background p-8">
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <Box component="main" sx={{ 
+        flexGrow: 1, 
+        minHeight: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column',
+        bgcolor: '#f1f5f9', // slate-100
+        '.dark &': {
+          bgcolor: '#0f172a' // slate-900
+        }
+      }}>
+        <AppBar 
+          position="sticky" 
+          elevation={0}
+          sx={{ 
+            height: 64,
+            justifyContent: 'center',
+            bgcolor: 'rgba(255, 255, 255, 0.8)', // Fallback for light mode
+            backdropFilter: 'blur(12px)',
+            borderBottom: '1px solid rgba(0,0,0,0.05)',
+            '.dark &': {
+               bgcolor: 'rgba(15, 23, 42, 0.8)',
+               borderColor: 'rgba(255,255,255,0.05)'
+            }
+          }}
+        >
+          <Toolbar sx={{ justifyContent: 'flex-end', px: 4 }}>
+             <ThemeToggle />
+          </Toolbar>
+        </AppBar>
+        
+        <Box sx={{ p: 4, pt: 1, flexGrow: 1 }}>
              <Outlet />
-        </div>
-      </main>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

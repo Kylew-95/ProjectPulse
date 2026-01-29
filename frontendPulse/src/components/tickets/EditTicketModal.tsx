@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import SearchableSelect from '../ui/SearchableSelect';
+import type { Ticket } from '../../types/ticket';
 
 interface Profile {
   id: string;
@@ -11,16 +12,6 @@ interface Profile {
   discord_id: string | null;
 }
 
-interface Ticket {
-  id: string | number;
-  title: string;
-  description: string | null;
-  priority: string;
-  status: string;
-  assignee_id: string | null;
-  team_id: string | null;
-  urgency: number | null;
-}
 
 interface EditTicketModalProps {
   ticket: Ticket;
@@ -40,7 +31,7 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
     priority: ticket.priority,
     status: ticket.status,
     assignee_id: ticket.assignee_id || '',
-    urgency: ticket.urgency || 0
+    urgency_score: ticket.urgency_score || 0
   });
 
   useEffect(() => {
@@ -125,7 +116,7 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
           status: formData.status,
           assignee_id: formData.assignee_id === '' ? null : formData.assignee_id,
           team_id: selectedTeamId,
-          urgency: formData.urgency,
+          urgency_score: formData.urgency_score,
           updated_at: new Date().toISOString()
         })
         .eq('id', ticket.id);

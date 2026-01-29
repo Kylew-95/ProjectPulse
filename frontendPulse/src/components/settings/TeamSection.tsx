@@ -112,7 +112,7 @@ const TeamSection = () => {
       </h2>
 
       <ProGate featureName="Team Management" description="Upgrade to Pro to unlock team management, invite members, and collaborate efficiently.">
-        <div className="bg-surface border border-slate-800 rounded-xl overflow-hidden p-6">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl overflow-hidden p-6">
             {loading ? (
                 <div className="flex items-center justify-center py-12">
                     <Loader2 className="animate-spin text-primary" />
@@ -125,14 +125,14 @@ const TeamSection = () => {
                 <div>
                     <div className="flex justify-between items-center mb-6">
                         <div>
-                            <h3 className="text-xl font-bold text-white">{team.name}</h3>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{team.name}</h3>
                             <p className="text-sm text-slate-400">{members.length} Members</p>
                         </div>
                     </div>
 
                     {/* Invite Form */}
-                    <div className="bg-black/20 rounded-lg p-4 mb-6 border border-slate-800/50">
-                        <h4 className="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2">
+                    <div className="bg-slate-50 dark:bg-black/20 rounded-lg p-4 mb-6 border border-slate-200 dark:border-slate-800/50">
+                        <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
                             <UserPlus size={16} /> Invite New Member
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
@@ -140,13 +140,13 @@ const TeamSection = () => {
                                 value={inviteEmail}
                                 onChange={(e) => setInviteEmail(e.target.value)}
                                 placeholder="Email Address"
-                                className="bg-black/20 border border-slate-800 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-primary outline-none"
+                                className="bg-white dark:bg-black/20 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:ring-1 focus:ring-primary outline-none"
                             />
                             <input 
                                 value={inviteDiscord}
                                 onChange={(e) => setInviteDiscord(e.target.value)}
                                 placeholder="Discord ID (Optional)"
-                                className="bg-black/20 border border-slate-800 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-primary outline-none"
+                                className="bg-white dark:bg-black/20 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-slate-900 dark:text-white text-sm focus:ring-1 focus:ring-primary outline-none"
                             />
                         </div>
                         <div className="flex justify-end">
@@ -164,11 +164,11 @@ const TeamSection = () => {
                     {/* Members List */}
                     <div className="space-y-3">
                         {members.map(member => (
-                            <div key={member.id} className="flex justify-between items-center bg-black/20 p-3 rounded-lg border border-slate-800/50">
+                            <div key={member.id} className="flex justify-between items-center bg-slate-50 dark:bg-black/20 p-3 rounded-lg border border-slate-200 dark:border-slate-800/50">
                                 <div>
-                                    <p className="text-white font-medium">{member.email}</p>
+                                    <p className="text-slate-900 dark:text-white font-medium">{member.email}</p>
                                     <div className="flex items-center gap-2 text-xs text-slate-500">
-                                        <span className={`px-1.5 py-0.5 rounded ${member.role === 'Admin' ? 'bg-purple-900/30 text-purple-400' : 'bg-slate-800 text-slate-400'}`}>
+                                        <span className={`px-1.5 py-0.5 rounded ${member.role === 'Admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}>
                                             {member.role}
                                         </span>
                                         {member.discord_id && (

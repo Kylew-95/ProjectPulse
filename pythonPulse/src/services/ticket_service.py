@@ -41,7 +41,7 @@ class SupabaseTicketService(TicketService):
             "user_name": report_data["user"],
             "description": report_data["original_issue"],
             "title": report_data.get("summary") or report_data.get("final_summary"),
-            "urgency": report_data.get("urgency_score", 5),
+            "urgency_score": report_data.get("urgency_score", 5),
             "status": "open",
             "type": (report_data.get("type") or "support").lower(),
             "priority": (report_data.get("priority") or "medium").lower(),

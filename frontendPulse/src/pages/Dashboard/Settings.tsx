@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import PageHeader from '../../components/common/PageHeader';
 import SubscriptionSection from '../../components/settings/SubscriptionSection';
 import IntegrationsSection from '../../components/settings/IntegrationsSection';
 import AccountSection from '../../components/settings/AccountSection';
@@ -12,7 +13,7 @@ const Settings = () => {
 
   return (
     <div className="p-8 max-w-4xl mx-auto relative">
-      <h1 className="text-3xl font-bold mb-8">Settings</h1>
+      <PageHeader title="Settings" className="mb-8" />
 
       <SubscriptionSection 
         profile={profile} 

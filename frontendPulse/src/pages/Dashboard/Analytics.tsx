@@ -1,13 +1,36 @@
-import { BarChart2, ArrowUpRight } from 'lucide-react';
+import { BarChart2, Clock } from 'lucide-react';
+import { useState } from 'react';
+import Breadcrumbs from '../../components/ui/Breadcrumbs';
+import PageHeader from '../../components/common/PageHeader';
 
 const Analytics = () => {
-    // Placeholder data - in real app fetch from backend
-  return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Analytics</h1>
+  const [loading, setLoading] = useState(false);
 
-      <div className="bg-surface p-12 rounded-xl border border-slate-800 flex flex-col items-center justify-center min-h-[400px] text-center">
-        <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mb-6">
+  const refreshData = () => {
+    setLoading(true);
+    // Simulate data fetch
+    setTimeout(() => setLoading(false), 800);
+  };
+
+  return (
+    <div className="p-6 max-w-[1600px] mx-auto min-h-screen font-sans selection:bg-primary/30">
+      <Breadcrumbs />
+
+      <PageHeader 
+        title="Analytics" 
+        description="Track your team's performance and ticket trends"
+      >
+        <button 
+            onClick={refreshData}
+            className="p-2 bg-white dark:bg-[#0f172a] hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 rounded-lg transition-all border border-slate-200 dark:border-white/5 active:scale-95 group shadow-sm"
+            title="Refresh data"
+        >
+            <Clock size={16} className={`${loading ? "animate-spin" : "group-hover:rotate-180"} transition-transform duration-500`} />
+        </button>
+      </PageHeader>
+
+      <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-12 overflow-hidden backdrop-blur-xl shadow-2xl flex flex-col items-center justify-center min-h-[400px] text-center">
+        <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mb-6 border border-white/5">
             <BarChart2 size={32} className="text-slate-500" />
         </div>
         <h3 className="text-xl font-semibold text-white mb-2">No Data Available</h3>

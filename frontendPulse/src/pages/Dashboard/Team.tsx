@@ -1,55 +1,54 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
-import { 
-  Shield, 
-  UserPlus, 
-  Search, 
-  Download, 
-  ChevronDown, 
-  Users,
-  ExternalLink,
-  MoreHorizontal,
-  ChevronLeft,
-  ChevronRight,
-  UserCheck,
-  UserX,
-  Check,
-  Clock,
-  Mail,
-  Calendar,
-  Trash2
-} from 'lucide-react';
-import ProGate from '../../components/ui/ProGate';
-import Breadcrumbs from '../../components/ui/Breadcrumbs';
-import FilterDropdown from '../../components/ui/FilterDropdown';
-import { exportToCSV } from '../../utils/exportUtils';
 import CreateTeamModal from '../../components/teams/CreateTeamModal';
-import SearchableSelect from '../../components/ui/SearchableSelect';
-import { TEAM_ROLES } from '../../constants/roles';
+import InviteModal from '../../components/teams/InviteModal';
+import PermissionsModal from '../../components/teams/PermissionsModal';
+import TeamHeader from '../../components/teams/TeamHeader';
+import TeamFilters from '../../components/teams/TeamFilters';
+import TeamList from '../../components/teams/TeamList';
+import Breadcrumbs from '../../components/ui/Breadcrumbs';
+import Pagination from '../../components/common/Pagination';
+import { exportToCSV } from '../../utils/exportUtils';
 
 interface TeamMember {
-    id: number;
-    user_id: string;
-    role: string;
-    joined_at: string;
-    status: string;
-    email?: string;
-    discord_id?: string;
-    profiles?: {
-        full_name: string;
-        email: string;
-        avatar_url: string;
-        discord_id?: string;
-    }
+  id: string;
+  user_id: string;
+  email: string;
+  discord_id: string | null;
+  role: string;
+  status: string;
+  profiles: {
+    full_name: string | null;
+    avatar_url: string | null;
+    email: string | null;
+  } | null;
 }
 
 const Team = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { teamId } = useParams();
-  const navigate = useNavigate();
   const [members, setMembers] = useState<TeamMember[]>([]);
+
+  // ... (keep state declarations)
+
+  // Access Control for Teams
+  if (['Free', 'Starter'].includes(profile?.subscription_tier || 'Free')) {
+     return (
+        <div className="p-8 max-w-[1600px] mx-auto min-h-screen flex flex-col items-center justify-center text-center animate-in fade-in duration-700">
+            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
+               <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Team Access Restricted</h2>
+            <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
+               Your current plan ({profile?.subscription_tier}) does not include access to Team Management. Upgrade to Pro or Enterprise to collaborate with your team.
+            </p>
+            {/* Optional: Add Upgrade Button if routing exists */}
+        </div>
+     );
+  }
+
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -59,8 +58,11 @@ const Team = () => {
   const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<{ id: string; name: string } | null>(null);
   const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
-  const [inviteIdentifier, setInviteIdentifier] = useState(''); // Email or Discord ID
+  const [inviteIdentifier, setInviteIdentifier] = useState('');
   const [inviteRole, setInviteRole] = useState('Developer');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const refreshData = () => setRefreshTrigger(prev => prev + 1);
 
   // Real Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,7 +77,6 @@ const Team = () => {
         setLoading(true);
         try {
             if (viewMode === 'teams') {
-                // Fetch all teams user belongs to
                 const { data: memberRecords, error: memberError } = await supabase
                     .from('team_members')
                     .select('team_id, teams(id, name)')
@@ -83,16 +84,17 @@ const Team = () => {
 
                 if (memberError) throw memberError;
 
-                const userTeams = memberRecords?.map(m => {
-                    const t = Array.isArray(m.teams) ? m.teams[0] : m.teams;
-                    return { id: t.id, name: t.name };
-                }) || [];
+                const userTeams = memberRecords
+                    ?.filter(m => m.teams)
+                    .map(m => {
+                        const t = Array.isArray(m.teams) ? m.teams[0] : m.teams;
+                        return { id: t.id, name: t.name };
+                    }) || [];
 
                 setTeams(userTeams);
                 setTotalCount(userTeams.length);
-                setMembers([]); // Clear members in team view
+                setMembers([]);
             } else if (viewMode === 'members' && teamId) {
-                // First fetch team details if not already set or different
                 if (!selectedTeam || selectedTeam.id !== teamId) {
                   const { data: teamData, error: teamError } = await supabase
                     .from('teams')
@@ -100,612 +102,196 @@ const Team = () => {
                     .eq('id', teamId)
                     .single();
                   
-                  if (!teamError && teamData) {
-                    setSelectedTeam(teamData);
-                  }
+                  if (teamError) throw teamError;
+                  setSelectedTeam(teamData);
                 }
 
-                // 2. Fetch total count with filters for THIS team
-                let countQuery = supabase
-                    .from('team_members')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('team_id', teamId);
-                
-                if (roleFilter !== 'all') countQuery = countQuery.eq('role', roleFilter);
-                
-                const { count: total } = await countQuery;
-                setTotalCount(total || 0);
-
-                // 3. Fetch paginated members for THIS team
                 const from = (currentPage - 1) * pageSize;
                 const to = from + pageSize - 1;
 
-                let dataQuery = supabase
+                let query = supabase
                     .from('team_members')
-                    .select('*')
+                    .select(`
+                        id, user_id, email, discord_id, role, status,
+                        profiles(full_name, avatar_url, email)
+                    `, { count: 'exact' })
                     .eq('team_id', teamId);
-                
-                if (roleFilter !== 'all') dataQuery = dataQuery.eq('role', roleFilter);
 
-                const { data: teamData, error: teamError } = await dataQuery
-                    .order('joined_at', { ascending: false })
+                if (roleFilter !== 'all') query = query.eq('role', roleFilter);
+                if (statusFilter !== 'all') query = query.eq('status', statusFilter);
+                if (searchQuery) query = query.or(`email.ilike.%${searchQuery}%,profiles.full_name.ilike.%${searchQuery}%`);
+
+                const { data, error, count } = await query
+                    .order('created_at', { ascending: false })
                     .range(from, to);
-                
-                if (teamError) throw teamError;
 
-                // 4. Fetch profiles for these users
-                const userIds = teamData?.map(m => m.user_id) || [];
-                
-                if (userIds.length > 0) {
-                     let profilesQuery = supabase
-                        .from('profiles')
-                        .select('id, full_name, email, avatar_url, subscription_tier, discord_id');
-                    
-                    if (searchQuery) {
-                        profilesQuery = profilesQuery.or(`full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
-                    }
-
-                    const { data: profilesData, error: profilesError } = await profilesQuery.in('id', userIds);
-                    
-                    if (profilesError) throw profilesError;
-
-                    // Merge
-                    const merged = teamData?.map(member => {
-                        const profile = profilesData?.find(p => p.id === member.user_id);
-                        return { ...member, profiles: profile };
-                    });
-                    
-                    setMembers(merged || []);
-                } else {
-                    setMembers([]);
-                }
+                if (error) throw error;
+                setMembers(data as any || []);
+                setTotalCount(count || 0);
             }
-        } catch (err) {
-            console.error('Error fetching data:', err);
+        } catch (err: any) {
+            console.error('Error fetching dashboard data:', err);
         } finally {
             setLoading(false);
         }
     };
 
     fetchData();
-  }, [user, currentPage, roleFilter, searchQuery, viewMode, teamId]);
+  }, [user, currentPage, roleFilter, searchQuery, viewMode, teamId, refreshTrigger]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTeam || !inviteIdentifier) {
-        alert('Missing team context or identifier');
-        return;
-    }
-    
+    if (!teamId) return;
     setLoading(true);
     try {
-      const isDiscord = !inviteIdentifier.includes('@');
-      
-      const { error } = await supabase.from('team_members').insert({
-        team_id: selectedTeam.id,
-        [isDiscord ? 'discord_id' : 'email']: inviteIdentifier,
-        role: inviteRole,
-        status: 'invited'
-      });
-
+      const isEmail = inviteIdentifier.includes('@');
+      const { error } = await supabase
+        .from('team_members')
+        .insert([{
+          team_id: teamId,
+          email: isEmail ? inviteIdentifier : 'pending@discord.user',
+          discord_id: isEmail ? null : inviteIdentifier,
+          role: inviteRole,
+          status: 'inactive'
+        }]);
       if (error) throw error;
-      
       setIsInviteModalOpen(false);
       setInviteIdentifier('');
-      // Trigger re-fetch
-      setCurrentPage(1);
-      alert('Invitation sent successfully!');
+      refreshData();
     } catch (err: any) {
-      console.error('Error inviting member:', err);
       alert(`Error: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateRole = async (memberId: number, newRole: string) => {
-    if (!confirm(`Are you sure you want to change this member's role to ${newRole}?`)) return;
-
-    setLoading(true);
+  const handleUpdateRole = async (memberId: string, newRole: string) => {
     try {
-      const { error } = await supabase
-        .from('team_members')
-        .update({ role: newRole })
-        .eq('id', memberId);
-
+      const { error } = await supabase.from('team_members').update({ role: newRole }).eq('id', memberId);
       if (error) throw error;
-      
-      // Update local state
       setMembers(prev => prev.map(m => m.id === memberId ? { ...m, role: newRole } : m));
-      alert('Role updated successfully!');
     } catch (err: any) {
-      console.error('Error updating role:', err);
-      alert(`Error updating role: ${err.message}`);
-    } finally {
-      setLoading(false);
+      alert(`Error: ${err.message}`);
     }
   };
 
-  const handleRemoveMember = async (memberId: number, memberName: string) => {
-    if (!confirm(`Are you sure you want to remove ${memberName} from the team?`)) return;
-
-    setLoading(true);
+  const handleRemoveMember = async (memberId: string) => {
+    if (!confirm('Are you sure you want to remove this member?')) return;
     try {
-      const { error } = await supabase
-        .from('team_members')
-        .delete()
-        .eq('id', memberId);
-
+      const { error } = await supabase.from('team_members').delete().eq('id', memberId);
       if (error) throw error;
-      
       setMembers(prev => prev.filter(m => m.id !== memberId));
-      alert('Member removed successfully.');
     } catch (err: any) {
-      console.error('Error removing member:', err);
-      alert(`Error removing member: ${err.message}`);
-    } finally {
-      setLoading(false);
+      alert(`Error: ${err.message}`);
     }
   };
 
-  const handleDeleteTeam = async (teamId: string, teamName: string) => {
-    if (!confirm(`Are you sure you want to delete the team "${teamName}"? This action cannot be undone and will remove all members from the team.`)) return;
-
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from('teams')
-        .delete()
-        .eq('id', teamId);
-
+  const handleDeleteTeam = async (teamId: string) => {
+     if (!confirm('DANGER: This will delete the team. Are you sure?')) return;
+     try {
+      const { error } = await supabase.from('teams').delete().eq('id', teamId);
       if (error) throw error;
-      
       setTeams(prev => prev.filter(t => t.id !== teamId));
       setTotalCount(prev => prev - 1);
-      alert('Team deleted successfully.');
     } catch (err: any) {
-      console.error('Error deleting team:', err);
-      alert(`Error deleting team: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getRoleColor = (role: string) => {
-    switch (role?.toLowerCase()) {
-      case 'admin': return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-      case 'it': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-      case 'developer': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-      default: return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+      alert(`Error : ${err.message}`);
     }
   };
 
   const handleExport = () => {
-    const exportData = members.map(m => ({
-      Name: m.profiles?.full_name || 'Unknown',
-      Email: m.profiles?.email || m.email || 'No Email',
-      Discord: m.profiles?.discord_id || m.discord_id || 'None',
-      Role: m.role,
-      Status: m.status || 'Active',
-      Joined: new Date(m.joined_at).toLocaleDateString()
-    }));
-    exportToCSV(exportData, `team-export-${new Date().toISOString().split('T')[0]}`);
+    if (viewMode === 'members') {
+      const data = members.map(m => ({
+        Name: m.profiles?.full_name || 'N/A',
+        Email: m.email,
+        Discord: m.discord_id || 'N/A',
+        Role: m.role,
+        Status: m.status
+      }));
+      exportToCSV(data, `team-members-${selectedTeam?.name || 'export'}`);
+    } else {
+      const data = teams.map(t => ({ ID: t.id, Name: t.name }));
+      exportToCSV(data, 'my-teams-export');
+    }
   };
 
-  const currentMembers = members; // Already paginated from server
-  const totalPages = Math.ceil(totalCount / pageSize);
+
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto min-h-screen font-sans selection:bg-primary/30">
+    <div className="p-8 max-w-[1600px] mx-auto min-h-screen animate-in fade-in duration-700">
       <Breadcrumbs />
 
-      {/* Header Section */}
-      <div className="flex justify-between items-end mb-8 px-2">
-        <div>
-          <div className="flex items-center gap-2 text-slate-500 mb-1">
-            {viewMode === 'members' && (
-              <button 
-                onClick={() => navigate('/dashboard/team')}
-                className="hover:text-white transition-colors flex items-center gap-1 text-xs font-bold uppercase tracking-widest"
-              >
-                <ChevronLeft size={14} /> Back to Teams
-              </button>
-            )}
-          </div>
-          <h1 className="text-4xl font-extrabold text-white tracking-tight">
-            {viewMode === 'teams' ? 'Teams' : selectedTeam?.name}
-          </h1>
-          <p className="text-slate-500 text-sm mt-1">
-            {viewMode === 'teams' 
-              ? 'Select a team to manage its members and settings' 
-              : 'Manage your team members and roles'}
-          </p>
+      <TeamHeader 
+        viewMode={viewMode}
+        selectedTeamName={selectedTeam?.name}
+        onExport={handleExport}
+        onRefresh={refreshData}
+        loading={loading}
+        onCreateTeam={() => setIsCreateTeamModalOpen(true)}
+        onInvite={() => setIsInviteModalOpen(true)}
+      />
+
+      <div className="space-y-8">
+        {viewMode === 'members' && (
+          <TeamFilters 
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            roleFilter={roleFilter}
+            setRoleFilter={setRoleFilter}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            setIsPermissionsModalOpen={setIsPermissionsModalOpen}
+          />
+        )}
+
+        <div className={viewMode === 'members' ? "" : "min-h-[400px]"}>
+          <TeamList 
+            viewMode={viewMode}
+            loading={loading}
+            members={members}
+            teams={teams}
+            onUpdateRole={handleUpdateRole}
+            onRemoveMember={handleRemoveMember}
+            onDeleteTeam={handleDeleteTeam}
+          />
         </div>
-        <div className="flex items-center gap-3">
-            <button 
-                onClick={handleExport}
-                className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 hover:bg-slate-800 text-slate-300 rounded-lg transition-all text-sm font-medium border border-white/5"
-            >
-                <Download size={14} /> 
-                <span className="hidden md:inline">Export team</span>
-                <ChevronDown size={14} />
-            </button>
-            <button className="flex items-center gap-2 px-3 py-2 bg-slate-800 text-slate-300 rounded-lg transition-all text-sm font-medium border border-white/5 md:hidden">
-              <UserPlus size={16} />
-            </button>
-            <button 
-              onClick={() => setIsCreateTeamModalOpen(true)}
-              className="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-all font-bold border border-white/5"
-            >
-              <Users size={18} /> Create Team
-            </button>
-            {viewMode === 'members' && (
-              <button 
-                onClick={() => setIsInviteModalOpen(true)}
-                className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg transition-all font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <UserPlus size={18} strokeWidth={3} /> Invite
-              </button>
-            )}
-        </div>
+
+        {/* Pagination Footer - Only for members view as Teams are currently not paginated in the same way or few in number */}
+        {viewMode === 'members' && totalCount > 0 && (
+          <Pagination 
+            currentPage={currentPage}
+            totalCount={totalCount}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            entityName="experts"
+          />
+        )}
       </div>
 
-      <ProGate featureName="Team Management" description="Collaborate with your team, assign roles, and manage permissions. Upgrade to Pro to unlock Team features.">
-        <div className="bg-slate-900/40 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-xl shadow-2xl">
-          {/* Stylized Filter Bar */}
-          <div className="p-4 border-b border-white/5 flex flex-wrap items-center gap-3 bg-white/5">
-            <div className="relative group flex-1 max-w-xs min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors" size={16} />
-              <input 
-                type="text" 
-                placeholder="Search by name, email or discord..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-950/50 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder:text-slate-600 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 outline-none transition-all"
-              />
-            </div>
-
-            <div className="min-w-[200px]">
-              <SearchableSelect
-                options={[
-                  { value: 'all', label: 'All Roles' },
-                  ...TEAM_ROLES.map(role => ({ value: role, label: role }))
-                ]}
-                value={roleFilter}
-                onChange={setRoleFilter}
-                placeholder="Filter by Role"
-              />
-            </div>
-
-            <FilterDropdown 
-                label="Status" 
-                options={[
-                    { id: 'all', label: 'All Statuses' },
-                    { id: 'active', label: 'Active', icon: <UserCheck size={14} className="text-emerald-400" /> },
-                    { id: 'inactive', label: 'Inactive', icon: <UserX size={14} className="text-slate-500" /> }
-                ]} 
-                selectedId={statusFilter} 
-                onSelect={setStatusFilter} 
-            />
-            
-            <div className="h-6 w-px bg-white/10 mx-1 hidden lg:block"></div>
-
-            <button 
-              onClick={() => setIsPermissionsModalOpen(true)}
-              className="ml-auto hidden lg:flex items-center gap-2 px-3 py-2 text-slate-400 hover:text-white transition-colors text-sm font-medium"
-            >
-              Manage permissions <ExternalLink size={14} className="opacity-50" />
-            </button>
-          </div>
-
-          {/* Professional Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1000px]">
-              <thead className="sticky top-0 bg-slate-900 z-10">
-                <tr className="text-slate-500 text-[11px] uppercase tracking-wider font-bold border-b border-white/5">
-                  {viewMode === 'teams' ? (
-                    <>
-                      <th className="px-6 py-4">Team Name</th>
-                      <th className="px-6 py-4">Role in Team</th>
-                      <th className="px-6 py-4">Tickets</th>
-                      <th className="px-6 py-4 text-right">Action</th>
-                    </>
-                  ) : (
-                    <>
-                      <th className="px-6 py-4">Name</th>
-                      <th className="px-6 py-4 w-64">Contact</th>
-                      <th className="px-6 py-4 w-32">Role</th>
-                      <th className="px-6 py-4 w-40">Status</th>
-                      <th className="px-6 py-4 w-40">Joined</th>
-                      <th className="px-6 py-4 w-12"></th>
-                    </>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/[0.03]">
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-24 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                            <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                            <span className="text-slate-500 text-sm font-medium">Loading team...</span>
-                        </div>
-                    </td>
-                  </tr>
-                ) : (viewMode === 'teams' ? teams : currentMembers).length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-24 text-center">
-                        <div className="max-w-xs mx-auto text-slate-500">
-                            <Users className="mx-auto mb-4 opacity-10" size={48} />
-                            <p className="font-bold text-slate-400 mb-1">No {viewMode} found</p>
-                            <p className="text-xs">
-                              {viewMode === 'teams' 
-                                ? 'Create a team to start collaborating.' 
-                                : 'Try adjusting your search or invite a new teammate.'}
-                            </p>
-                        </div>
-                    </td>
-                  </tr>
-                ) : viewMode === 'teams' ? (
-                  teams.map((team) => (
-                    <tr 
-                      key={team.id} 
-                      onClick={() => {
-                        navigate(`/dashboard/team/${team.id}`);
-                        setCurrentPage(1);
-                      }}
-                      className="group hover:bg-white/[0.02] transition-colors cursor-pointer"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-slate-800 border border-white/5 flex items-center justify-center text-xs font-bold text-white uppercase bg-gradient-to-br from-blue-500 to-indigo-600">
-                            {team.name[0]}
-                          </div>
-                          <span className="text-sm font-bold text-slate-200">{team.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                         <span className="text-xs text-slate-400">Owner/Admin</span>
-                      </td>
-                      <td className="px-6 py-4">
-                         <span className="text-xs text-slate-400">--</span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                         <div className="flex justify-end gap-2 text-right">
-                             <button className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all">
-                                View Details <ExternalLink size={10} />
-                             </button>
-                             <button 
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 handleDeleteTeam(team.id, team.name);
-                               }}
-                               className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition-all border border-red-500/20"
-                               title="Delete Team"
-                             >
-                                <Trash2 size={14} />
-                             </button>
-                         </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  currentMembers.map((member) => {
-                    const profile = member.profiles || { full_name: 'Unknown', email: 'No Email', avatar_url: '' };
-                    return (
-                      <tr key={member.id} className="group hover:bg-white/[0.02] transition-colors cursor-pointer">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-slate-800 border border-white/5 flex items-center justify-center text-xs font-bold text-white overflow-hidden uppercase bg-gradient-to-br from-indigo-500 to-purple-600">
-                                {profile.avatar_url ? (
-                                    <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                                ) : (
-                                    <span>{profile.full_name?.[0] || profile.email?.[0] || 'U'}</span>
-                                )}
-                            </div>
-                            <span className="text-sm font-medium text-slate-200">
-                                {profile.full_name || profile.email?.split('@')[0]}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-1">
-                             <div className="flex items-center gap-2 text-slate-400 text-xs">
-                                <Mail size={12} className="opacity-50" />
-                                {profile.email || member.email || 'No email linked'}
-                             </div>
-                             {(profile.discord_id || member.discord_id) && (
-                               <div className="flex items-center gap-2 text-primary/70 text-[10px] font-bold">
-                                  <Users size={12} className="opacity-50" />
-                                  {profile.discord_id || member.discord_id}
-                               </div>
-                             )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 min-w-[180px]">
-                          {member.role === 'Admin' ? (
-                            <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border flex items-center gap-1.5 w-fit ${getRoleColor(member.role)}`}>
-                                <Shield size={10} /> {member.role}
-                            </span>
-                          ) : (
-                            <SearchableSelect
-                              options={TEAM_ROLES.map(role => ({ value: role, label: role }))}
-                              value={member.role}
-                              onChange={(newRole) => handleUpdateRole(member.id, newRole)}
-                              className="text-xs"
-                            />
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className={`flex items-center gap-2 ${member.status === 'invited' ? 'text-amber-400' : 'text-green-400'}`}>
-                             {member.status === 'invited' ? <Clock size={14} /> : <UserCheck size={14} />}
-                             <span className="text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">
-                                {member.status || 'Active'}
-                             </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                           <div className="flex items-center gap-2 text-slate-500 text-xs">
-                              <Calendar size={12} className="opacity-50" />
-                              {new Date(member.joined_at).toLocaleDateString()}
-                           </div>
-                        </td>
-                        <td className="px-6 py-4 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); handleRemoveMember(member.id, profile.full_name || member.email || 'this member'); }}
-                            className="text-slate-600 hover:text-red-500 transition-colors p-2"
-                            title="Remove member"
-                          >
-                              <UserX size={16} />
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Real Pagination Footer */}
-          <div className="p-4 bg-white/5 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500">
-            <div className="flex items-center gap-4">
-               <div className="flex items-center gap-2 grayscale opacity-50 cursor-pointer hover:opacity-100 transition-opacity">
-                   <MoreHorizontal size={14} /> <span>Give feedback</span>
-               </div>
-               <span>Showing {Math.min((currentPage-1)*pageSize + 1, members.length)}-{Math.min(currentPage*pageSize, members.length)} of {members.length}</span>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 disabled:opacity-20 transition-colors"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              
-              {[...Array(totalPages)].map((_, i) => (
-                <button 
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
-                    currentPage === i + 1 
-                      ? 'bg-primary text-white shadow-lg shadow-primary/20' 
-                      : 'hover:bg-white/5'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-
-              <button 
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 disabled:opacity-20 transition-colors"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </ProGate>
-
-      {/* Invite Modal */}
-      {isInviteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-          <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-white/5 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">Invite Team Member</h2>
-              <button onClick={() => setIsInviteModalOpen(false)} className="text-slate-500 hover:text-white transition-colors">
-                <MoreHorizontal size={20} />
-              </button>
-            </div>
-            <form className="p-6 space-y-4" onSubmit={handleInvite}>
-               <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-1.5">Discord ID or Email</label>
-                  <input 
-                    type="text" 
-                    required
-                    value={inviteIdentifier}
-                    onChange={(e) => setInviteIdentifier(e.target.value)}
-                    placeholder="Discord ID (e.g. 123456) or Email"
-                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-primary transition-all"
-                  />
-               </div>
-               <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-1.5">Role</label>
-                  <SearchableSelect
-                    options={TEAM_ROLES.map(role => ({ value: role, label: role }))}
-                    value={inviteRole}
-                    onChange={setInviteRole}
-                    placeholder="Select a role..."
-                  />
-               </div>
-               <div className="pt-4 flex gap-3">
-                  <button type="button" onClick={() => setIsInviteModalOpen(false)} className="flex-1 py-2.5 text-sm font-bold text-slate-400 hover:text-white transition-colors">Cancel</button>
-                  <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-primary hover:bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all disabled:opacity-50">
-                    {loading ? 'Sending...' : 'Send Invitation'}
-                  </button>
-               </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Permissions Overview Modal */}
-      {isPermissionsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-          <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-white/5 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                 <Shield className="text-primary" />
-                 <h2 className="text-xl font-bold text-white">Role Permissions</h2>
-              </div>
-              <button onClick={() => setIsPermissionsModalOpen(false)} className="text-slate-500 hover:text-white transition-colors">
-                 <MoreHorizontal size={20} />
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto max-h-[70vh]">
-               <div className="grid grid-cols-2 gap-8">
-                  <div>
-                     <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 border-b border-white/5 pb-2">Admin</h3>
-                     <ul className="space-y-3 text-sm text-slate-300">
-                        <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400" /> Manage team & roles</li>
-                        <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400" /> Delete any work item</li>
-                        <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400" /> View financial analytics</li>
-                        <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400" /> Manage subscriptions</li>
-                     </ul>
-                  </div>
-                  <div>
-                     <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 border-b border-white/5 pb-2">Member</h3>
-                     <ul className="space-y-3 text-sm text-slate-300">
-                        <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400" /> Create tickets</li>
-                        <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400" /> Edit assigned tickets</li>
-                        <li className="flex items-center gap-2"><Check size={14} className="text-emerald-400" /> Comment on tasks</li>
-                        <li className="flex items-center gap-2 text-slate-600 italic">No admin access</li>
-                     </ul>
-                  </div>
-               </div>
-            </div>
-            <div className="p-6 bg-white/5 border-t border-white/5 text-right">
-               <button onClick={() => setIsPermissionsModalOpen(false)} className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-sm font-bold transition-all">Close</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Create Team Modal */}
       {isCreateTeamModalOpen && (
         <CreateTeamModal 
           onClose={() => setIsCreateTeamModalOpen(false)}
           onTeamCreated={(_teamId) => {
-            // Trigger re-fetch
-            setCurrentPage(1);
-            setRoleFilter(prev => prev); 
+            refreshData();
+            if (currentPage !== 1) setCurrentPage(1);
           }}
         />
       )}
+
+      <InviteModal 
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        onSubmit={handleInvite}
+        inviteIdentifier={inviteIdentifier}
+        setInviteIdentifier={setInviteIdentifier}
+        inviteRole={inviteRole}
+        setInviteRole={setInviteRole}
+        loading={loading}
+      />
+
+      <PermissionsModal 
+        isOpen={isPermissionsModalOpen}
+        onClose={() => setIsPermissionsModalOpen(false)}
+      />
     </div>
   );
 };
