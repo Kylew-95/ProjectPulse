@@ -1,0 +1,34 @@
+Traceback (most recent call last):
+  File "E:\2nd drive files\School of code\SOC lessons\playground Apps\ProjectPulse\pythonPulse\src\main.py", line 52, in main
+    sync_plan_tiers()
+    ~~~~~~~~~~~~~~~^^
+  File "E:\2nd drive files\School of code\SOC lessons\playground Apps\ProjectPulse\pythonPulse\src\plan_tiers.py", line 52, in sync_plan_tiers
+    print("\U0001f680 Starting Plan Tiers Sync...")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f680' in position 0: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "E:\2nd drive files\School of code\SOC lessons\playground Apps\ProjectPulse\pythonPulse\src\main.py", line 81, in <module>
+    asyncio.run(main())
+    ~~~~~~~~~~~^^^^^^^^
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "E:\2nd drive files\School of code\SOC lessons\playground Apps\ProjectPulse\pythonPulse\src\main.py", line 54, in main
+    print(f"\u26a0\ufe0f Failed to sync plan tiers on startup: {e}")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>

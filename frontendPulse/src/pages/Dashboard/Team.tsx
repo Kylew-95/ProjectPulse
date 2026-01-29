@@ -13,11 +13,12 @@ import {
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
-  Mail,
-  Calendar,
   UserCheck,
   UserX,
-  Check
+  Check,
+  Clock,
+  Mail,
+  Calendar
 } from 'lucide-react';
 import ProGate from '../../components/ui/ProGate';
 import Breadcrumbs from '../../components/ui/Breadcrumbs';
@@ -29,11 +30,14 @@ interface TeamMember {
     user_id: string;
     role: string;
     created_at: string;
-    status?: string;
+    status: string;
+    email?: string;
+    discord_id?: string;
     profiles?: {
         full_name: string;
         email: string;
         avatar_url: string;
+        discord_id?: string;
     }
 }
 
@@ -46,6 +50,9 @@ const Team = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
+  const [currentTeam, setCurrentTeam] = useState<{ id: string } | null>(null);
+  const [inviteIdentifier, setInviteIdentifier] = useState(''); // Email or Discord ID
+  const [inviteRole, setInviteRole] = useState('Member');
 
   // Real Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -65,11 +72,30 @@ const Team = () => {
                 .maybeSingle();
 
             if (!existing) {
-                await supabase.from('team_members').insert({
-                    user_id: user.id,
-                    role: 'Admin',
-                });
+                // If no team member record, and we are user, let's create a default team or join one
+                const { data: teamsOwned } = await supabase.from('teams').select('id').eq('owner_id', user.id).maybeSingle();
+                let teamId = teamsOwned?.id;
+
+                if (!teamId) {
+                    const { data: newTeam, error: createError } = await supabase.from('teams').insert({
+                        name: `${user.user_metadata?.name || 'Personal'}'s Team`,
+                        owner_id: user.id
+                    }).select().single();
+                    if (!createError) teamId = newTeam.id;
+                }
+
+                if (teamId) {
+                    await supabase.from('team_members').insert({
+                        team_id: teamId,
+                        user_id: user.id,
+                        role: 'Admin',
+                    });
+                }
             }
+
+            // Get current team context
+            const { data: memberRecord } = await supabase.from('team_members').select('team_id').eq('user_id', user.id).maybeSingle();
+            if (memberRecord) setCurrentTeam({ id: memberRecord.team_id });
 
             // 2. Fetch total count with filters
             let countQuery = supabase
@@ -103,7 +129,7 @@ const Team = () => {
             if (userIds.length > 0) {
                  let profilesQuery = supabase
                     .from('profiles')
-                    .select('id, full_name, email, avatar_url, subscription_tier');
+                    .select('id, full_name, email, avatar_url, subscription_tier, discord_id');
                 
                 if (searchQuery) {
                     profilesQuery = profilesQuery.or(`full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
@@ -134,6 +160,39 @@ const Team = () => {
     syncAndFetchTeam();
   }, [user, currentPage, roleFilter, searchQuery]); // Re-fetch on filter change
 
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentTeam || !inviteIdentifier) {
+        alert('Missing team context or identifier');
+        return;
+    }
+    
+    setLoading(true);
+    try {
+      const isDiscord = !inviteIdentifier.includes('@');
+      
+      const { error } = await supabase.from('team_members').insert({
+        team_id: currentTeam.id,
+        [isDiscord ? 'discord_id' : 'email']: inviteIdentifier,
+        role: inviteRole,
+        status: 'invited'
+      });
+
+      if (error) throw error;
+      
+      setIsInviteModalOpen(false);
+      setInviteIdentifier('');
+      // Trigger re-fetch
+      setCurrentPage(1);
+      alert('Invitation sent successfully!');
+    } catch (err: any) {
+      console.error('Error inviting member:', err);
+      alert(`Error: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getRoleColor = (role: string) => {
     switch (role?.toLowerCase()) {
       case 'admin': return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
@@ -144,9 +203,10 @@ const Team = () => {
   const handleExport = () => {
     const exportData = members.map(m => ({
       Name: m.profiles?.full_name || 'Unknown',
-      Email: m.profiles?.email || 'No Email',
+      Email: m.profiles?.email || m.email || 'No Email',
+      Discord: m.profiles?.discord_id || m.discord_id || 'None',
       Role: m.role,
-      Status: 'Active',
+      Status: m.status || 'Active',
       Joined: new Date(m.created_at).toLocaleDateString()
     }));
     exportToCSV(exportData, `team-export-${new Date().toISOString().split('T')[0]}`);
@@ -193,7 +253,7 @@ const Team = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors" size={16} />
               <input 
                 type="text" 
-                placeholder="Search by name or email..." 
+                placeholder="Search by name, email or discord..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-slate-950/50 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder:text-slate-600 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 outline-none transition-all"
@@ -238,7 +298,7 @@ const Team = () => {
               <thead className="sticky top-0 bg-slate-900 z-10">
                 <tr className="text-slate-500 text-[11px] uppercase tracking-wider font-bold border-b border-white/5">
                   <th className="px-6 py-4">Name</th>
-                  <th className="px-6 py-4 w-64">Email</th>
+                  <th className="px-6 py-4 w-64">Contact</th>
                   <th className="px-6 py-4 w-32">Role</th>
                   <th className="px-6 py-4 w-40">Status</th>
                   <th className="px-6 py-4 w-40">Joined</th>
@@ -285,9 +345,17 @@ const Team = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-2 text-slate-400 text-xs">
-                             <Mail size={12} className="opacity-50" />
-                             {profile.email}
+                          <div className="flex flex-col gap-1">
+                             <div className="flex items-center gap-2 text-slate-400 text-xs">
+                                <Mail size={12} className="opacity-50" />
+                                {profile.email || member.email || 'No email linked'}
+                             </div>
+                             {(profile.discord_id || member.discord_id) && (
+                               <div className="flex items-center gap-2 text-primary/70 text-[10px] font-bold">
+                                  <Users size={12} className="opacity-50" />
+                                  {profile.discord_id || member.discord_id}
+                               </div>
+                             )}
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -297,9 +365,11 @@ const Team = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-2 text-green-400">
-                             <UserCheck size={14} />
-                             <span className="text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">Active</span>
+                          <div className={`flex items-center gap-2 ${member.status === 'invited' ? 'text-amber-400' : 'text-green-400'}`}>
+                             {member.status === 'invited' ? <Clock size={14} /> : <UserCheck size={14} />}
+                             <span className="text-[11px] font-bold uppercase tracking-wider whitespace-nowrap">
+                                {member.status || 'Active'}
+                             </span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -375,26 +445,34 @@ const Team = () => {
                 <MoreHorizontal size={20} />
               </button>
             </div>
-            <form className="p-6 space-y-4" onSubmit={(e) => { e.preventDefault(); setIsInviteModalOpen(false); alert('System: Invitation would be sent to the backend.'); }}>
+            <form className="p-6 space-y-4" onSubmit={handleInvite}>
                <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-1.5">Email Address</label>
+                  <label className="block text-sm font-medium text-slate-400 mb-1.5">Discord ID or Email</label>
                   <input 
-                    type="email" 
+                    type="text" 
                     required
-                    placeholder="teammate@example.com"
+                    value={inviteIdentifier}
+                    onChange={(e) => setInviteIdentifier(e.target.value)}
+                    placeholder="Discord ID (e.g. 123456) or Email"
                     className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-primary transition-all"
                   />
                </div>
                <div>
                   <label className="block text-sm font-medium text-slate-400 mb-1.5">Role</label>
-                  <select className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-primary transition-all appearance-none">
+                  <select 
+                    value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value)}
+                    className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2.5 text-white outline-none focus:border-primary transition-all appearance-none"
+                  >
                     <option value="Member">Member</option>
                     <option value="Admin">Admin</option>
                   </select>
                </div>
                <div className="pt-4 flex gap-3">
                   <button type="button" onClick={() => setIsInviteModalOpen(false)} className="flex-1 py-2.5 text-sm font-bold text-slate-400 hover:text-white transition-colors">Cancel</button>
-                  <button type="submit" className="flex-1 py-2.5 bg-primary hover:bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all">Send Invitation</button>
+                  <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-primary hover:bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all disabled:opacity-50">
+                    {loading ? 'Sending...' : 'Send Invitation'}
+                  </button>
                </div>
             </form>
           </div>

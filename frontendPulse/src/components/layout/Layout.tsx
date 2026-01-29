@@ -4,6 +4,7 @@ import { LayoutDashboard, Ticket, BarChart2, Settings, Users, LogOut } from 'luc
 import { supabase } from '../../supabaseClient';
 import SidebarProfile from './SidebarProfile';
 import CommandPalette from '../ui/CommandPalette';
+import OnboardingTour from '../ui/OnboardingTour';
 
 const Layout = () => {
   const location = useLocation();
@@ -22,6 +23,7 @@ const Layout = () => {
 
   return (
     <div className="flex h-screen bg-background text-white selection:bg-primary/30 scroll-smooth">
+      <OnboardingTour />
       <CommandPalette />
       {/* Sidebar - Glassmorphism */}
       <aside className="w-64 border-r border-white/5 bg-slate-900/50 backdrop-blur-xl flex flex-col fixed inset-y-0 z-50 transition-all duration-300">

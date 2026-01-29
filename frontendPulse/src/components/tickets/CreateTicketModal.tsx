@@ -6,16 +6,18 @@ import { useAuth } from '../../context/AuthContext';
 interface CreateTicketModalProps {
   onClose: () => void;
   onTicketCreated: () => void;
+  teamId: string | null;
 }
 
-const CreateTicketModal = ({ onClose, onTicketCreated }: CreateTicketModalProps) => {
+const CreateTicketModal = ({ onClose, onTicketCreated, teamId }: CreateTicketModalProps) => {
   const { session } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     priority: 'medium',
-    status: 'open'
+    status: 'open',
+    urgency: 50 // Default urgency
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,11 +25,16 @@ const CreateTicketModal = ({ onClose, onTicketCreated }: CreateTicketModalProps)
     setLoading(true);
 
     try {
+      if (!teamId) {
+        throw new Error('No team assigned. Please join or create a team first.');
+      }
+
       const { error } = await supabase.from('tickets').insert([
         {
           ...formData,
           user_id: session?.user?.id,
-          // assignee: null // Optional
+          reporter_id: session?.user?.id,
+          team_id: teamId
         }
       ]);
 
