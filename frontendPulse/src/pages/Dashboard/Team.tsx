@@ -57,7 +57,7 @@ const Team = () => {
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
   const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<{ id: string; name: string } | null>(null);
-  const [teams, setTeams] = useState<{ id: string; name: string }[]>([]);
+  const [teams, setTeams] = useState<{ id: string; name: string; members: { id: string; user_id: string; avatar_url: string | null }[] }[]>([]);
   const [inviteIdentifier, setInviteIdentifier] = useState('');
   const [inviteRole, setInviteRole] = useState('Developer');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -84,13 +84,73 @@ const Team = () => {
 
                 if (memberError) throw memberError;
 
+                const teamIds = memberRecords
+                    ?.filter(m => m.teams)
+                    .map(m => {
+                        const t = m.teams as any;
+                        return Array.isArray(t) ? t[0].id : t.id;
+                    }) || [];
+
+
+                // Fetch members for these teams separately to avoid nested query issues
+                let allMembers: any[] = [];
+                if (teamIds.length > 0) {
+                    console.log('🔍 Fetching members for team IDs:', teamIds);
+                    
+                    // Fetch team_members WITHOUT the profiles join
+                    const { data: membersData, error: membersError } = await supabase
+                        .from('team_members')
+                        .select('team_id, user_id')
+                        .in('team_id', teamIds);
+
+                    if (membersError) {
+                        console.error('❌ Error fetching team members:', membersError);
+                    } else if (membersData && membersData.length > 0) {
+                        // Get unique user IDs
+                        const userIds = [...new Set(membersData.map(m => m.user_id))];
+                        
+                        // Fetch profiles separately
+                        const { data: profilesData, error: profilesError } = await supabase
+                            .from('profiles')
+                            .select('id, avatar_url')
+                            .in('id', userIds);
+
+                        if (profilesError) {
+                            console.error('❌ Error fetching profiles:', profilesError);
+                        }
+
+                        // Merge members with their profiles
+                        allMembers = membersData.map(member => ({
+                            team_id: member.team_id,
+                            user_id: member.user_id,
+                            profiles: profilesData?.find(p => p.id === member.user_id) || null
+                        }));
+                    }
+                    
+                    console.log('✅ Fetched team members:', allMembers);
+                }
+
                 const userTeams = memberRecords
                     ?.filter(m => m.teams)
                     .map(m => {
                         const t = Array.isArray(m.teams) ? m.teams[0] : m.teams;
-                        return { id: t.id, name: t.name };
+                        const teamMembers = allMembers?.filter(am => am.team_id === t.id) || [];
+                        
+                        console.log(`📊 Team "${t.name}" has ${teamMembers.length} members:`, teamMembers);
+                        
+                        return { 
+                            id: t.id, 
+                            name: t.name,
+                            members: teamMembers.map((tm: any) => ({
+                                id: tm.user_id,
+                                user_id: tm.user_id,
+                                avatar_url: tm.profiles?.avatar_url || null,
+                                profiles: tm.profiles
+                            }))
+                        };
                     }) || [];
-
+                
+                console.log('🎯 Final userTeams:', userTeams);
                 setTeams(userTeams);
                 setTotalCount(userTeams.length);
                 setMembers([]);
@@ -109,24 +169,45 @@ const Team = () => {
                 const from = (currentPage - 1) * pageSize;
                 const to = from + pageSize - 1;
 
+                // Fetch team_members WITHOUT profiles join
                 let query = supabase
                     .from('team_members')
-                    .select(`
-                        id, user_id, email, discord_id, role, status,
-                        profiles(full_name, avatar_url, email)
-                    `, { count: 'exact' })
+                    .select('id, user_id, email, discord_id, role, status', { count: 'exact' })
                     .eq('team_id', teamId);
 
                 if (roleFilter !== 'all') query = query.eq('role', roleFilter);
                 if (statusFilter !== 'all') query = query.eq('status', statusFilter);
-                if (searchQuery) query = query.or(`email.ilike.%${searchQuery}%,profiles.full_name.ilike.%${searchQuery}%`);
+                if (searchQuery) query = query.or(`email.ilike.%${searchQuery}%`);
 
-                const { data, error, count } = await query
-                    .order('created_at', { ascending: false })
+                const { data: membersData, error, count } = await query
                     .range(from, to);
 
                 if (error) throw error;
-                setMembers(data as any || []);
+
+                // Fetch profiles separately for these members
+                if (membersData && membersData.length > 0) {
+                    const userIds = membersData.map(m => m.user_id).filter(Boolean);
+                    
+                    if (userIds.length > 0) {
+                        const { data: profilesData } = await supabase
+                            .from('profiles')
+                            .select('id, full_name, avatar_url, email')
+                            .in('id', userIds);
+
+                        // Merge profiles into members
+                        const mergedMembers = membersData.map(member => ({
+                            ...member,
+                            profiles: profilesData?.find(p => p.id === member.user_id) || null
+                        }));
+
+                        setMembers(mergedMembers as any);
+                    } else {
+                        setMembers(membersData as any);
+                    }
+                } else {
+                    setMembers([]);
+                }
+                
                 setTotalCount(count || 0);
             }
         } catch (err: any) {
@@ -270,7 +351,10 @@ const Team = () => {
       {isCreateTeamModalOpen && (
         <CreateTeamModal 
           onClose={() => setIsCreateTeamModalOpen(false)}
-          onTeamCreated={(_teamId) => {
+          onTeamCreated={async (_teamId) => {
+            setIsCreateTeamModalOpen(false);
+            // Small delay to ensure DB write completes
+            await new Promise(resolve => setTimeout(resolve, 500));
             refreshData();
             if (currentPage !== 1) setCurrentPage(1);
           }}

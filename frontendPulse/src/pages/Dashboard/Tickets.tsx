@@ -74,7 +74,12 @@ const Tickets = () => {
           teams(name)
         `, { count: 'exact' });
 
-      if (selectedTeamId !== 'all') query = query.eq('team_id', selectedTeamId);
+      // Only filter by team if a specific team is selected (not 'all')
+      if (selectedTeamId !== 'all') {
+        query = query.eq('team_id', selectedTeamId);
+      }
+      // When 'all' is selected, show all tickets (including those with null team_id)
+      
       if (searchQuery) query = query.ilike('title', `%${searchQuery}%`);
       if (statusFilter !== 'all') query = query.eq('status', statusFilter);
       if (priorityFilter !== 'all') query = query.eq('priority', priorityFilter);

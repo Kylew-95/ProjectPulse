@@ -6,6 +6,7 @@ import os
 import uvicorn
 from api import app as fastapi_app
 from plan_tiers import sync_plan_tiers
+from services.supabase_client import supabase
 
 import subprocess
 
@@ -21,13 +22,13 @@ async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
     
-    # Create "report-an-issue" channel in each guild if it doesn't exist
+    # Create "report-issues-with-pulse" channel in each guild if it doesn't exist
     for guild in bot.guilds:
-        channel = discord.utils.get(guild.text_channels, name="report-an-issue")
+        channel = discord.utils.get(guild.text_channels, name="report-issues-with-pulse")
         if not channel:
             try:
-                await guild.create_text_channel("report-an-issue")
-                print(f"Created #report-an-issue in {guild.name}")
+                await guild.create_text_channel("report-issues-with-pulse")
+                print(f"Created #report-issues-with-pulse in {guild.name}")
             except Exception as e:
                 print(f"Failed to create channel in {guild.name}: {e}")
     
@@ -44,12 +45,45 @@ async def on_ready():
         
 @bot.event
 async def on_guild_join(guild):
-    """Automatically create the required channel when joining a new server."""
-    channel = discord.utils.get(guild.text_channels, name="report-an-issue")
+    """Automatically create the required channel and link server to owner's profile."""
+    print(f"🎉 Bot joined server: {guild.name}")
+    print(f"📋 Server ID: {guild.id}")
+    print(f"👥 Member count: {guild.member_count}")
+    print(f"👑 Owner ID: {guild.owner_id}")
+    
+    # Automatically link this Discord server to the owner's profile
+    try:
+        
+        # Find the profile by Discord user ID (owner_id)
+        # First, check if there's already a profile with this discord_guild_id
+        existing = supabase.table("profiles").select("id, email").eq("discord_guild_id", str(guild.id)).execute()
+        
+        if existing.data:
+            print(f"✅ Server already linked to profile: {existing.data[0].get('email')}")
+        else:
+            # Try to find owner's profile by their Discord ID in auth.users
+            # Since we use Discord OAuth, the user's Discord ID is stored as the user's id
+            owner_profile = supabase.table("profiles").select("id, email, discord_guild_id").eq("id", str(guild.owner_id)).execute()
+            
+            if owner_profile.data and len(owner_profile.data) > 0:
+                profile = owner_profile.data[0]
+                # Update the owner's profile with this guild ID
+                supabase.table("profiles").update({
+                    "discord_guild_id": str(guild.id)
+                }).eq("id", str(guild.owner_id)).execute()
+                print(f"✅ Automatically linked server to owner's profile: {profile.get('email')}")
+            else:
+                print(f"⚠️ Could not find profile for server owner (Discord ID: {guild.owner_id})")
+                print(f"   Owner needs to sign up at ProjectPulse first!")
+    except Exception as e:
+        print(f"❌ Error auto-linking server: {e}")
+    
+    # Create the report channel
+    channel = discord.utils.get(guild.text_channels, name="report-issues-with-pulse")
     if not channel:
         try:
-            await guild.create_text_channel("report-an-issue")
-            print(f"Created #report-an-issue in {guild.name} (on join)")
+            await guild.create_text_channel("report-issues-with-pulse")
+            print(f"Created #report-issues-with-pulse in {guild.name} (on join)")
         except Exception as e:
             print(f"Failed to create channel in {guild.name} on join: {e}")
 

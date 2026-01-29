@@ -23,21 +23,29 @@ class SupabaseTicketService(TicketService):
     def create_ticket(self, report_data):
         import uuid
         user_id = report_data.get("user_id")
-        discord_id = None
+        discord_id = str(user_id) if user_id else None
         supabase_uuid = None
 
-        # Check if user_id is a valid UUID (Supabase) or just a Discord ID (string/int)
-        try:
-            if user_id:
-                uuid.UUID(str(user_id))
-                supabase_uuid = user_id
-        except ValueError:
-            # Not a UUID, treated as Discord ID
-            discord_id = str(user_id)
+        # Try to find the user's Supabase UUID by their Discord ID
+        if discord_id:
+            try:
+                # Look up the user's Supabase profile by their discord_user_id
+                profile_result = supabase.table("profiles").select("id").eq("discord_user_id", discord_id).execute()
+                
+                if profile_result.data and len(profile_result.data) > 0:
+                    supabase_uuid = profile_result.data[0].get("id")
+                    print(f"✅ Found Supabase UUID for Discord user {discord_id}: {supabase_uuid}")
+                else:
+                    print(f"⚠️ No Supabase profile found for Discord user ID: {discord_id}")
+                    print(f"   User needs to sign up at ProjectPulse with their Discord account!")
+            except Exception as e:
+                print(f"❌ Error looking up user: {e}")
 
         data = {
             "reporter_id": supabase_uuid,
+            "team_id": None,  # Let users manually assign tickets to teams
             "discord_id": discord_id,
+            "discord_guild_id": report_data.get("guild_id"),  # Discord server ID for reference
             "user_name": report_data["user"],
             "description": report_data["original_issue"],
             "title": report_data.get("summary") or report_data.get("final_summary"),
@@ -52,6 +60,7 @@ class SupabaseTicketService(TicketService):
 
         try:
             supabase.table("tickets").insert(data).execute()
+            print(f"✅ Ticket created with reporter_id: {supabase_uuid}")
             return "Saved to Supabase Database"
 
 

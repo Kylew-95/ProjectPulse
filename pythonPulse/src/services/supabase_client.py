@@ -32,23 +32,30 @@ def get_messages_last_24h():
 def check_guild_subscription(guild_id: int):
     """Checks if a Discord guild (by its ID) has an active subscription."""
     try:
+        print(f"🔎 Checking subscription for guild_id: {guild_id} (type: {type(guild_id)})")
+        
         # Match discord_guild_id in profiles
         # Note: We use str(guild_id) because it's stored as text in the DB
-        response = supabase.table("profiles").select("subscription_tier, status").eq("discord_guild_id", str(guild_id)).execute()
+        response = supabase.table("profiles").select("id, email, subscription_tier, status, discord_guild_id").eq("discord_guild_id", str(guild_id)).execute()
+        
+        print(f"📊 Query result: {response.data}")
         
         if not response.data:
+            print(f"❌ No profile found with discord_guild_id={guild_id}")
             return False, "This Discord server is not linked to an active ProjectPulse account. Use /link in the dashboard to connect."
         
         profile = response.data[0]
         tier = profile.get("subscription_tier", "free").lower()
         status = profile.get("status", "active").lower() # Default to active if status is missing but tier is set
         
+        print(f"✅ Found profile: {profile.get('email')}")
+        print(f"   Tier: {tier}")
+        print(f"   Status: {status}")
+        
         if tier in ["pro", "enterprise"]:
             return True, "Active"
         
         return False, "Your ProjectPulse plan (Free) does not include Daily Pulse summaries. Please upgrade to Pro."
     except Exception as e:
-        print(f"Error checking subscription: {e}")
+        print(f"❌ Error checking subscription: {e}")
         return False, f"Error verifying subscription status: {e}"
-
-

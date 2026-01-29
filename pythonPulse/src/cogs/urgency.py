@@ -37,6 +37,7 @@ class Urgency(commands.Cog):
                     "full_name": message.author.display_name,
                     "avatar_url": str(message.author.display_avatar.url),
                     "user_id": str(message.author.id),
+                    "guild_id": str(original_data['guild_id']),  # Discord server ID
                     "original_issue": original_data['content'],
                     "follow_up_details": message.content,
                     "summary": ai_report.get("summary", "New report from Discord"),
@@ -79,11 +80,19 @@ class Urgency(commands.Cog):
         # Only process messages in Guilds (Servers)
         if not message.guild:
             return
+        
+        # Only respond in #report-issues-with-pulse channel
+        if message.channel.name != "report-issues-with-pulse":
+            return
 
         # ---------------------------------------------------------
         # 3. PLAN TIER ENFORCEMENT
         # ---------------------------------------------------------
         is_active, sub_msg = check_guild_subscription(message.guild.id)
+        print(f"\n🔍 SUBSCRIPTION CHECK for Guild {message.guild.name} (ID: {message.guild.id})")
+        print(f"   Active: {is_active}")
+        print(f"   Message: {sub_msg}\n")
+        
         if not is_active:
             # Only notify once per bot session per guild to avoid spam
             if message.guild.id not in self.notified_guilds:
@@ -109,7 +118,8 @@ class Urgency(commands.Cog):
                     self.active_reports[message.author.id] = {
                         "content": message.content,
                         "score": score,
-                        "channel_id": message.channel.id
+                        "channel_id": message.channel.id,
+                        "guild_id": message.guild.id  # Store Discord server ID
                     }
 
                     # A. NOTIFY ADMINS (Private)
