@@ -7,8 +7,8 @@ interface DemoSectionProps {
     children: ReactNode;
     icon: LucideIcon;
     iconColor: string;
-    screenshotSrc: string;
-    screenshotAlt: string;
+    screenshotSrc?: string;
+    screenshotAlt?: string;
     onImageClick: (src: string) => void;
 }
 
@@ -19,7 +19,7 @@ const DemoSection = ({
     icon: Icon, 
     iconColor, 
     screenshotSrc, 
-    screenshotAlt, 
+    screenshotAlt = "Screenshot", 
     onImageClick 
 }: DemoSectionProps) => {
     
@@ -53,23 +53,25 @@ const DemoSection = ({
                 {children}
             </div>
 
-            <div className={`bg-slate-900/50 border border-white/10 rounded-2xl p-4 overflow-hidden shadow-2xl transition-all group ${colorClasses.shadow} ${colorClasses.hoverBorder}`}>
-                <div className="aspect-video bg-slate-800/50 rounded-xl flex items-center justify-center relative overflow-hidden">
-                     <div 
-                        className="w-full h-full flex items-center justify-center bg-slate-800/50 cursor-pointer group/image relative"
-                        onClick={() => onImageClick(screenshotSrc)}
-                    >
-                        <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/10 transition-colors flex items-center justify-center z-10 rounded-xl">
-                            <ZoomIn className="text-white opacity-0 group-hover/image:opacity-100 transition-opacity transform scale-75 group-hover/image:scale-100" />
+            {screenshotSrc && (
+                <div className={`bg-slate-900/50 border border-white/10 rounded-2xl p-4 overflow-hidden shadow-2xl transition-all group ${colorClasses.shadow} ${colorClasses.hoverBorder}`}>
+                    <div className="aspect-video bg-slate-800/50 rounded-xl flex items-center justify-center relative overflow-hidden">
+                        <div 
+                            className="w-full h-full flex items-center justify-center bg-slate-800/50 cursor-pointer group/image relative"
+                            onClick={() => onImageClick(screenshotSrc)}
+                        >
+                            <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/10 transition-colors flex items-center justify-center z-10 rounded-xl">
+                                <ZoomIn className="text-white opacity-0 group-hover/image:opacity-100 transition-opacity transform scale-75 group-hover/image:scale-100" />
+                            </div>
+                            <img 
+                                src={screenshotSrc} 
+                                alt={screenshotAlt} 
+                                className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover/image:scale-105"
+                            />
                         </div>
-                        <img 
-                            src={screenshotSrc} 
-                            alt={screenshotAlt} 
-                            className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover/image:scale-105"
-                        />
                     </div>
                 </div>
-            </div>
+            )}
         </section>
     );
 };
