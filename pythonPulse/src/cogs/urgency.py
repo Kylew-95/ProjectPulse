@@ -112,7 +112,7 @@ class Urgency(commands.Cog):
             return
         
         # Only respond in #report-issues-with-pulse channel
-        if message.channel.name != "report-issues-with-pulse":
+        if message.channel.name.lower() != "report-issues-with-pulse":
             return
 
         # ---------------------------------------------------------
@@ -140,89 +140,89 @@ class Urgency(commands.Cog):
             return
 
         # Urgency Check 
-            result = analyze_urgency(message.content)
-            # Result format: "Score|Reason"
-            try:
-                if "|" in result:
-                    score_str, reason = result.split("|", 1)
-                else:
-                    score_str = result
-                    reason = "No reason provided by AI"
+        result = analyze_urgency(message.content)
+        # Result format: "Score|Reason"
+        try:
+            if "|" in result:
+                score_str, reason = result.split("|", 1)
+            else:
+                score_str = result
+                reason = "No reason provided by AI"
+            
+            score = int(score_str)
+
+            if score >= 5:
+                # Create Ticket IMMEDIATELY (Preliminary Report)
+                pre_report = generate_detailed_ticket(message.content, "")
+                ticket_data = {
+                    "user": message.author.name,
+                    "full_name": message.author.display_name,
+                    "avatar_url": str(message.author.display_avatar.url),
+                    "user_id": str(message.author.id),
+                    "guild_id": str(message.guild.id),
+                    "original_issue": message.content,
+                    "follow_up_details": "Pending...",
+                    "summary": pre_report.get("summary", "New report from Discord"),
+                    "type": pre_report.get("type", "Support"),
+                    "priority": pre_report.get("priority", "Medium"),
+                    "location": pre_report.get("location", "Unknown"),
+                    "solution": pre_report.get("solution", "Analyzing report..."),
+                    "urgency_score": score,
+                    "origin_channel_id": str(message.channel.id),
+                    "status": "OPEN"
+                }
                 
-                score = int(score_str)
+                # Create ticket and get ID
+                ticket_id = self.ticket_service.create_ticket(ticket_data)
 
-                if score >= 5:
-                    # Create Ticket IMMEDIATELY (Preliminary Report)
-                    pre_report = generate_detailed_ticket(message.content, "")
-                    ticket_data = {
-                        "user": message.author.name,
-                        "full_name": message.author.display_name,
-                        "avatar_url": str(message.author.display_avatar.url),
-                        "user_id": str(message.author.id),
-                        "guild_id": str(message.guild.id),
-                        "original_issue": message.content,
-                        "follow_up_details": "Pending...",
-                        "summary": pre_report.get("summary", "New report from Discord"),
-                        "type": pre_report.get("type", "Support"),
-                        "priority": pre_report.get("priority", "Medium"),
-                        "location": pre_report.get("location", "Unknown"),
-                        "solution": pre_report.get("solution", "Analyzing report..."),
-                        "urgency_score": score,
-                        "origin_channel_id": str(message.channel.id),
-                        "status": "OPEN"
-                    }
-                    
-                    # Create ticket and get ID
-                    ticket_id = self.ticket_service.create_ticket(ticket_data)
+                # START ACTIVE TRACKING
+                self.active_reports[message.author.id] = {
+                    "content": message.content,
+                    "score": score,
+                    "channel_id": message.channel.id,
+                    "guild_id": message.guild.id,
+                    "ticket_id": ticket_id
+                }
 
-                    # START ACTIVE TRACKING
-                    self.active_reports[message.author.id] = {
-                        "content": message.content,
-                        "score": score,
-                        "channel_id": message.channel.id,
-                        "guild_id": message.guild.id,
-                        "ticket_id": ticket_id
-                    }
+                # A. NOTIFY ADMINS (Private)
+                admin_channel = discord.utils.get(message.guild.channels, name=".dev")
+                if not admin_channel:
+                        admin_channel = discord.utils.get(message.guild.channels, name="dev")
+                
+                if not admin_channel:
+                        try:
+                            overwrites = {
+                                message.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                                message.guild.me: discord.PermissionOverwrite(read_messages=True)
+                            }
+                            admin_channel = await message.guild.create_text_channel('dev', overwrites=overwrites)
+                        except:
+                            print("Could not create dev channel.")
 
-                    # A. NOTIFY ADMINS (Private)
-                    admin_channel = discord.utils.get(message.guild.channels, name=".dev")
-                    if not admin_channel:
-                         admin_channel = discord.utils.get(message.guild.channels, name="dev")
-                    
-                    if not admin_channel:
-                         try:
-                             overwrites = {
-                                 message.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                                 message.guild.me: discord.PermissionOverwrite(read_messages=True)
-                             }
-                             admin_channel = await message.guild.create_text_channel('dev', overwrites=overwrites)
-                         except:
-                             print("Could not create dev channel.")
+                if admin_channel:
+                    await admin_channel.send(
+                        f"Urgency Alert (Level {score}/10)\n"
+                        f"**User:** {message.author.mention}\n"
+                        f"**Reason:** {reason}\n"
+                        f"**Content:** {message.content}"
+                    )
 
-                    if admin_channel:
-                        await admin_channel.send(
-                            f"Urgency Alert (Level {score}/10)\n"
-                            f"**User:** {message.author.mention}\n"
-                            f"**Reason:** {reason}\n"
-                            f"**Content:** {message.content}"
-                        )
+                # B. FOLLOW-UP WITH USER (Direct Message - Dynamic)
+                follow_up = generate_followup_questions(message.content)
+                
+                try:
+                    await message.author.send(follow_up)
+                    await message.add_reaction("📩")
+                    await message.reply("Hey! I've sent you a DM to get a few more details so we can help you faster.")
+                except discord.Forbidden:
+                    # Fallback if DMs are closed
+                    await message.reply("I tried to DM you follow-up questions but your DMs are closed. Please check your settings!")
+                    # Clean up active report since we can't DM them
+                    if message.author.id in self.active_reports:
+                        del self.active_reports[message.author.id]
 
-                    # B. FOLLOW-UP WITH USER (Direct Message - Dynamic)
-                    follow_up = generate_followup_questions(message.content)
-                    
-                    try:
-                        await message.author.send(follow_up)
-                        await message.add_reaction("📩")
-                        await message.reply("Hey! I've sent you a DM to get a few more details so we can help you faster.")
-                    except discord.Forbidden:
-                        # Fallback if DMs are closed
-                        await message.reply("I tried to DM you follow-up questions but your DMs are closed. Please check your settings!")
-                        # Clean up active report since we can't DM them
-                        if message.author.id in self.active_reports:
-                            del self.active_reports[message.author.id]
-
-            except ValueError:
-                pass
+        except ValueError:
+            pass
 
     @commands.command(name="report")
     async def manual_report(self, ctx, *, issue_content: str = None):

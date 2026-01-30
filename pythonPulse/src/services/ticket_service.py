@@ -28,32 +28,38 @@ class SupabaseTicketService(TicketService):
         user_id = report_data.get("user_id")
         discord_id = str(user_id) if user_id else None
         supabase_uuid = None
-
-        # Try to find the user's Supabase UUID by their Discord ID
+        # Try to find the user's Supabase UUID and Team by their Discord ID
+        team_id = None
         if discord_id:
             try:
-                # Look up the user's Supabase profile by their discord_user_id
+                # 1. Find profile
                 profile_result = supabase.table("profiles").select("id").eq("discord_user_id", discord_id).execute()
                 
                 if profile_result.data and len(profile_result.data) > 0:
                     supabase_uuid = profile_result.data[0].get("id")
                     print(f"Found Supabase UUID for Discord user {discord_id}: {supabase_uuid}")
+                    
+                    # 2. Find Team (Lookup memberships)
+                    team_res = supabase.table("team_members").select("team_id").eq("user_id", supabase_uuid).limit(1).execute()
+                    if team_res.data:
+                        team_id = team_res.data[0].get("team_id")
+                        print(f"Automatically assigned ticket to team: {team_id}")
                 else:
                     print(f"Warning: No Supabase profile found for Discord user ID: {discord_id}")
                     print(f"   User needs to sign up at ProjectPulse with their Discord account!")
             except Exception as e:
-                print(f"Error looking up user: {e}")
+                print(f"Error looking up user/team: {e}")
 
         data = {
             "reporter_id": supabase_uuid,
-            "team_id": None,  # Let users manually assign tickets to teams
+            "team_id": team_id,
             "discord_id": discord_id,
-            "discord_guild_id": report_data.get("guild_id"),  # Discord server ID for reference
+            "discord_guild_id": report_data.get("guild_id"),
             "user_name": report_data["user"],
             "description": report_data["original_issue"],
             "title": report_data.get("summary") or report_data.get("final_summary"),
-            "urgency_score": report_data.get("urgency_score", 5),
-            "status": "open",
+            "urgency_score": int(report_data.get("urgency_score", 5)),
+            "status": (report_data.get("status") or "open").lower(),
             "type": (report_data.get("type") or "support").lower(),
             "priority": (report_data.get("priority") or "medium").lower(),
             "solution": report_data.get("solution"),
