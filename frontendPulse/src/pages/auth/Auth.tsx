@@ -1,11 +1,21 @@
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
+import { useAuth } from '../../context/AuthContext';
 import { ArrowRight, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export const Login = () => {
+  const { session } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (session) {
+      navigate('/dashboard/overview', { replace: true });
+    }
+  }, [session, navigate]);
 
   // Removed handleLogin since it's no longer used
 
@@ -63,8 +73,17 @@ export const Login = () => {
 };
 
 export const Signup = () => {
+    const { session } = useAuth();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Redirect if already logged in
+    useEffect(() => {
+      if (session) {
+        navigate('/dashboard/overview', { replace: true });
+      }
+    }, [session, navigate]);
   
     // Removed handleSignup
   
