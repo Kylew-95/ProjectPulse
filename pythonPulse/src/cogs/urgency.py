@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from services.ai_service import analyze_urgency, generate_followup_questions, generate_detailed_ticket
-from services.supabase_client import insert_message, check_guild_subscription
+from services.supabase_client import insert_message, check_guild_subscription, supabase
 from services.ticket_service import get_ticket_service
 import json
 
@@ -11,6 +11,7 @@ class Urgency(commands.Cog):
         self.active_reports = {}
         self.ticket_service = get_ticket_service()
         self.notified_guilds = set() # Simple anti-spam for no-tier message
+        self.notified_sessions = set() # Anti-spam for "I sent you a DM"
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -33,17 +34,50 @@ class Urgency(commands.Cog):
                 str(message.author.display_avatar.url)
             )
 
+                str(message.author.display_avatar.url)
+            )
+
+            # Look for active session in memory
+            ticket_id = None
+            original_issue = None
+            guild_id = None
+
             if message.author.id in self.active_reports:
-                # Retrieve the original issue data
-                original_data = self.active_reports.pop(message.author.id)
-                
+                session = self.active_reports.pop(message.author.id)
+                ticket_id = session.get("ticket_id")
+                original_issue = session.get("content")
+                guild_id = session.get("guild_id")
+            else:
+                # RECOVERY LOGIC: Look for a "Pending..." ticket in the DB for this user
+                try:
+                    print(f"DEBUG: Session lost for {message.author.name}, attempting recovery from DB...")
+                    res = supabase.table("tickets")\
+                        .select("*")\
+                        .eq("discord_id", str(message.author.id))\
+                        .eq("status", "open")\
+                        .order("created_at", desc=True)\
+                        .limit(1)\
+                        .execute()
+                    
+                    if res.data:
+                        ticket = res.data[0]
+                        ticket_id = ticket.get("id")
+                        original_issue = ticket.get("description")
+                        guild_id = ticket.get("discord_guild_id")
+                        print(f"DEBUG: Recovered ticket {ticket_id} for {message.author.name}")
+                    else:
+                        print(f"DEBUG: No pending ticket found for {message.author.name} in DB.")
+                except Exception as e:
+                    print(f"Recovery Error: {e}")
+
+            if ticket_id:
                 # Generate Structured AI Report (now with follow-up)
-                ai_report = generate_detailed_ticket(original_data['content'], message.content)
+                ai_report = generate_detailed_ticket(original_issue, message.content)
                 
                 # Construct the update report
                 report = {
                     "user": message.author.name,
-                    "original_issue": original_data['content'],
+                    "original_issue": original_issue,
                     "follow_up_details": message.content,
                     "summary": ai_report.get("summary", "New report from Discord"),
                     "type": ai_report.get("type", "Support"),
@@ -53,18 +87,9 @@ class Urgency(commands.Cog):
                     "status": "OPEN"
                 }
 
-                # UPDATE TICKET if exists, otherwise create
-                ticket_id = original_data.get("ticket_id")
-                if ticket_id:
-                    success = self.ticket_service.update_ticket(ticket_id, report)
-                    ticket_result = "Updated in Database" if success else "Update Failed"
-                else:
-                    # Fallback create if no ID found
-                    report["user_id"] = str(message.author.id)
-                    report["guild_id"] = str(original_data['guild_id'])
-                    report["urgency_score"] = original_data.get('score', 5)
-                    ticket_result = self.ticket_service.create_ticket(report)
-                    ticket_result = "Saved to Database" if ticket_result else "Failed to Save"
+                # UPDATE TICKET
+                success = self.ticket_service.update_ticket(ticket_id, report)
+                ticket_result = "Updated in Database" if success else "Update Failed"
 
                 # Thank the user
                 await message.channel.send(
@@ -78,7 +103,9 @@ class Urgency(commands.Cog):
 
                 return
             else:
-                pass
+                # If no session and no ticket, it's just a regular DM
+                await message.channel.send("Hey! If you have an issue to report, please post it in the server's `#report-issues-with-pulse` channel first.")
+                return
 
         # ---------------------------------------------------------
         # 2. HANDLE SERVER MESSAGES (The "Detection" Step)
@@ -111,8 +138,11 @@ class Urgency(commands.Cog):
         avatar_url = str(message.author.display_avatar.url)
         insert_message(message.author.id, message.channel.id, message.content, message.author.name, full_name, avatar_url)
 
+        # Anti-Spam / Concurrent Report Check
+        if message.author.id in self.active_reports:
+            return
+
         # Urgency Check 
-        if len(message.content) > 5: 
             result = analyze_urgency(message.content)
             # Result format: "Score|Reason"
             try:
@@ -196,6 +226,60 @@ class Urgency(commands.Cog):
 
             except ValueError:
                 pass
+
+    @commands.command(name="report")
+    async def manual_report(self, ctx, *, issue_content: str = None):
+        """Manually trigger the ticketing process."""
+        if not issue_content:
+            await ctx.send("Please provide the issue description. Usage: `!report <describe your problem>`")
+            return
+
+        # Use the same logic as auto-detection but forced
+        if ctx.guild:
+            # Check tier (reusing existing logic)
+            is_active, sub_msg = check_guild_subscription(ctx.guild.id)
+            if not is_active:
+                await ctx.send(f"**Subscription Required**: {sub_msg}")
+                return
+
+        # Create ticket
+        pre_report = generate_detailed_ticket(issue_content, "")
+        ticket_data = {
+            "user": ctx.author.name,
+            "full_name": ctx.author.display_name,
+            "avatar_url": str(ctx.author.display_avatar.url),
+            "user_id": str(ctx.author.id),
+            "guild_id": str(ctx.guild.id) if ctx.guild else None,
+            "original_issue": issue_content,
+            "follow_up_details": "Manual Report - Initial",
+            "summary": pre_report.get("summary", "Manual report from Discord"),
+            "type": pre_report.get("type", "Support"),
+            "priority": pre_report.get("priority", "Medium"),
+            "location": pre_report.get("location", "Unknown"),
+            "solution": pre_report.get("solution", "Analyzing report..."),
+            "urgency_score": 7, # Manual reports get a fixed baseline high score
+            "origin_channel_id": str(ctx.channel.id) if ctx.channel else None,
+            "status": "OPEN"
+        }
+        
+        ticket_id = self.ticket_service.create_ticket(ticket_data)
+        
+        self.active_reports[ctx.author.id] = {
+            "content": issue_content,
+            "score": 7,
+            "channel_id": ctx.channel.id,
+            "guild_id": ctx.guild.id if ctx.guild else None,
+            "ticket_id": ticket_id
+        }
+
+        # Follow up
+        follow_up = generate_followup_questions(issue_content)
+        try:
+            await ctx.author.send(follow_up)
+            await ctx.message.add_reaction("📩")
+            await ctx.reply("I've manually created a ticket for you and sent a DM for more details.")
+        except discord.Forbidden:
+            await ctx.reply("Ticket created, but I couldn't DM you. Please check your settings!")
 
 async def setup(bot):
     await bot.add_cog(Urgency(bot))
