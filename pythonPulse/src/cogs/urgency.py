@@ -23,6 +23,16 @@ class Urgency(commands.Cog):
         # (They are finishing a report already validated by server check)
         # ---------------------------------------------------------
         if isinstance(message.channel, discord.DMChannel):
+            # Log the user's DM response
+            insert_message(
+                message.author.id, 
+                message.channel.id, 
+                message.content, 
+                message.author.name, 
+                message.author.display_name, 
+                str(message.author.display_avatar.url)
+            )
+
             if message.author.id in self.active_reports:
                 # ... (rest of DM logic remains same)
                 # Retrieve the original issue data
@@ -150,6 +160,15 @@ class Urgency(commands.Cog):
                     
                     try:
                         await message.author.send(follow_up)
+                        # Log the bot's follow-up message
+                        insert_message(
+                            self.bot.user.id,
+                            message.author.id, # DM channel ID is often inferred or same as user ID in some contexts, but here we use author id for simplicity in DM logging
+                            follow_up,
+                            self.bot.user.name,
+                            self.bot.user.display_name,
+                            str(self.bot.user.display_avatar.url)
+                        )
                         await message.add_reaction("📩")
                         await message.reply("Hey! I've sent you a DM to get a few more details so we can help you faster.")
                     except discord.Forbidden:

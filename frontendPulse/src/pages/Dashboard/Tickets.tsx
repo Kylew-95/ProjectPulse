@@ -58,7 +58,7 @@ const Tickets = () => {
       setUserTeams(teams);
     };
     fetchUserTeams();
-  }, [session]);
+  }, [session, refreshTrigger]);
 
   const fetchTickets = async () => {
     if (!session) return;
