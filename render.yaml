@@ -14,8 +14,6 @@ services:
         sync: false
       - key: SUPABASE_URL
         sync: false
-      - key: SUPABASE_KEY
-        sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: GUILD_ID
@@ -25,10 +23,6 @@ services:
       - key: STRIPE_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
-        sync: false
-      - key: EMAIL_USER
-        sync: false
-      - key: EMAIL_PASSWORD
         sync: false
       - key: FRONTEND_URL
         sync: false
