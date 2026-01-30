@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, LayoutDashboard, Bot, Settings, Database } from 'lucide-react';
+import { ArrowLeft, User, LayoutDashboard, Bot, Settings } from 'lucide-react';
 import ImageModal from './components/ImageModal';
 import DemoSection from './components/DemoSection';
 

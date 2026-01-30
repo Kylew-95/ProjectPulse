@@ -21,7 +21,7 @@ const Tickets = () => {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [userTeams, setUserTeams] = useState<{ id: string; name: string }[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [viewMode, setViewMode] = useState<'table' | 'list'>('table');
+  const [viewMode] = useState<'table' | 'list'>('table');
   
   // States moved to Table: statusFilter, priorityFilter, searchQuery, currentPage, sortByUrgency 
   // We keep 'viewMode' here or move it to header? Kept here for switching between Table/List views if needed.

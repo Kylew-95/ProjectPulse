@@ -1,6 +1,4 @@
 import { Trash2 } from 'lucide-react';
-import SearchableSelect from '../ui/SearchableSelect';
-import { TEAM_ROLES } from '../../constants/roles';
 import { useAuth } from '../../context/AuthContext';
 
 interface TeamMember {
@@ -25,7 +23,7 @@ interface MemberListItemProps {
   avatarUrl: string | null;
 }
 
-const MemberListItem = ({ member, onUpdateRole, onRemoveMember, avatarUrl }: MemberListItemProps) => {
+const MemberListItem = ({ member, onRemoveMember, avatarUrl }: MemberListItemProps) => {
   const { user } = useAuth();
   
   const finalAvatarUrl = (member.user_id === user?.id ? user?.user_metadata?.avatar_url : null) ||
