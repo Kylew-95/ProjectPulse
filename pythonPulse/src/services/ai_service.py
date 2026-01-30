@@ -26,7 +26,6 @@ def analyze_urgency(message_content: str):
     Return strict format: Score|Reason
     Example: 8|Critical bug report affecting payment
     """
-    Example: 8|Critical bug report affecting payment
     """
     if not co:
         return "0|AI Unavailable"
@@ -58,7 +57,6 @@ def generate_followup_questions(message_content: str):
     
     IMPORTANT: Do NOT use words like "critical", "urgent", "severe", or "emergency". Keep it friendly.
     """
-    IMPORTANT: Do NOT use words like "critical", "urgent", "severe", or "emergency". Keep it friendly.
     """
     if not co:
         return "Hey there! Could you please provide more details?"
@@ -84,7 +82,6 @@ def generate_issue_summary(original_issue: str, follow_up_response: str):
     
     Format the output as a single paragraph describing the problem and any provided technical details (error codes, steps).
     """
-    Format the output as a single paragraph describing the problem and any provided technical details (error codes, steps).
     """
     if not co:
         return "Summary unavailable (AI Validation pending)."
@@ -143,14 +140,6 @@ def generate_detailed_ticket(original_issue: str, follow_up_response: str):
       "solution": "Check stripe webhook logs for 403 errors and verify API keys."
     }}
     """
-    Example Output:
-    {{
-      "type": "Bug",
-      "priority": "Critical",
-      "summary": "Payment processing failing for Stripe users in UK",
-      "location": "Checkout API",
-      "solution": "Check stripe webhook logs for 403 errors and verify API keys."
-    }}
     """
     if not co:
         return {
@@ -197,8 +186,6 @@ def generate_summary(messages_text: str):
     Logs:
     {messages_text}
     """
-    Logs:
-    {messages_text}
     """
     if not co:
         return "AI Summary unavailable."
