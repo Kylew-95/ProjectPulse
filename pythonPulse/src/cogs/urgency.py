@@ -34,9 +34,6 @@ class Urgency(commands.Cog):
                 str(message.author.display_avatar.url)
             )
 
-                str(message.author.display_avatar.url)
-            )
-
             # Look for active session in memory
             ticket_id = None
             original_issue = None
