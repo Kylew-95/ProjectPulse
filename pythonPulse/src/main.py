@@ -180,11 +180,23 @@ async def main():
         print("Running in Production Mode - Skipping local Stripe Listener")
     
     # Run both bot and API
-    await asyncio.gather(
-        load_extensions(),
-        bot.start(DISCORD_TOKEN),
-        run_fastapi()
-    )
+    try:
+        await asyncio.gather(
+            load_extensions(),
+            bot.start(DISCORD_TOKEN),
+            run_fastapi()
+        )
+    except Exception as e:
+        if "429" in str(e):
+            print("\nCRITICAL ERROR: Discord Rate Limit (429) hit.")
+            print("Render IP is likely blocked by Cloudflare/Discord.")
+            print("Action: Restart Render service to try a new IP.\n")
+        else:
+            print(f"Main Loop error: {e}")
+    finally:
+        print("Shutting down bot...")
+        if not bot.is_closed():
+            await bot.close()
 
 
 
