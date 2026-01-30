@@ -151,7 +151,8 @@ async def load_extensions():
 
 
 async def run_fastapi():
-    config = uvicorn.Config(fastapi_app, host="0.0.0.0", port=8000, log_level="info")
+    port = int(os.getenv("PORT", 8000))
+    config = uvicorn.Config(fastapi_app, host="0.0.0.0", port=port, log_level="info")
     server = uvicorn.Server(config)
     await server.serve()
 
@@ -162,18 +163,21 @@ async def main():
     except Exception as e:
         print(f"⚠️ Failed to sync plan tiers on startup: {e}")
 
-    # Auto-start Stripe Listener (Forwarding to local backend)
-    try:
-        print("🎧 Starting Stripe Listener (Background)...")
-        # Run stripe listen silently
-        subprocess.Popen(
-            ["stripe", "listen", "--forward-to", "localhost:8000/webhook"], 
-            shell=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-    except Exception as e:
-        print(f"⚠️ Could not start Stripe Listener automatically: {e}")
+    # Auto-start Stripe Listener (Development Only)
+    if os.getenv("ENV") != "production":
+        try:
+            print("🎧 Starting Stripe Listener (Background)...")
+            # Run stripe listen silently
+            subprocess.Popen(
+                ["stripe", "listen", "--forward-to", "localhost:8000/webhook"], 
+                shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        except Exception as e:
+            print(f"⚠️ Could not start Stripe Listener automatically: {e}")
+    else:
+        print("🌍 Running in Production Mode - Skipping local Stripe Listener")
     
     # Run both bot and API
     await asyncio.gather(
@@ -181,6 +185,9 @@ async def main():
         bot.start(DISCORD_TOKEN),
         run_fastapi()
     )
+
+
+
 
 if __name__ == "__main__":
     if not DISCORD_TOKEN:
