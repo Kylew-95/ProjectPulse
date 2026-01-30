@@ -1,6 +1,6 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Zap, Shield, Globe } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
 const InteractivePulse = () => {
@@ -36,14 +36,7 @@ const InteractivePulse = () => {
 
 const Home = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
-
-  // Automatically redirect logged-in users to the dashboard
-  useEffect(() => {
-    if (user && !loading) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [user, loading, navigate]);
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-background selection:bg-primary/30">
