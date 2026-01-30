@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-const SUPABASE_URL = 'https://ztzmykkriwjlsijazvoi.supabase.co';
-const PROJECT_REF = 'ztzmykkriwjlsijazvoi';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://example.supabase.co';
+const PROJECT_REF = SUPABASE_URL.split('.')[0].split('//')[1] || 'example';
 const STORAGE_KEY = `sb-${PROJECT_REF}-auth-token`;
 
 test.describe('Authentication Flow', () => {
