@@ -44,7 +44,7 @@ const Home = () => {
       <nav className="border-b border-white/5 bg-slate-900 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <img src="/src/assets/logo.png" alt="Pulse Logo" className="w-12 h-12 object-contain" />
+            <img src="/logo.png" alt="Pulse Logo" className="w-12 h-12 object-contain" />
             <span className="text-2xl font-bold text-white tracking-tight">
               Pulse
             </span>
