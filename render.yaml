@@ -2,6 +2,7 @@ services:
   - type: web
     name: project-pulse-python-server
     runtime: python
+    rootDir: pythonPulse
     buildCommand: pip install -r requirements.txt
     startCommand: python src/main.py
     envVars:
@@ -16,6 +17,10 @@ services:
       - key: SUPABASE_KEY
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: GUILD_ID
+        sync: false
+      - key: COHERE_API_KEY
         sync: false
       - key: STRIPE_KEY
         sync: false
