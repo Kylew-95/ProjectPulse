@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useTable } from 'react-table';
 import type { Column } from 'react-table';
 import { Edit2, Trash2 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import type { Ticket } from '../../types/ticket';
 
 interface TicketTableProps {
@@ -24,6 +25,8 @@ const TicketTable = ({
   onEdit,
   onDelete
 }: TicketTableProps) => {
+  const { user } = useAuth();
+
 
   const data = useMemo(() => tickets, [tickets]);
 
@@ -86,13 +89,17 @@ const TicketTable = ({
     {
       Header: "Assignee",
       accessor: 'assignee_profile',
-      Cell: ({ value }: any) => {
+      Cell: ({ row, value }: any) => {
         if (!value) return <span className="text-xs text-slate-400 italic">Unassigned</span>;
+        
+        const isCurrentUser = row.original.assignee_id === user?.id;
+        const avatarUrl = (isCurrentUser ? user?.user_metadata?.avatar_url : null) || value.avatar_url;
+
         return (
            <div className="flex items-center gap-2">
                <div className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[9px] font-bold text-slate-600 overflow-hidden shrink-0">
-                  {value.avatar_url ? (
-                    <img src={value.avatar_url} alt="" className="w-full h-full object-cover" />
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
                     value.full_name?.[0] || '?'
                   )}
@@ -140,7 +147,7 @@ const TicketTable = ({
          );
       }
     }
-  ], [totalCount, currentPage, pageSize, onEdit, onDelete]);
+  ], [totalCount, currentPage, pageSize, onEdit, onDelete, user]);
 
   const {
     getTableProps,

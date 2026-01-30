@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Shield, User } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import ResourceCard from '../common/ResourceCard';
 import MemberListItem from './MemberListItem';
 
@@ -16,6 +17,7 @@ interface TeamMember {
     avatar_url: string | null;
     email: string | null;
   } | null;
+  avatar_url?: string | null;
 }
 
 interface Team {
@@ -51,25 +53,12 @@ const TeamList = ({
   onDeleteTeam,
 }: TeamListProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const rows = useMemo(() => members.map(m => ({ original: m, id: m.id })), [members]);
 
-  // Helper function to fix duplicated Discord CDN URLs
-  const fixDuplicatedAvatarUrl = (url: string | null | undefined): string | null => {
-    if (!url) return null;
-    
-    // Check if URL contains duplicate Discord CDN prefix
-    const duplicatePattern = /^https:\/\/cdn\.discordapp\.com\/avatars\/\d+\/(https:\/\/cdn\.discordapp\.com\/avatars\/\d+\/.+)$/;
-    const match = url.match(duplicatePattern);
-    
-    if (match) {
-      console.warn('⚠️ Fixed duplicated avatar URL:', url, '→', match[1]);
-      return match[1];
-    }
-    
-    return url;
-  };
 
+    
   if (loading) {
     return (
       <div className="px-6 py-24 text-center">
@@ -104,21 +93,22 @@ const TeamList = ({
               footer={
                 <div className="flex -space-x-2 mb-6 min-h-[32px]">
                    {(team.members || []).slice(0, 2).map((member) => {
-                     const rawAvatarUrl = member.profiles?.avatar_url;
-                     const fixedAvatarUrl = fixDuplicatedAvatarUrl(rawAvatarUrl);
-                     const avatarUrl = fixedAvatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.user_id}`;
+                     const avatarUrl = (member.user_id === user?.id ? user?.user_metadata?.avatar_url : null) || 
+                        member.avatar_url || 
+                        member.profiles?.avatar_url;
                      
                      console.log('🖼️ Avatar Debug:', {
                        user_id: member.user_id,
-                       raw: rawAvatarUrl,
-                       fixed: fixedAvatarUrl,
+                       raw: member.avatar_url,
+                       profile: member.profiles?.avatar_url,
+                       metadata: member.user_id === user?.id ? user?.user_metadata?.avatar_url : 'N/A',
                        final: avatarUrl
                      });
                      
                      return (
                        <div key={member.id} className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
                          <img 
-                           src={avatarUrl} 
+                           src={avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.user_id}`} 
                            alt="Member"
                            className="w-full h-full object-cover"
                            onError={(e) => {
@@ -159,7 +149,7 @@ const TeamList = ({
             member={row.original}
             onUpdateRole={onUpdateRole}
             onRemoveMember={onRemoveMember}
-            fixDuplicatedAvatarUrl={fixDuplicatedAvatarUrl}
+            avatarUrl={(row.original.user_id === user?.id ? user?.user_metadata?.avatar_url : null) || row.original.avatar_url || row.original.profiles?.avatar_url || null}
           />
         ))
       )}

@@ -24,6 +24,7 @@ interface TeamMember {
     avatar_url: string | null;
     email: string | null;
   } | null;
+  avatar_url?: string | null;
 }
 
 const Team = () => {

@@ -1,6 +1,7 @@
 import { Trash2 } from 'lucide-react';
 import SearchableSelect from '../ui/SearchableSelect';
 import { TEAM_ROLES } from '../../constants/roles';
+import { useAuth } from '../../context/AuthContext';
 
 interface TeamMember {
   id: string;
@@ -14,16 +15,23 @@ interface TeamMember {
     avatar_url: string | null;
     email: string | null;
   } | null;
+  avatar_url?: string | null;
 }
 
 interface MemberListItemProps {
   member: TeamMember;
   onUpdateRole: (memberId: string, role: string) => void;
   onRemoveMember: (memberId: string) => void;
-  fixDuplicatedAvatarUrl: (url: string | null | undefined) => string | null;
+  avatarUrl: string | null;
 }
 
-const MemberListItem = ({ member, onUpdateRole, onRemoveMember, fixDuplicatedAvatarUrl }: MemberListItemProps) => {
+const MemberListItem = ({ member, onUpdateRole, onRemoveMember, avatarUrl }: MemberListItemProps) => {
+  const { user } = useAuth();
+  
+  const finalAvatarUrl = (member.user_id === user?.id ? user?.user_metadata?.avatar_url : null) ||
+    avatarUrl || 
+    member.profiles?.avatar_url;
+
   return (
     <div 
       className="group flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/5 hover:border-primary/50 dark:hover:border-blue-500/50 transition-all duration-300 shadow-sm hover:shadow-md"
@@ -33,7 +41,7 @@ const MemberListItem = ({ member, onUpdateRole, onRemoveMember, fixDuplicatedAva
          <div className="relative">
             <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden border-2 border-white dark:border-slate-800 shadow-sm">
               <img 
-                src={fixDuplicatedAvatarUrl(member.profiles?.avatar_url) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.user_id}`} 
+                src={finalAvatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.user_id}`} 
                 alt="Avatar" 
                 className="w-full h-full object-cover"
               />

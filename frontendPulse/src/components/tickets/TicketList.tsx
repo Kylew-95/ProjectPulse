@@ -1,5 +1,6 @@
 import { Bug, Sparkles, CheckCircle2, CircleDot } from 'lucide-react';
 import type { Ticket } from '../../types/ticket';
+import { useAuth } from '../../context/AuthContext';
 import ResourceCard from '../common/ResourceCard';
 
 interface TicketListProps {
@@ -21,6 +22,8 @@ const TicketList = ({
   onEdit, 
   onDelete 
 }: TicketListProps) => {
+  const { user } = useAuth();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-4">
       {loading ? (
@@ -65,8 +68,12 @@ const TicketList = ({
                   <span className="text-xs text-text-secondary dark:text-slate-400">Assignee:</span>
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 rounded-full bg-background dark:bg-slate-800 border border-border-main flex items-center justify-center text-[10px] overflow-hidden">
-                        {ticket.assignee_profile?.avatar_url ? (
-                        <img src={ticket.assignee_profile.avatar_url} alt={`${ticket.assignee_profile.full_name}'s avatar`} className="w-full h-full object-cover" />
+                        {(ticket.assignee_id === user?.id ? user?.user_metadata?.avatar_url : ticket.assignee_profile?.avatar_url) ? (
+                        <img 
+                          src={(ticket.assignee_id === user?.id ? user?.user_metadata?.avatar_url : ticket.assignee_profile?.avatar_url)} 
+                          alt={`${ticket.assignee_profile?.full_name}'s avatar`} 
+                          className="w-full h-full object-cover" 
+                        />
                         ) : (
                         ticket.assignee_profile?.full_name?.[0] || '?'
                         )}
