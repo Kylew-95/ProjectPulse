@@ -9,7 +9,7 @@ export const Login = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+// 
   // Redirect if already logged in
   useEffect(() => {
     if (session) {
