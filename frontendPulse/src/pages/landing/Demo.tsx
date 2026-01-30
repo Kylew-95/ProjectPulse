@@ -153,7 +153,6 @@ const Demo = () => {
                  <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-4 shadow-xl hover:border-emerald-500/30 transition-all">
                     <div 
                         className="aspect-square bg-slate-800/50 rounded-xl flex items-center justify-center relative overflow-hidden cursor-pointer group"
-                        onClick={() => setSelectedImage("/Screenshots/Discord Bot notifications.png")}
                     >
                         <img 
                             src="/Screenshots/Discord Bot notifications.png" 
