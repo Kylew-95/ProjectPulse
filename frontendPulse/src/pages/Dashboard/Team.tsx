@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
 import CreateTeamModal from '../../components/teams/CreateTeamModal';
@@ -7,6 +7,7 @@ import InviteModal from '../../components/teams/InviteModal';
 import PermissionsModal from '../../components/teams/PermissionsModal';
 import TeamHeader from '../../components/teams/TeamHeader';
 import TeamList from '../../components/teams/TeamList';
+import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal';
 
 import Breadcrumbs from '../../components/ui/Breadcrumbs';
 import { exportToCSV } from '../../utils/exportUtils';
@@ -29,6 +30,7 @@ interface TeamMember {
 const Team = () => {
   const { user, profile } = useAuth();
   const { teamId } = useParams();
+  const navigate = useNavigate();
   const [members, setMembers] = useState<TeamMember[]>([]);
 
   // Access Control for Teams
@@ -58,6 +60,19 @@ const Team = () => {
   const [inviteIdentifier, setInviteIdentifier] = useState('');
   const [inviteRole, setInviteRole] = useState('Developer');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    type: 'member' | 'team';
+    id: string;
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    type: 'team',
+    id: '',
+    title: '',
+    message: ''
+  });
 
   const refreshData = () => setRefreshTrigger(prev => prev + 1);
 
@@ -238,26 +253,46 @@ const Team = () => {
     }
   };
 
-  const handleRemoveMember = async (memberId: string) => {
-    if (!confirm('Are you sure you want to remove this member?')) return;
-    try {
-      const { error } = await supabase.from('team_members').delete().eq('id', memberId);
-      if (error) throw error;
-      setMembers(prev => prev.filter(m => m.id !== memberId));
-    } catch (err: any) {
-      alert(`Error: ${err.message}`);
-    }
+  const handleRemoveMember = (memberId: string) => {
+    setDeleteModal({
+      isOpen: true,
+      type: 'member',
+      id: memberId,
+      title: 'Remove Member',
+      message: 'Are you sure you want to remove this member? They will lose access to this workspace immediately.'
+    });
   };
 
-  const handleDeleteTeam = async (teamId: string) => {
-     if (!confirm('DANGER: This will delete the team. Are you sure?')) return;
-     try {
-      const { error } = await supabase.from('teams').delete().eq('id', teamId);
-      if (error) throw error;
-      setTeams(prev => prev.filter(t => t.id !== teamId));
+  const handleDeleteTeam = (teamId: string) => {
+    setDeleteModal({
+      isOpen: true,
+      type: 'team',
+      id: teamId,
+      title: 'Delete Team',
+      message: 'DANGER: This will permanently delete the team and all associated data. This action cannot be undone.'
+    });
+  };
 
+  const confirmDelete = async () => {
+    setLoading(true);
+    try {
+      if (deleteModal.type === 'member') {
+        const { error } = await supabase.from('team_members').delete().eq('id', deleteModal.id);
+        if (error) throw error;
+        setMembers(prev => prev.filter(m => m.id !== deleteModal.id));
+      } else {
+        const { error } = await supabase.from('teams').delete().eq('id', deleteModal.id);
+        if (error) throw error;
+        setTeams(prev => prev.filter(t => t.id !== deleteModal.id));
+        if (teamId === deleteModal.id) {
+          navigate('/dashboard/team');
+        }
+      }
+      setDeleteModal(prev => ({ ...prev, isOpen: false }));
     } catch (err: any) {
-      alert(`Error : ${err.message}`);
+      alert(`Error: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -333,6 +368,15 @@ const Team = () => {
       <PermissionsModal 
         isOpen={isPermissionsModalOpen}
         onClose={() => setIsPermissionsModalOpen(false)}
+      />
+
+      <DeleteConfirmationModal 
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDelete}
+        title={deleteModal.title}
+        message={deleteModal.message}
+        loading={loading}
       />
     </div>
   );

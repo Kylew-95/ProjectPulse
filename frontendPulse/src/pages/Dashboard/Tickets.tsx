@@ -9,6 +9,7 @@ import TicketHeader from '../../components/tickets/TicketHeader';
 import TicketTable from '../../components/tickets/TicketTable';
 import TicketList from '../../components/tickets/TicketList';
 import { exportToCSV } from '../../utils/exportUtils';
+import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal';
 
 import type { Ticket } from '../../types/ticket';
 
@@ -22,6 +23,13 @@ const Tickets = () => {
   const [userTeams, setUserTeams] = useState<{ id: string; name: string }[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [viewMode] = useState<'table' | 'list'>('table');
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    id: string | number;
+  }>({
+    isOpen: false,
+    id: ''
+  });
   
   // States moved to Table: statusFilter, priorityFilter, searchQuery, currentPage, sortByUrgency 
   // We keep 'viewMode' here or move it to header? Kept here for switching between Table/List views if needed.
@@ -89,13 +97,21 @@ const Tickets = () => {
   }, [session, refreshTrigger]);
 
   const handleDelete = async (id: string | number) => {
-    if (!confirm('Are you sure you want to delete this ticket?')) return;
+    setDeleteModal({ isOpen: true, id });
+  };
+
+  const confirmDelete = async () => {
+    setLoading(true);
     try {
-      const { error } = await supabase.from('tickets').delete().eq('id', id);
+      const { error } = await supabase.from('tickets').delete().eq('id', deleteModal.id);
       if (error) throw error;
-      setTickets(prev => prev.filter(t => t.id !== id));
+      setTickets(prev => prev.filter(t => t.id !== deleteModal.id));
+      setDeleteModal(prev => ({ ...prev, isOpen: false }));
     } catch (err: any) {
       console.error('Error deleting ticket:', err);
+      alert(`Error: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -168,6 +184,15 @@ const Tickets = () => {
           userTeams={userTeams}
         />
       )}
+
+      <DeleteConfirmationModal 
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDelete}
+        title="Delete Ticket"
+        message="Are you sure you want to delete this ticket? This action cannot be undone."
+        loading={loading}
+      />
     </div>
   );
 };

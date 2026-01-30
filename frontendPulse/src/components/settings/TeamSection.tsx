@@ -3,6 +3,7 @@ import { Users, UserPlus, Trash2, Loader2 } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import ProGate from '../ui/ProGate';
+import DeleteConfirmationModal from '../ui/DeleteConfirmationModal';
 
 interface Team {
   id: string;
@@ -27,6 +28,13 @@ const TeamSection = () => {
   const [inviteDiscord, setInviteDiscord] = useState('');
   const [inviting, setInviting] = useState(false);
   const [error, setError] = useState('');
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    id: string;
+  }>({
+    isOpen: false,
+    id: ''
+  });
 
   const isPro = profile?.subscription_tier === 'pro' || profile?.subscription_tier === 'enterprise';
 
@@ -95,13 +103,21 @@ const TeamSection = () => {
     }
   };
 
-  const handleRemoveMember = async (id: string) => {
-    if (!confirm('Are you sure you want to remove this member?')) return;
+  const handleRemoveMember = (id: string) => {
+    setDeleteModal({ isOpen: true, id });
+  };
+
+  const confirmDelete = async () => {
+    setLoading(true);
     try {
-        await supabase.from('team_members').delete().eq('id', id);
-        if (team) fetchMembers(team.id);
-    } catch (err) {
-        console.error(err);
+      await supabase.from('team_members').delete().eq('id', deleteModal.id);
+      if (team) fetchMembers(team.id);
+      setDeleteModal(prev => ({ ...prev, isOpen: false }));
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -194,6 +210,15 @@ const TeamSection = () => {
             )}
         </div>
       </ProGate>
+
+      <DeleteConfirmationModal 
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDelete}
+        title="Remove Member"
+        message="Are you sure you want to remove this member? They will lose access to team resources immediately."
+        loading={loading}
+      />
     </section>
   );
 };
