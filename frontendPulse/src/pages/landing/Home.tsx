@@ -41,7 +41,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background selection:bg-primary/30">
       {/* Navbar */}
-      <nav className="border-b border-white/5 bg-slate-900/50 backdrop-blur-xl">
+      <nav className="border-b border-white/5 bg-slate-900 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <img src="/src/assets/logo.png" alt="Pulse Logo" className="w-12 h-12 object-contain" />
@@ -85,7 +85,7 @@ const Home = () => {
             <button onClick={() => navigate(user ? '/dashboard' : '/signup')} className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-semibold transition-all shadow-lg shadow-blue-500/25 flex items-center gap-2 group">
               {user ? 'Go to Dashboard' : 'Start for free'} <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-full font-semibold transition-all backdrop-blur-sm border border-white/10">
+            <button className="px-8 py-4 bg-white/10 hover:bg-white/20 text-blue-400 rounded-full font-semibold transition-all backdrop-blur-xl border border-blue-500/10">
               View Demo
             </button>
           </div>
@@ -100,7 +100,7 @@ const Home = () => {
                 { icon: Shield, title: "Enterprise Security", desc: "Bank-grade encryption for your data." },
                 { icon: Globe, title: "Global CDN", desc: "Lightning fast access from anywhere." }
             ].map((feature, i) => (
-                <div key={i} className="p-6 rounded-2xl bg-slate-900/50 border border-white/5 hover:border-blue-500/30 transition-colors group backdrop-blur-sm text-white">
+                <div key={i} className="p-6 rounded-2xl bg-white/10 border border-white/10 hover:border-blue-500/30 transition-colors group backdrop-blur-sm text-white">
                     <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 mb-4 group-hover:scale-110 transition-transform">
                         <feature.icon size={24} />
                     </div>
