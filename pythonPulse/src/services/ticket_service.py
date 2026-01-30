@@ -62,18 +62,24 @@ class SupabaseTicketService(TicketService):
         }
 
         try:
+            print(f"DEBUG: Attempting to insert ticket data: {json.dumps(data, indent=2)}")
             response = supabase.table("tickets").insert(data).execute()
+            print(f"DEBUG: Supabase Insert Response Data: {response.data}")
+            
             ticket_id = response.data[0].get("id") if response.data else None
-            print(f"Ticket created with ID: {ticket_id}")
+            print(f"Ticket created successfully with ID: {ticket_id}")
             return ticket_id
 
 
         except Exception as e:
-            print(f"Supabase Ticket Error: {e}")
+            print(f"!!!! Supabase Ticket Insert Error: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
     def update_ticket(self, ticket_id, report_data):
         if not ticket_id:
+            print("DEBUG: update_ticket called with no ticket_id")
             return False
 
         data = {
@@ -83,15 +89,18 @@ class SupabaseTicketService(TicketService):
             "priority": (report_data.get("priority") or "medium").lower(),
             "solution": report_data.get("solution"),
             "location": (report_data.get("location") or "unknown").lower(),
-            "updated_at": "now()"
+            # Removed updated_at: now() as it can cause type errors if sent as a raw string across the API
         }
 
         try:
-            supabase.table("tickets").update(data).eq("id", ticket_id).execute()
-            print(f"Ticket {ticket_id} updated with follow-up details.")
+            print(f"DEBUG: Attempting to update ticket {ticket_id} with data: {json.dumps(data, indent=2)}")
+            response = supabase.table("tickets").update(data).eq("id", ticket_id).execute()
+            print(f"DEBUG: Supabase Update Response Data: {response.data}")
             return True
         except Exception as e:
-            print(f"Supabase Update Error: {e}")
+            print(f"!!!! Supabase Ticket Update Error: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
 class TrelloTicketService(TicketService):

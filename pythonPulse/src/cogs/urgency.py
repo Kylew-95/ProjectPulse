@@ -116,7 +116,12 @@ class Urgency(commands.Cog):
             result = analyze_urgency(message.content)
             # Result format: "Score|Reason"
             try:
-                score_str, reason = result.split("|", 1)
+                if "|" in result:
+                    score_str, reason = result.split("|", 1)
+                else:
+                    score_str = result
+                    reason = "No reason provided by AI"
+                
                 score = int(score_str)
 
                 if score >= 5:
