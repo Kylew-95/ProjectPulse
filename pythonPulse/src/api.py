@@ -357,8 +357,15 @@ async def stripe_webhook(request: Request):
             }
 
             # Use upsert to create profile if it's missing (failsafe)
-            response = supabase.table('profiles').upsert(update_data).execute()
-            print(f"WEBHOOK UPDATE SUCCESS: {response}", flush=True)
+            try:
+                response = supabase.table('profiles').upsert(update_data).execute()
+                print(f"WEBHOOK UPDATE SUCCESS: {response}", flush=True)
+            except Exception as e:
+                error_msg = str(e)
+                if "<html" in error_msg.lower():
+                    print("WEBHOOK ERROR: Supabase Sync failed (HTML/Cloudflare response).", flush=True)
+                else:
+                    print(f"WEBHOOK ERROR: Supabase Sync failed: {error_msg}", flush=True)
         else:
             print("WEBHOOK ERROR: User ID or Plan Tier ID missing in metadata.", flush=True)
 

@@ -1,19 +1,24 @@
-from config import COHERE_API_KEY
+import config
 import json
 
 try:
+    COHERE_API_KEY = getattr(config, "COHERE_API_KEY", None)
     import cohere
     if COHERE_API_KEY:
         co = cohere.Client(COHERE_API_KEY)
     else:
         co = None
-        print("COHERE_API_KEY not found. AI features will be disabled.")
+        print("COHERE_API_KEY not found in config. AI features will be disabled.")
 except ImportError:
     co = None
     print("'cohere' library not found. AI features will be disabled.")
 except Exception as e:
     co = None
-    print(f"Failed to initialize Cohere client: {e}")
+    error_msg = str(e)
+    if "<html" in error_msg.lower():
+        print("Failed to initialize Cohere: Received HTML/Cloudflare response.")
+    else:
+        print(f"Failed to initialize Cohere client: {error_msg}")
 
 def analyze_urgency(message_content: str):
     """
