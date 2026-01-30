@@ -34,6 +34,10 @@ class Urgency(commands.Cog):
                 str(message.author.display_avatar.url)
             )
 
+            # Acknowledgment (Make it feel responsive)
+            async with message.channel.typing():
+                ack_msg = await message.channel.send("Got it! I'm analyzing your additional details now...")
+
             # Look for active session in memory
             ticket_id = None
             original_issue = None

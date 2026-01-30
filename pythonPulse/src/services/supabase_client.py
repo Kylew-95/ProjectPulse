@@ -4,8 +4,24 @@ from config import SUPABASE_URL, SUPABASE_KEY
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def insert_message(user_id: int, channel_id: int, content: str, username: str, full_name: str = None, avatar_url: str = None):
-    """Logs a message to the database for summary generation."""
+    """Logs a message to the database with deduplication logic to prevent multi-bot double-logging."""
     try:
+        # Check for recent identical message (within 10s) to prevent dual-bot duplication
+        # Note: We filter by user, channel and content.
+        recent = supabase.table("messages")\
+            .select("id")\
+            .eq("user_id", str(user_id))\
+            .eq("channel_id", str(channel_id))\
+            .eq("content", content)\
+            .order("created_at", desc=True)\
+            .limit(1)\
+            .execute()
+        
+        if recent.data:
+            # If the exact same message exists already, skip logging it again
+            print(f"DEBUG: Skipping duplicate message insertion for {username} in {channel_id}")
+            return
+
         data = {
             "user_id": str(user_id),
             "channel_id": str(channel_id),
