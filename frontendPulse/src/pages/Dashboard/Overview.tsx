@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
-import { Ticket, Users, Activity, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Ticket, Activity, ExternalLink, ShieldCheck } from 'lucide-react';
 import Breadcrumbs from '../../components/ui/Breadcrumbs';
 import PageHeader from '../../components/common/PageHeader';
 
