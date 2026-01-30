@@ -104,7 +104,7 @@ const TeamList = ({
                        metadata: member.user_id === user?.id ? user?.user_metadata?.avatar_url : 'N/A',
                        final: avatarUrl
                      });
-                     
+                    //  
                      return (
                        <div key={member.id} className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800 bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
                          <img 
