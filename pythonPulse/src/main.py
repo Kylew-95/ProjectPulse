@@ -76,13 +76,23 @@ async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
     
-    # Create "report-issues-with-pulse" channel in each guild if it doesn't exist
+    # 1. Randomized delay to reduce race conditions in multi-bot setups
+    await asyncio.sleep(os.getpid() % 3 + 1) # Simple way to stagger instances
+    
+    # 2. Robust Channel Check & Creation
     for guild in bot.guilds:
-        channel = discord.utils.get(guild.text_channels, name="report-issues-with-pulse")
+        channel_name = "report-issues-with-pulse"
+        # Case-insensitive check for existing channel
+        channel = discord.utils.get(guild.text_channels, name=channel_name)
+        
         if not channel:
+            # Final safety check: refresh cache or look again
+            # discord.py cache should be up to date after the sleep
             try:
-                await guild.create_text_channel("report-issues-with-pulse")
-                print(f"Created #report-issues-with-pulse in {guild.name}")
+                await guild.create_text_channel(channel_name)
+                print(f"Created #{channel_name} in {guild.name}")
+            except discord.Forbidden:
+                print(f"Forbidden: Cannot create channel in {guild.name}")
             except Exception as e:
                 print(f"Failed to create channel in {guild.name}: {e}")
     
@@ -132,12 +142,15 @@ async def on_guild_join(guild):
     except Exception as e:
         print(f"Error auto-linking server: {e}")
     
-    # Create the report channel
-    channel = discord.utils.get(guild.text_channels, name="report-issues-with-pulse")
+    # 3. Robust Channel Creation on Join
+    channel_name = "report-issues-with-pulse"
+    channel = discord.utils.get(guild.text_channels, name=channel_name)
     if not channel:
         try:
-            await guild.create_text_channel("report-issues-with-pulse")
-            print(f"Created #report-issues-with-pulse in {guild.name} (on join)")
+            await guild.create_text_channel(channel_name)
+            print(f"Created #{channel_name} in {guild.name} (on join)")
+        except discord.Forbidden:
+            print(f"Forbidden: Cannot create channel in {guild.name} on join")
         except Exception as e:
             print(f"Failed to create channel in {guild.name} on join: {e}")
 

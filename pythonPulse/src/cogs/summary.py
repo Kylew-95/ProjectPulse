@@ -11,7 +11,7 @@ class Summary(commands.Cog):
         self.scheduler = AsyncIOScheduler()
         
         # Schedule the job to run every day at 9 AM (server time)
-        # For testing, you can change this to run every minute: trigger='interval', minutes=1
+        print(f"DEBUG: Starting Daily Pulse scheduler on Instance (PID: {os.getpid()})")
         self.scheduler.add_job(self.post_daily_summary, 'cron', hour=9, minute=0)
         self.scheduler.start()
 

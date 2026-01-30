@@ -202,19 +202,23 @@ class Urgency(commands.Cog):
                 }
 
                 # A. NOTIFY ADMINS (Private)
-                admin_channel = discord.utils.get(message.guild.channels, name=".dev")
+                admin_channel_name = "dev"
+                admin_channel = discord.utils.get(message.guild.text_channels, name=admin_channel_name)
                 if not admin_channel:
-                        admin_channel = discord.utils.get(message.guild.channels, name="dev")
+                    admin_channel = discord.utils.get(message.guild.text_channels, name=".dev")
                 
                 if not admin_channel:
-                        try:
-                            overwrites = {
-                                message.guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                                message.guild.me: discord.PermissionOverwrite(read_messages=True)
-                            }
-                            admin_channel = await message.guild.create_text_channel('dev', overwrites=overwrites)
-                        except:
-                            print("Could not create dev channel.")
+                    try:
+                        print(f"DEBUG: Creating private {admin_channel_name} channel in {message.guild.name}")
+                        overwrites = {
+                            message.guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                            message.guild.me: discord.PermissionOverwrite(read_messages=True)
+                        }
+                        admin_channel = await message.guild.create_text_channel(admin_channel_name, overwrites=overwrites)
+                    except discord.Forbidden:
+                        print(f"Forbidden: Cannot create {admin_channel_name} in {message.guild.name}")
+                    except Exception as e:
+                        print(f"Failed to create {admin_channel_name} channel: {e}")
 
                 if admin_channel:
                     await admin_channel.send(
