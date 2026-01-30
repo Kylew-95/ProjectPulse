@@ -34,8 +34,8 @@ const Layout = () => {
             {/* Logo Area */}
             <div className="p-5 flex items-center gap-3">
                 <Link to="/" className="flex items-center gap-3 group" title="Return to home">
-                    <img src="/src/assets/logo.png" alt="Pulse Loop" className="w-10 h-10 object-contain group-hover:scale-105 transition-transform" />
-                    <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                    <img src="/logo.png" alt="Pulse Loop" className="w-10 h-10 object-contain group-hover:scale-105 transition-transform" />
+                    <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                          Pulse
                     </span>
                 </Link>
