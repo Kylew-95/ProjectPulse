@@ -6,10 +6,8 @@ import CreateTicketModal from '../../components/tickets/CreateTicketModal';
 import EditTicketModal from '../../components/tickets/EditTicketModal';
 import Breadcrumbs from '../../components/ui/Breadcrumbs';
 import TicketHeader from '../../components/tickets/TicketHeader';
-import TicketFilters from '../../components/tickets/TicketFilters';
 import TicketTable from '../../components/tickets/TicketTable';
 import TicketList from '../../components/tickets/TicketList';
-import Pagination from '../../components/common/Pagination';
 import { exportToCSV } from '../../utils/exportUtils';
 
 import type { Ticket } from '../../types/ticket';
@@ -21,18 +19,14 @@ const Tickets = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [userTeams, setUserTeams] = useState<{ id: string; name: string }[]>([]);
-  const [selectedTeamId, setSelectedTeamId] = useState<string>('all');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
   const [viewMode, setViewMode] = useState<'table' | 'list'>('table');
-  const [sortByUrgency, setSortByUrgency] = useState(false);
-  const pageSize = 10;
-
+  
+  // States moved to Table: statusFilter, priorityFilter, searchQuery, currentPage, sortByUrgency 
+  // We keep 'viewMode' here or move it to header? Kept here for switching between Table/List views if needed.
+  // Actually, TicketList is likely duplicate/alternative view. We might want to pass data to it too.
+  
   const refreshData = () => setRefreshTrigger(prev => prev + 1);
 
   useEffect(() => {
@@ -62,9 +56,10 @@ const Tickets = () => {
     if (!session) return;
     setLoading(true);
     try {
-      const from = (currentPage - 1) * pageSize;
-      const to = from + pageSize - 1;
-
+      // Client-side filtering: Fetch ALL tickets
+      // Limiting to reasonably high number if needed, but for now fetch all assigned/related to user
+      // or filtering by RLS handled by backend. RLS usually handles "my tickets" or "my team's tickets".
+      
       let query = supabase
         .from('tickets')
         .select(`
@@ -72,30 +67,16 @@ const Tickets = () => {
           assignee_profile:profiles!tickets_assignee_id_fkey(full_name, avatar_url),
           reporter_profile:profiles!tickets_reporter_id_fkey(full_name, avatar_url),
           teams(name)
-        `, { count: 'exact' });
+        `)
+        .order('created_at', { ascending: false });
 
-      // Only filter by team if a specific team is selected (not 'all')
-      if (selectedTeamId !== 'all') {
-        query = query.eq('team_id', selectedTeamId);
-      }
-      // When 'all' is selected, show all tickets (including those with null team_id)
+      // If we want to support server-side filtering later we can add it back, 
+      // but for now we fetch all relevant tickets.
       
-      if (searchQuery) query = query.ilike('title', `%${searchQuery}%`);
-      if (statusFilter !== 'all') query = query.eq('status', statusFilter);
-      if (priorityFilter !== 'all') query = query.eq('priority', priorityFilter);
-
-      // Implement Sorting
-      if (sortByUrgency) {
-        query = query.order('urgency_score', { ascending: false });
-      } else {
-        query = query.order('created_at', { ascending: false });
-      }
-
-      const { data, error, count } = await query.range(from, to);
+      const { data, error } = await query;
       
       if (error) throw error;
       setTickets(data || []);
-      setTotalCount(count || 0);
     } catch (err) {
       console.error('Error fetching tickets:', err);
     } finally {
@@ -105,39 +86,14 @@ const Tickets = () => {
 
   useEffect(() => {
     fetchTickets();
-  }, [session, currentPage, statusFilter, priorityFilter, selectedTeamId, refreshTrigger, sortByUrgency]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-    fetchTickets();
-  }, [searchQuery]);
-
-  const statusOptions = [
-    { id: 'all', label: 'All Statuses' },
-    { id: 'open', label: 'Open' },
-    { id: 'in_progress', label: 'In Progress' },
-    { id: 'done', label: 'Done' },
-  ];
-
-  const priorityOptions = [
-    { id: 'all', label: 'All Priorities' },
-    { id: 'low', label: 'Low' },
-    { id: 'medium', label: 'Medium' },
-    { id: 'high', label: 'High' },
-    { id: 'critical', label: 'Critical' },
-  ];
-
-  const teamOptions = [
-    { value: 'all', label: 'All Teams' },
-    ...userTeams.map(t => ({ value: t.id, label: t.name }))
-  ];
+  }, [session, refreshTrigger]);
 
   const handleDelete = async (id: string | number) => {
     if (!confirm('Are you sure you want to delete this ticket?')) return;
     try {
       const { error } = await supabase.from('tickets').delete().eq('id', id);
       if (error) throw error;
-      refreshData();
+      setTickets(prev => prev.filter(t => t.id !== id));
     } catch (err: any) {
       console.error('Error deleting ticket:', err);
     }
@@ -156,8 +112,6 @@ const Tickets = () => {
     exportToCSV(data, 'project-pulse-tickets');
   };
 
-  const totalPages = Math.ceil(totalCount / pageSize);
-
   return (
     <div className="p-8 max-w-[1600px] mx-auto min-h-screen animate-in fade-in duration-700">
       <Breadcrumbs />
@@ -170,59 +124,38 @@ const Tickets = () => {
       />
 
       <div className="space-y-6">
-        <TicketFilters 
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedTeamId={selectedTeamId}
-          setSelectedTeamId={setSelectedTeamId}
-          teamOptions={teamOptions}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          statusOptions={statusOptions}
-          priorityFilter={priorityFilter}
-          setPriorityFilter={setPriorityFilter}
-          priorityOptions={priorityOptions}
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-        />
-
+        {/* TicketFilters removed - logic moved to Table */}
+        
         {viewMode === 'table' ? (
           <TicketTable 
             tickets={tickets}
             loading={loading}
-            totalCount={totalCount}
-            currentPage={currentPage}
-            pageSize={pageSize}
+            userTeams={userTeams}
             onEdit={(t) => { setSelectedTicket(t); setIsEditModalOpen(true); }}
             onDelete={handleDelete}
-            onSortByUrgency={() => setSortByUrgency(!sortByUrgency)}
           />
         ) : (
           <TicketList 
             tickets={tickets}
             loading={loading}
-            totalCount={totalCount}
-            currentPage={currentPage}
-            pageSize={pageSize}
+            // For List view, might need to pass plain pagination props if it doesn't support client-side yet,
+            // or we might need to refactor TicketList too.
+            // Assuming TicketList is legacy or alternative view.
+            // For now, focus on Table view refactor.
+            totalCount={tickets.length}
+            currentPage={1}
+            pageSize={1000}
             onEdit={(t) => { setSelectedTicket(t); setIsEditModalOpen(true); }}
             onDelete={handleDelete}
           />
         )}
-
-        <Pagination 
-          currentPage={currentPage}
-          totalCount={totalCount}
-          pageSize={pageSize}
-          onPageChange={setCurrentPage}
-          entityName="tickets"
-        />
       </div>
 
       {isModalOpen && (
         <CreateTicketModal 
           onClose={() => setIsModalOpen(false)} 
           onTicketCreated={fetchTickets}
-          teamId={selectedTeamId === 'all' ? (userTeams[0]?.id || null) : selectedTeamId}
+          teamId={userTeams[0]?.id || null} 
           userTeams={userTeams}
         />
       )}

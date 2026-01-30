@@ -3,20 +3,23 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
+  getFilteredRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  getPaginationRowModel,
   flexRender,
   createColumnHelper,
   type SortingState,
+  type ColumnFiltersState
 } from '@tanstack/react-table';
-import { Edit2, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Sparkles } from 'lucide-react';
+import { Edit2, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Sparkles, Search, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import type { Ticket } from '../../types/ticket';
 
 interface TicketTableProps {
   tickets: Ticket[];
   loading: boolean;
-  totalCount: number;
-  currentPage: number;
-  pageSize: number;
+  userTeams: { id: string; name: string }[];
   onEdit: (ticket: Ticket) => void;
   onDelete: (id: string | number) => Promise<void>;
 }
@@ -24,30 +27,32 @@ interface TicketTableProps {
 const TicketTable = ({ 
   tickets, 
   loading,
-  totalCount,
-  currentPage,
-  pageSize,
+  userTeams,
   onEdit,
   onDelete
 }: TicketTableProps) => {
   const { user } = useAuth();
   const [sorting, setSorting] = useState<SortingState>([]);
-  
+  const [globalFilter, setGlobalFilter] = useState('');
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
   const columnHelper = createColumnHelper<Ticket>();
 
   const columns = useMemo(() => [
     columnHelper.accessor('title', {
       header: 'Title',
       cell: info => {
-        // Calculate absolute index if needed, or just use ID
-        const absIndex = totalCount - (info.row.index + (currentPage - 1) * pageSize);
+        // We don't have totalCount from server anymore, so we calculate index based on current rows?
+        // Actually, we can just use the ticket ID or a relative index if we want.
+        // For now, let's just show the Tick ID if it exists or generic ID.
+        // Or just the title.
         return (
           <div className="flex flex-col">
             <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm truncate max-w-[200px] md:max-w-[300px]">
               {info.getValue()}
             </span>
             <span className="text-[10px] text-slate-400 font-mono tracking-wider">
-              TICK-{absIndex}
+              ID: {info.row.original.id}
             </span>
           </div>
         );
@@ -67,7 +72,8 @@ const TicketTable = ({
                     {status.replace('_', ' ')}
                   </span>
             );
-        }
+        },
+        filterFn: 'equals'
     }),
     columnHelper.accessor('priority', {
         header: 'Priority',
@@ -84,12 +90,25 @@ const TicketTable = ({
                     {priority}
                 </span>
             );
-        }
+        },
+        filterFn: 'equals'
     }),
     columnHelper.accessor(row => row.team?.name || row.teams?.name || '—', {
         id: 'team',
         header: 'Team',
-        cell: info => <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">{info.getValue()}</span>
+        cell: info => <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">{info.getValue()}</span>,
+        filterFn: (row, columnId, filterValue) => {
+             // Custom filter for team name or team id matching
+             const teamName = row.getValue(columnId) as string;
+             // If filterValue is team ID, we might need to check row.original.team_id?
+             // But the dropdown sends ID.
+             // Let's assume filterValue is the team NAME for simplicity in column filter?
+             // Or we can match ID.
+             if (filterValue === 'all') return true;
+             // If we want to filter by ID, we should better accessor the ID.
+             // But let's check against team ID on original row
+             return row.original.team_id === filterValue;
+        }
     }),
     columnHelper.accessor('assignee_profile', {
         header: 'Assignee',
@@ -158,19 +177,39 @@ const TicketTable = ({
             </div>
         )
     })
-  ], [totalCount, currentPage, pageSize, user, onEdit, onDelete]);
+  ], [user, onEdit, onDelete]);
 
   const table = useReactTable({
     data: tickets,
     columns,
     state: {
       sorting,
+      globalFilter,
+      columnFilters
     },
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(), // Client-side sorting for current page data
-    // Manual pagination is handled by parent, so we don't use getPaginationRowModel here unless we want client-side pagination
-    manualPagination: true,
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
+    getPaginationRowModel: getPaginationRowModel(),
+    globalFilterFn: (row, columnId, filterValue) => {
+        const search = filterValue.toLowerCase();
+        const title = (row.getValue('title') as string)?.toLowerCase() || '';
+        const status = (row.getValue('status') as string)?.toLowerCase() || '';
+        const priority = (row.getValue('priority') as string)?.toLowerCase() || '';
+        const assignee = (row.original.assignee_profile?.full_name)?.toLowerCase() || '';
+        const teamName = (row.original.team?.name || row.original.teams?.name)?.toLowerCase() || '';
+
+        return title.includes(search) || 
+               status.includes(search) ||
+               priority.includes(search) ||
+               assignee.includes(search) ||
+               teamName.includes(search);
+    }
   });
 
   if (loading) {
@@ -182,9 +221,85 @@ const TicketTable = ({
      );
   }
 
+  // Define options for dropdowns
+  const STATUS_OPTIONS = ['open', 'in_progress', 'done'];
+  const PRIORITY_OPTIONS = ['low', 'medium', 'high', 'critical'];
+
   return (
-    <div className="w-full bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden flex flex-col">
-      <div className="overflow-x-auto">
+    <div className="flex flex-col gap-4">
+      {/* Table Toolbar */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white dark:bg-[#0f172a] p-4 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm">
+        <div className="relative w-full sm:w-72">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            value={globalFilter ?? ''}
+            onChange={e => setGlobalFilter(e.target.value)}
+            placeholder="Search tickets..."
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-slate-100"
+          />
+          {globalFilter && (
+            <button 
+              onClick={() => setGlobalFilter('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          {/* Team Filter */}
+           <select
+            value={(table.getColumn('team')?.getFilterValue() as string) ?? ''}
+            onChange={e => table.getColumn('team')?.setFilterValue(e.target.value || undefined)}
+            className="w-full sm:w-auto px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <option value="">All Teams</option>
+            {userTeams.map(team => (
+                <option key={team.id} value={team.id}>{team.name}</option>
+            ))}
+          </select>
+
+          {/* Status Filter */}
+          <select
+            value={(table.getColumn('status')?.getFilterValue() as string) ?? ''}
+            onChange={e => table.getColumn('status')?.setFilterValue(e.target.value || undefined)}
+            className="w-full sm:w-auto px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <option value="">All Status</option>
+            {STATUS_OPTIONS.map(status => (
+              <option key={status} value={status}>{status.replace('_', ' ')}</option>
+            ))}
+          </select>
+
+           {/* Priority Filter */}
+           <select
+            value={(table.getColumn('priority')?.getFilterValue() as string) ?? ''}
+            onChange={e => table.getColumn('priority')?.setFilterValue(e.target.value || undefined)}
+            className="w-full sm:w-auto px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <option value="">All Priorities</option>
+            {PRIORITY_OPTIONS.map(p => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
+          
+          {(columnFilters.length > 0 || globalFilter) && (
+             <button
+                onClick={() => {
+                    setGlobalFilter('');
+                    setColumnFilters([]);
+                }}
+                className="px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"
+             >
+                Reset
+             </button>
+          )}
+        </div>
+      </div>
+
+      <div className="w-full bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden flex flex-col">
+          <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead className="bg-slate-50/80 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-10">
             {table.getHeaderGroups().map(headerGroup => (
@@ -239,6 +354,32 @@ const TicketTable = ({
           </tbody>
         </table>
       </div>
+      </div>
+      
+       {/* Pagination Controls */}
+       {table.getPageCount() > 1 && (
+        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-white/5">
+             <div className="flex items-center gap-2">
+                <button
+                    className="px-3 py-1 text-sm border border-slate-200 dark:border-slate-700 rounded-md disabled:opacity-50"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                >
+                    Previous
+                </button>
+                <button
+                    className="px-3 py-1 text-sm border border-slate-200 dark:border-slate-700 rounded-md disabled:opacity-50"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                >
+                    Next
+                </button>
+             </div>
+             <span className="text-sm text-slate-500 dark:text-slate-400">
+                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+             </span>
+        </div>
+      )}
     </div>
   );
 };

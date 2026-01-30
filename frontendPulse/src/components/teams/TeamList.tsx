@@ -1,16 +1,24 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, User, Users, Trash2, Edit2, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown, Sparkles } from 'lucide-react';
+import { Shield, User, Users, Trash2, Edit2, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown, Sparkles, Search, X } from 'lucide-react';
 import { 
   useReactTable, 
   getCoreRowModel, 
   getSortedRowModel,
   flexRender, 
   createColumnHelper,
-  type SortingState 
+  getFilteredRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  getPaginationRowModel,
+  type SortingState,
+  type ColumnFiltersState,
+  type FilterFn
 } from '@tanstack/react-table';
 import { useAuth } from '../../context/AuthContext';
 import ResourceCard from '../common/ResourceCard';
+
+const TEAM_ROLES_OPTIONS = ['Admin', 'Developer', 'Designer', 'Viewer']; 
 
 interface TeamMember {
   id: string;
@@ -61,6 +69,8 @@ const TeamList = ({
   const navigate = useNavigate();
   const { user } = useAuth();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState('');
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   
   // -- Members Table Setup --
   const columnHelper = createColumnHelper<TeamMember>();
@@ -164,11 +174,33 @@ const TeamList = ({
   const table = useReactTable({
     data: members,
     columns,
-    state: { sorting },
+    state: { 
+      sorting,
+      globalFilter,
+      columnFilters
+    },
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    manualPagination: true, // Pagination controlled by parent
+    getFilteredRowModel: getFilteredRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
+    getPaginationRowModel: getPaginationRowModel(),
+    // Custom global filter to search multiple fields including nested profiles
+    globalFilterFn: (row, columnId, filterValue) => {
+      const search = filterValue.toLowerCase();
+      const email = (row.getValue('email') as string)?.toLowerCase() || '';
+      const role = (row.getValue('role') as string)?.toLowerCase() || '';
+      const discordId = (row.original.discord_id)?.toLowerCase() || '';
+      const fullName = (row.original.profiles?.full_name)?.toLowerCase() || '';
+      
+      return email.includes(search) || 
+             role.includes(search) || 
+             discordId.includes(search) || 
+             fullName.includes(search);
+    }, 
   });
 
   // -- Loading State --
@@ -235,8 +267,65 @@ const TeamList = ({
 
   // -- Members View (Table) --
   return (
-    <div className="w-full bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden flex flex-col">
-      <div className="overflow-x-auto">
+    <div className="flex flex-col gap-4">
+      {/* Table Toolbar */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white dark:bg-[#0f172a] p-4 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm">
+        <div className="relative w-full sm:w-72">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            value={globalFilter ?? ''}
+            onChange={e => setGlobalFilter(e.target.value)}
+            placeholder="Search members..."
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-slate-100"
+          />
+          {globalFilter && (
+            <button 
+              onClick={() => setGlobalFilter('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <select
+            value={(table.getColumn('role')?.getFilterValue() as string) ?? ''}
+            onChange={e => table.getColumn('role')?.setFilterValue(e.target.value || undefined)}
+            className="w-full sm:w-auto px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <option value="">All Roles</option>
+            {TEAM_ROLES_OPTIONS.map(role => (
+              <option key={role} value={role}>{role}</option>
+            ))}
+          </select>
+
+          <select
+            value={(table.getColumn('status')?.getFilterValue() as string) ?? ''}
+            onChange={e => table.getColumn('status')?.setFilterValue(e.target.value || undefined)}
+            className="w-full sm:w-auto px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-700 dark:text-slate-300 cursor-pointer"
+          >
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          
+          {(columnFilters.length > 0 || globalFilter) && (
+             <button
+                onClick={() => {
+                    setGlobalFilter('');
+                    setColumnFilters([]);
+                }}
+                className="px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"
+             >
+                Reset
+             </button>
+          )}
+        </div>
+      </div>
+
+      <div className="w-full bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden flex flex-col">
+          <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead className="bg-slate-50/80 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-10">
             {table.getHeaderGroups().map(headerGroup => (
@@ -287,6 +376,32 @@ const TeamList = ({
           </tbody>
         </table>
       </div>
+      </div>
+      
+      {/* Pagination Controls */}
+      {table.getPageCount() > 1 && (
+        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-white/5">
+             <div className="flex items-center gap-2">
+                <button
+                    className="px-3 py-1 text-sm border border-slate-200 dark:border-slate-700 rounded-md disabled:opacity-50"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                >
+                    Previous
+                </button>
+                <button
+                    className="px-3 py-1 text-sm border border-slate-200 dark:border-slate-700 rounded-md disabled:opacity-50"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                >
+                    Next
+                </button>
+             </div>
+             <span className="text-sm text-slate-500 dark:text-slate-400">
+                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+             </span>
+        </div>
+      )}
     </div>
   );
 };

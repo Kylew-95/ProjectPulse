@@ -52,7 +52,7 @@ const Overview = () => {
         title="Command Center" 
         description={
             <>
-              Welcome back, <span className="text-slate-900 dark:text-slate-100 font-bold">{user?.user_metadata.name?.split(' ')[0]}</span>
+              Welcome back, <span className="text-slate-900 dark:text-slate-100 font-bold">{user?.user_metadata.full_name}</span>
             </>
         }
       >
@@ -116,7 +116,7 @@ const Overview = () => {
            </div>
         </div>
 
-        <div className="lg:col-span-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl p-8 shadow-sm">
+        {/* <div className="lg:col-span-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl p-8 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-6">Quick Actions</h2>
           <div className="space-y-3">
              <button className="w-full flex items-center justify-between px-5 py-4 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.01] transition-all active:scale-95 group">
@@ -128,7 +128,7 @@ const Overview = () => {
                <Users size={18} aria-hidden="true" className="group-hover:scale-110 transition-transform" />
              </button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

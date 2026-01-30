@@ -6,10 +6,9 @@ import CreateTeamModal from '../../components/teams/CreateTeamModal';
 import InviteModal from '../../components/teams/InviteModal';
 import PermissionsModal from '../../components/teams/PermissionsModal';
 import TeamHeader from '../../components/teams/TeamHeader';
-import TeamFilters from '../../components/teams/TeamFilters';
 import TeamList from '../../components/teams/TeamList';
+
 import Breadcrumbs from '../../components/ui/Breadcrumbs';
-import Pagination from '../../components/common/Pagination';
 import { exportToCSV } from '../../utils/exportUtils';
 
 interface TeamMember {
@@ -32,8 +31,6 @@ const Team = () => {
   const { teamId } = useParams();
   const [members, setMembers] = useState<TeamMember[]>([]);
 
-  // ... (keep state declarations)
-
   // Access Control for Teams
   if (['Free', 'Starter'].includes(profile?.subscription_tier || 'Free')) {
      return (
@@ -50,10 +47,9 @@ const Team = () => {
      );
   }
 
+
+  // Client-side filtering implementation - simplified state
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
   const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
@@ -65,10 +61,6 @@ const Team = () => {
 
   const refreshData = () => setRefreshTrigger(prev => prev + 1);
 
-  // Real Pagination State
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const pageSize = 10;
   
   const viewMode = teamId ? 'members' : 'teams';
 
@@ -153,7 +145,6 @@ const Team = () => {
                 
                 console.log('🎯 Final userTeams:', userTeams);
                 setTeams(userTeams);
-                setTotalCount(userTeams.length);
                 setMembers([]);
             } else if (viewMode === 'members' && teamId) {
                 if (!selectedTeam || selectedTeam.id !== teamId) {
@@ -167,21 +158,13 @@ const Team = () => {
                   setSelectedTeam(teamData);
                 }
 
-                const from = (currentPage - 1) * pageSize;
-                const to = from + pageSize - 1;
-
-                // Fetch team_members WITHOUT profiles join
+                // Fetch all team_members for client-side filtering
                 let query = supabase
                     .from('team_members')
-                    .select('id, user_id, email, discord_id, role, status', { count: 'exact' })
+                    .select('id, user_id, email, discord_id, role, status')
                     .eq('team_id', teamId);
 
-                if (roleFilter !== 'all') query = query.eq('role', roleFilter);
-                if (statusFilter !== 'all') query = query.eq('status', statusFilter);
-                if (searchQuery) query = query.or(`email.ilike.%${searchQuery}%`);
-
-                const { data: membersData, error, count } = await query
-                    .range(from, to);
+                const { data: membersData, error } = await query;
 
                 if (error) throw error;
 
@@ -208,8 +191,6 @@ const Team = () => {
                 } else {
                     setMembers([]);
                 }
-                
-                setTotalCount(count || 0);
             }
         } catch (err: any) {
             console.error('Error fetching dashboard data:', err);
@@ -219,7 +200,7 @@ const Team = () => {
     };
 
     fetchData();
-  }, [user, currentPage, roleFilter, searchQuery, viewMode, teamId, refreshTrigger]);
+  }, [user, viewMode, teamId, refreshTrigger]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -274,7 +255,7 @@ const Team = () => {
       const { error } = await supabase.from('teams').delete().eq('id', teamId);
       if (error) throw error;
       setTeams(prev => prev.filter(t => t.id !== teamId));
-      setTotalCount(prev => prev - 1);
+
     } catch (err: any) {
       alert(`Error : ${err.message}`);
     }
@@ -313,18 +294,6 @@ const Team = () => {
       />
 
       <div className="space-y-8">
-        {viewMode === 'members' && (
-          <TeamFilters 
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            roleFilter={roleFilter}
-            setRoleFilter={setRoleFilter}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            setIsPermissionsModalOpen={setIsPermissionsModalOpen}
-          />
-        )}
-
         <div className={viewMode === 'members' ? "" : "min-h-[400px]"}>
           <TeamList 
             viewMode={viewMode}
@@ -336,17 +305,6 @@ const Team = () => {
             onDeleteTeam={handleDeleteTeam}
           />
         </div>
-
-        {/* Pagination Footer - Only for members view as Teams are currently not paginated in the same way or few in number */}
-        {viewMode === 'members' && totalCount > 0 && (
-          <Pagination 
-            currentPage={currentPage}
-            totalCount={totalCount}
-            pageSize={pageSize}
-            onPageChange={setCurrentPage}
-            entityName="experts"
-          />
-        )}
       </div>
 
       {isCreateTeamModalOpen && (
@@ -357,7 +315,6 @@ const Team = () => {
             // Small delay to ensure DB write completes
             await new Promise(resolve => setTimeout(resolve, 500));
             refreshData();
-            if (currentPage !== 1) setCurrentPage(1);
           }}
         />
       )}
