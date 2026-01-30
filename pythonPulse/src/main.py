@@ -101,9 +101,9 @@ async def on_ready():
 async def on_guild_join(guild):
     """Automatically create the required channel and link server to owner's profile."""
     print(f"Bot joined server: {guild.name}")
-    print(f"📋 Server ID: {guild.id}")
-    print(f"👥 Member count: {guild.member_count}")
-    print(f"👑 Owner ID: {guild.owner_id}")
+    print(f"Server ID: {guild.id}")
+    print(f"Member count: {guild.member_count}")
+    print(f"Owner ID: {guild.owner_id}")
     
     # Automatically link this Discord server to the owner's profile
     try:

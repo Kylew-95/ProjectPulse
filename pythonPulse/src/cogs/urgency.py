@@ -56,14 +56,14 @@ class Urgency(commands.Cog):
 
                 # PRINT JSON TO TERMINAL
                 print("\n" + "="*50)
-                print(f"📝 FINAL ISSUE REPORT ({ticket_result})")
+                print(f"FINAL ISSUE REPORT ({ticket_result})")
                 print("="*50)
                 print(json.dumps(report, indent=4))
                 print("="*50 + "\n")
 
                 # Thank the user with a more detailed confirmation
                 await message.channel.send(
-                    f"✅ **Report Submitted!**\n\n"
+                    f"**Report Submitted!**\n\n"
                     f"**Summary:** {report['summary']}\n"
                     f"**Priority:** {report['priority']}\n"
                     f"**Type:** {report['type']}\n\n"
@@ -89,14 +89,14 @@ class Urgency(commands.Cog):
         # 3. PLAN TIER ENFORCEMENT
         # ---------------------------------------------------------
         is_active, sub_msg = check_guild_subscription(message.guild.id)
-        print(f"\n🔍 SUBSCRIPTION CHECK for Guild {message.guild.name} (ID: {message.guild.id})")
+        print(f"\nSUBSCRIPTION CHECK for Guild {message.guild.name} (ID: {message.guild.id})")
         print(f"   Active: {is_active}")
         print(f"   Message: {sub_msg}\n")
         
         if not is_active:
             # Only notify once per bot session per guild to avoid spam
             if message.guild.id not in self.notified_guilds:
-                await message.channel.send(f"⚠️ **Subscription Required**: {sub_msg}")
+                await message.channel.send(f"**Subscription Required**: {sub_msg}")
                 self.notified_guilds.add(message.guild.id)
             return
 
@@ -139,7 +139,7 @@ class Urgency(commands.Cog):
 
                     if admin_channel:
                         await admin_channel.send(
-                            f"🚨 **Urgency Alert (Level {score}/10)**\n"
+                            f"Urgency Alert (Level {score}/10)\n"
                             f"**User:** {message.author.mention}\n"
                             f"**Reason:** {reason}\n"
                             f"**Content:** {message.content}"

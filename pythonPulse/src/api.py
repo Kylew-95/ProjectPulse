@@ -360,7 +360,7 @@ async def stripe_webhook(request: Request):
             response = supabase.table('profiles').upsert(update_data).execute()
             print(f"WEBHOOK UPDATE SUCCESS: {response}", flush=True)
         else:
-            print("❌ WEBHOOK ERROR: User ID or Plan Tier ID missing in metadata.", flush=True)
+            print("WEBHOOK ERROR: User ID or Plan Tier ID missing in metadata.", flush=True)
 
     elif event['type'] == 'customer.subscription.updated':
         sub = event['data']['object']

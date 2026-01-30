@@ -34,12 +34,12 @@ class SupabaseTicketService(TicketService):
                 
                 if profile_result.data and len(profile_result.data) > 0:
                     supabase_uuid = profile_result.data[0].get("id")
-                    print(f"✅ Found Supabase UUID for Discord user {discord_id}: {supabase_uuid}")
+                    print(f"Found Supabase UUID for Discord user {discord_id}: {supabase_uuid}")
                 else:
-                    print(f"⚠️ No Supabase profile found for Discord user ID: {discord_id}")
+                    print(f"Warning: No Supabase profile found for Discord user ID: {discord_id}")
                     print(f"   User needs to sign up at ProjectPulse with their Discord account!")
             except Exception as e:
-                print(f"❌ Error looking up user: {e}")
+                print(f"Error looking up user: {e}")
 
         data = {
             "reporter_id": supabase_uuid,
@@ -60,7 +60,7 @@ class SupabaseTicketService(TicketService):
 
         try:
             supabase.table("tickets").insert(data).execute()
-            print(f"✅ Ticket created with reporter_id: {supabase_uuid}")
+            print(f"Ticket created with reporter_id: {supabase_uuid}")
             return "Saved to Supabase Database"
 
 
@@ -103,7 +103,7 @@ class GitHubTicketService(TicketService):
         }
         title = f"Urgency Report: {report_data['user']}"
         body = f"""
-### 🚨 Urgency Level: {report_data['urgency_score']}/10
+### Urgency Level: {report_data['urgency_score']}/10
 **User**: {report_data['user']}
 
 ### Summary

@@ -16,7 +16,7 @@ class Summary(commands.Cog):
         self.scheduler.start()
 
     async def post_daily_summary(self):
-        print("🔍 Checking guilds for Daily Pulse...")
+        print("Checking guilds for Daily Pulse...")
         
         for guild in self.bot.guilds:
             # Plan Tier Enforcement
@@ -28,14 +28,14 @@ class Summary(commands.Cog):
             if not target_channel:
                 continue
 
-            print(f"📊 Generating Daily Pulse for {guild.name}...")
+            print(f"Generating Daily Pulse for {guild.name}...")
             
             # 1. Fetch Logs (This needs to be filtered by channel_id or guild if multi-tenant)
             # For now, it fetches last 24h of all logs, which is fine for a start if it's one guild
             messages = get_messages_last_24h()
             
             if not messages:
-                await target_channel.send("📉 **The Daily Pulse**: No messages recorded in the last 24 hours.")
+                await target_channel.send("The Daily Pulse: No messages recorded in the last 24 hours.")
                 continue
 
             # Format for AI

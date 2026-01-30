@@ -1,16 +1,3 @@
-
-import os
-import sys
-from dotenv import load_dotenv
-from supabase import create_client
-
-# Add src to path to allow imports
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-
-# Import the actual AI logic
-from services.ai_service import generate_detailed_ticket
-
-
 import os
 import sys
 import time
@@ -58,7 +45,7 @@ def create_ticket():
         }
     ]
 
-    print(f"🤖 Starting AI Priority Verification (Running {len(test_cases)} scenarios)...\n")
+    print(f"Starting AI Priority Verification (Running {len(test_cases)} scenarios)...\n")
     
     for i, case in enumerate(test_cases, 1):
         print(f"--- TEST CASE {i}: Expecting {case['priority'].upper()} ---")
@@ -69,13 +56,13 @@ def create_ticket():
             ai_report = generate_detailed_ticket(case['report'], case['followup'])
             predicted_priority = ai_report.get('priority')
             
-            print(f"📊 AI Result: {predicted_priority}")
+            print(f"AI Result: {predicted_priority}")
             
             # Simple Pass/Fail Check (Case insensitive)
             if predicted_priority.lower() == case['priority'].lower():
-                print("✅ PASSED")
+                print("PASSED")
             else:
-                print(f"⚠️ MISMATCH (Expected {case['priority']}, got {predicted_priority})")
+                print(f"MISMATCH (Expected {case['priority']}, got {predicted_priority})")
             
             # Insert into DB for record
             ticket_data = {
@@ -91,10 +78,10 @@ def create_ticket():
             }
             
             supabase.table("tickets").insert(ticket_data).execute()
-            print("💾 Saved to DB.\n")
+            print("Saved to DB.\n")
             
         except Exception as e:
-            print(f"❌ Error in Test Case {i}: {e}\n")
+            print(f"Error in Test Case {i}: {e}\n")
         
         time.sleep(1) # Avoid rate limits if any
 

@@ -13,7 +13,7 @@ class Knowledge(commands.Cog):
         
         is_active, sub_msg = check_guild_subscription(ctx.guild.id)
         if not is_active:
-            await ctx.send(f"⚠️ **Subscription Required**: {sub_msg}")
+            await ctx.send(f"**Subscription Required**: {sub_msg}")
             return False
         return True
 
@@ -28,11 +28,11 @@ class Knowledge(commands.Cog):
             question, answer = content.split("|", 1)
             success = add_knowledge_base_item(question.strip(), answer.strip())
             if success:
-                await ctx.send(f"✅ Added to KB: **{question.strip()}**")
+                await ctx.send(f"Added to KB: **{question.strip()}**")
             else:
-                await ctx.send("❌ Failed to add to database.")
+                await ctx.send("Failed to add to database.")
         except ValueError:
-            await ctx.send("⚠️ Format error. Usage: `!kb add Question | Answer`")
+            await ctx.send("Format error. Usage: `!kb add Question | Answer`")
 
     @kb.command(name="ask")
     async def ask_entry(self, ctx, *, query: str):
@@ -45,7 +45,7 @@ class Knowledge(commands.Cog):
 
         response = "**Running Search...**\n"
         for item in results[:3]: # Top 3
-            response += f"❓ **Q:** {item['question']}\n💡 **A:** {item['answer']}\n\n"
+            response += f"Q: {item['question']}\nA: {item['answer']}\n\n"
             
         await ctx.send(response)
 

@@ -12,12 +12,12 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
 if not STRIPE_KEY or not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
-    print("❌ Missing environment variables. Check .env")
+    print("Error: Missing environment variables. Check .env")
     exit(1)
 
 # SAFETY CHECK: Ensure we are using a Test Key
 if not STRIPE_KEY.startswith("sk_test_"):
-    print("🛑 DANGER: STRIPE_KEY does not start with 'sk_test_'.")
+    print("DANGER: STRIPE_KEY does not start with 'sk_test_'.")
     print("   Aborting to prevent accidental deletion of live data.")
     exit(1)
 
@@ -25,7 +25,7 @@ stripe.api_key = STRIPE_KEY
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
 def wipe_stripe():
-    print("🗑️ Wiping Stripe Data (Test Mode)...")
+    print("Wiping Stripe Data (Test Mode)...")
     
     # 0. Subscriptions (Explicit Delete)
     try:
@@ -38,7 +38,7 @@ def wipe_stripe():
             except Exception as e:
                 print(f"     Failed to delete subscription {sub.id}: {e}")
     except Exception as e:
-        print(f"⚠️ Error wiping subscriptions: {e}")
+        print(f"Error wiping subscriptions: {e}")
 
     # 1. Customers
     try:
@@ -51,7 +51,7 @@ def wipe_stripe():
             except Exception as e:
                 print(f"     Failed to delete customer {cust.id}: {e}")
     except Exception as e:
-        print(f"⚠️ Error wiping customers: {e}")
+        print(f"Error wiping customers: {e}")
 
     # 2. Coupons
     try:
@@ -64,7 +64,7 @@ def wipe_stripe():
             except Exception as e:
                 print(f"     Failed to delete coupon {item.id}: {e}")
     except Exception as e:
-        print(f"⚠️ Error wiping coupons: {e}")
+        print(f"Error wiping coupons: {e}")
 
     # 3. Prices (Try DELETE first)
     try:
@@ -118,7 +118,7 @@ def wipe_stripe():
             print(f"     Processed price {item.id}")
             
     except Exception as e:
-        print(f"⚠️ Error processing prices: {e}")
+        print(f"Error processing prices: {e}")
 
     # 4. Products (Delete if possible)
     try:
@@ -134,9 +134,9 @@ def wipe_stripe():
             except Exception as e:
                 print(f"     Archived product {item.id} (Delete blocked: {e})")
     except Exception as e:
-        print(f"⚠️ Error processing products: {e}")
+        print(f"Error processing products: {e}")
 
-    print("✅ Stripe Wipe Complete.\n")
+    print("Stripe Wipe Complete.\n")
 
 def wipe_supabase_table(table_name):
     """Fetches IDs and deletes them to handle UUIDs correctly and avoid 'invalid input syntax' errors."""
@@ -156,10 +156,10 @@ def wipe_supabase_table(table_name):
         print(f"     Deleted {len(ids)} rows from {table_name}")
 
     except Exception as e:
-        print(f"⚠️ Error clearing {table_name}: {e}")
+        print(f"Error clearing {table_name}: {e}")
 
 def wipe_supabase():
-    print("🗑️ Wiping Supabase Data...")
+    print("Wiping Supabase Data...")
     
     # Order matters for Foreign Keys
     tables_to_wipe = [
@@ -188,21 +188,21 @@ def wipe_supabase():
             except Exception as ue:
                 print(f"     Failed to delete user {user.id}: {ue}")
     except Exception as e:
-        print(f"⚠️ Error listing/deleting users: {e}")
+        print(f"Error listing/deleting users: {e}")
 
-    print("✅ Supabase Wipe Complete.\n")
+    print("Supabase Wipe Complete.\n")
 
 if __name__ == "__main__":
     if "--force" in sys.argv:
-        print("⚠️ Force Mode detected. Wiping immediately...")
+        print("Warning: Force Mode detected. Wiping immediately...")
         wipe_stripe()
         wipe_supabase()
-        print("✨ Environment Reset Successfully.")
+        print("Environment Reset Successfully.")
     else:
-        confirm = input("⚠️ WARNING: This will DELETE/ARCHIVE ALL Data in Stripe (Test Mode) and Supabase. Type 'DELETE' to confirm: ")
+        confirm = input("WARNING: This will DELETE/ARCHIVE ALL Data in Stripe (Test Mode) and Supabase. Type 'DELETE' to confirm: ")
         if confirm.strip() == "DELETE":
             wipe_stripe()
             wipe_supabase()
-            print("✨ Environment Reset Successfully.")
+            print("Environment Reset Successfully.")
         else:
-            print("❌ Operation Cancelled.")
+            print("Operation Cancelled.")

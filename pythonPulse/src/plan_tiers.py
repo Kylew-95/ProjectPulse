@@ -13,7 +13,7 @@ PLAN_TIERS = [
         "id": "starter",
         "name": "Starter",
         "description": "For solopreneurs and early-stage projects.",
-        "amount": 1800, # In pence (£18.00)
+        "amount": 1800, # In pence (18.00)
         "currency": "gbp",
         "interval": "month",
         "features": "5 projects, Standard AI Analysis, Email support", 
@@ -25,7 +25,7 @@ PLAN_TIERS = [
         "id": "pro",
         "name": "Pro",
         "description": "Perfect for growing teams and active projects.",
-        "amount": 2400, # In pence (£24.00)
+        "amount": 2400, # In pence (24.00)
         "currency": "gbp",
         "interval": "month",
         "features": "Unlimited projects, Advanced AI Analytics, Priority support, Web Dashboard Access", 
@@ -38,7 +38,7 @@ PLAN_TIERS = [
         "id": "enterprise",
         "name": "Enterprise",
         "description": "For large organizations requiring maximum throughput.",
-        "amount": 12000, # In pence (£120.00)
+        "amount": 12000, # In pence (120.00)
         "currency": "gbp",
         "interval": "month",
         "features": "Unlimited everything, Direct Ticketing Integration, Dedicated account manager",
