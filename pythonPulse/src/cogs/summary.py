@@ -30,9 +30,8 @@ class Summary(commands.Cog):
 
             print(f"Generating Daily Pulse for {guild.name}...")
             
-            # 1. Fetch Logs (This needs to be filtered by channel_id or guild if multi-tenant)
-            # For now, it fetches last 24h of all logs, which is fine for a start if it's one guild
-            messages = get_messages_last_24h()
+            # 1. Fetch Logs (Filtered by guild for isolation)
+            messages = get_messages_last_24h(guild_id=guild.id)
             
             if not messages:
                 await target_channel.send("The Daily Pulse: No messages recorded in the last 24 hours.")

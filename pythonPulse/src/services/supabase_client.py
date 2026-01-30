@@ -3,11 +3,10 @@ from config import SUPABASE_URL, SUPABASE_KEY
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-def insert_message(user_id: int, channel_id: int, content: str, username: str, full_name: str = None, avatar_url: str = None):
+def insert_message(user_id: int, channel_id: int, content: str, username: str, full_name: str = None, avatar_url: str = None, guild_id: int = None, ticket_id: int = None):
     """Logs a message to the database with deduplication logic to prevent multi-bot double-logging."""
     try:
         # Check for recent identical message (within 10s) to prevent dual-bot duplication
-        # Note: We filter by user, channel and content.
         recent = supabase.table("messages")\
             .select("id")\
             .eq("user_id", str(user_id))\
@@ -18,28 +17,45 @@ def insert_message(user_id: int, channel_id: int, content: str, username: str, f
             .execute()
         
         if recent.data:
-            # If the exact same message exists already, skip logging it again
             print(f"DEBUG: Skipping duplicate message insertion for {username} in {channel_id}")
-            return
+            return recent.data[0].get("id")
 
         data = {
             "user_id": str(user_id),
             "channel_id": str(channel_id),
+            "discord_guild_id": str(guild_id) if guild_id else None,
+            "ticket_id": ticket_id,
             "content": content,
             "username": username,
             "full_name": full_name,
             "avatar_url": avatar_url
         }
-        supabase.table("messages").insert(data).execute()
+        response = supabase.table("messages").insert(data).execute()
+        return response.data[0].get("id") if response.data else None
     except Exception as e:
         print(f"Error logging message to Supabase: {e}")
+        return None
 
-def get_messages_last_24h():
-    """Fetches messages from the last 24 hours."""
-    # Note: In a real app, you'd filter by timestamp. 
-    # For simplicity, we just fetch the last 100 messages for now.
+def link_message_to_ticket(message_id, ticket_id):
+    """Associates an existing message entry with a ticket ID."""
+    if not message_id or not ticket_id:
+        return False
     try:
-        response = supabase.table("messages").select("*").order("created_at", desc=True).limit(200).execute()
+        supabase.table("messages").update({"ticket_id": ticket_id}).eq("id", message_id).execute()
+        return True
+    except Exception as e:
+        print(f"Error linking message {message_id} to ticket {ticket_id}: {e}")
+        return False
+
+def get_messages_last_24h(guild_id: int = None):
+    """Fetches messages from the last 24 hours, optionally filtered by guild."""
+    try:
+        query = supabase.table("messages").select("*").order("created_at", desc=True).limit(200)
+        
+        if guild_id:
+            query = query.eq("discord_guild_id", str(guild_id))
+            
+        response = query.execute()
         return response.data
     except Exception as e:
         print(f"Error fetching messages: {e}")

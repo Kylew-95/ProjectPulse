@@ -19,21 +19,10 @@ class Urgency(commands.Cog):
         if message.author == self.bot.user:
             return
 
-        # ---------------------------------------------------------
         # 1. HANDLE DM RESPONSES (The "Finish" Step) - NO TIER CHECK FOR DMs 
         # (They are finishing a report already validated by server check)
         # ---------------------------------------------------------
         if isinstance(message.channel, discord.DMChannel):
-            # Log the user's DM response
-            insert_message(
-                message.author.id, 
-                message.channel.id, 
-                message.content, 
-                message.author.name, 
-                message.author.display_name, 
-                str(message.author.display_avatar.url)
-            )
-
             # Acknowledgment (Make it feel responsive)
             async with message.channel.typing():
                 ack_msg = await message.channel.send("Got it! I'm analyzing your additional details now...")
@@ -70,6 +59,18 @@ class Urgency(commands.Cog):
                         print(f"DEBUG: No pending ticket found for {message.author.name} in DB.")
                 except Exception as e:
                     print(f"Recovery Error: {e}")
+
+            # Log the user's DM response (Including ticket_id if found)
+            insert_message(
+                message.author.id, 
+                message.channel.id, 
+                message.content, 
+                message.author.name, 
+                message.author.display_name, 
+                str(message.author.display_avatar.url),
+                guild_id=guild_id,
+                ticket_id=ticket_id
+            )
 
             if ticket_id:
                 # Generate Structured AI Report (now with follow-up)
@@ -137,7 +138,15 @@ class Urgency(commands.Cog):
         # Log every message (Only for subscribed guilds)
         full_name = message.author.display_name
         avatar_url = str(message.author.display_avatar.url)
-        insert_message(message.author.id, message.channel.id, message.content, message.author.name, full_name, avatar_url)
+        message_id = insert_message(
+            message.author.id, 
+            message.channel.id, 
+            message.content, 
+            message.author.name, 
+            full_name, 
+            avatar_url,
+            guild_id=message.guild.id
+        )
 
         # Anti-Spam / Concurrent Report Check
         if message.author.id in self.active_reports:
@@ -178,6 +187,10 @@ class Urgency(commands.Cog):
                 
                 # Create ticket and get ID
                 ticket_id = self.ticket_service.create_ticket(ticket_data)
+
+                # LINK ORIGINAL MESSAGE TO TICKET
+                from services.supabase_client import link_message_to_ticket
+                link_message_to_ticket(message_id, ticket_id)
 
                 # START ACTIVE TRACKING
                 self.active_reports[message.author.id] = {
