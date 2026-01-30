@@ -1,3 +1,6 @@
+from config import COHERE_API_KEY
+import json
+
 try:
     import cohere
     if COHERE_API_KEY:
