@@ -63,14 +63,14 @@ async def on_guild_join(guild):
         else:
             # Try to find owner's profile by their Discord ID in auth.users
             # Since we use Discord OAuth, the user's Discord ID is stored as the user's id
-            owner_profile = supabase.table("profiles").select("id, email, discord_guild_id").eq("id", str(guild.owner_id)).execute()
+            owner_profile = supabase.table("profiles").select("id, email, discord_guild_id").eq("discord_user_id", str(guild.owner_id)).execute()
             
             if owner_profile.data and len(owner_profile.data) > 0:
                 profile = owner_profile.data[0]
                 # Update the owner's profile with this guild ID
                 supabase.table("profiles").update({
                     "discord_guild_id": str(guild.id)
-                }).eq("id", str(guild.owner_id)).execute()
+                }).eq("discord_user_id", str(guild.owner_id)).execute()
                 print(f"✅ Automatically linked server to owner's profile: {profile.get('email')}")
             else:
                 print(f"⚠️ Could not find profile for server owner (Discord ID: {guild.owner_id})")
