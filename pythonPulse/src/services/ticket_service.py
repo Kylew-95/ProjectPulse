@@ -13,11 +13,14 @@ class TicketService:
     def create_ticket(self, report_data):
         raise NotImplementedError
 
+    def update_ticket(self, ticket_id, report_data):
+        raise NotImplementedError
+
 class LogTicketService(TicketService):
     def create_ticket(self, report_data):
         print("\n[TICKET SYSTEM LOG] Ticket created internally.")
         print(json.dumps(report_data, indent=2))
-        return "Logged to Console"
+        return "LOGGED-INTERNAL"
 
 class SupabaseTicketService(TicketService):
     def create_ticket(self, report_data):
@@ -59,14 +62,37 @@ class SupabaseTicketService(TicketService):
         }
 
         try:
-            supabase.table("tickets").insert(data).execute()
-            print(f"Ticket created with reporter_id: {supabase_uuid}")
-            return "Saved to Supabase Database"
+            response = supabase.table("tickets").insert(data).execute()
+            ticket_id = response.data[0].get("id") if response.data else None
+            print(f"Ticket created with ID: {ticket_id}")
+            return ticket_id
 
 
         except Exception as e:
             print(f"Supabase Ticket Error: {e}")
-            return "Failed to save to DB"
+            return None
+
+    def update_ticket(self, ticket_id, report_data):
+        if not ticket_id:
+            return False
+
+        data = {
+            "description": f"{report_data['original_issue']}\n\nFOLLOW-UP:\n{report_data['follow_up_details']}",
+            "title": report_data.get("summary") or report_data.get("final_summary"),
+            "type": (report_data.get("type") or "support").lower(),
+            "priority": (report_data.get("priority") or "medium").lower(),
+            "solution": report_data.get("solution"),
+            "location": (report_data.get("location") or "unknown").lower(),
+            "updated_at": "now()"
+        }
+
+        try:
+            supabase.table("tickets").update(data).eq("id", ticket_id).execute()
+            print(f"Ticket {ticket_id} updated with follow-up details.")
+            return True
+        except Exception as e:
+            print(f"Supabase Update Error: {e}")
+            return False
 
 class TrelloTicketService(TicketService):
     def create_ticket(self, report_data):
@@ -86,10 +112,10 @@ class TrelloTicketService(TicketService):
         }
         try:
             requests.post(url, params=query).raise_for_status()
-            return "Created Trello Card"
+            return "TRELLO-CARD"
         except Exception as e:
             print(f"Trello Error: {e}")
-            return "Failed to create Trello Card"
+            return None
 
 class GitHubTicketService(TicketService):
     def create_ticket(self, report_data):
@@ -118,10 +144,10 @@ class GitHubTicketService(TicketService):
         data = {"title": title, "body": body, "labels": ["bug", "urgent"]}
         try:
             requests.post(url, json=data, headers=headers).raise_for_status()
-            return "Created GitHub Issue"
+            return "GITHUB-ISSUE"
         except Exception as e:
             print(f"GitHub Error: {e}")
-            return "Failed to create GitHub Issue"
+            return None
 
 class JiraTicketService(TicketService):
     def create_ticket(self, report_data):
@@ -155,10 +181,10 @@ class JiraTicketService(TicketService):
         }
         try:
             requests.post(url, json=data, headers=headers, auth=auth).raise_for_status()
-            return "Created Jira Ticket"
+            return "JIRA-TICKET"
         except Exception as e:
             print(f"Jira Error: {e}")
-            return "Failed to create Jira Ticket"
+            return None
 
 def get_ticket_service():
     if TICKET_PROVIDER == "TRELLO":

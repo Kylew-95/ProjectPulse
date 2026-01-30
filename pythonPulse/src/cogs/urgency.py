@@ -34,20 +34,15 @@ class Urgency(commands.Cog):
             )
 
             if message.author.id in self.active_reports:
-                # ... (rest of DM logic remains same)
                 # Retrieve the original issue data
                 original_data = self.active_reports.pop(message.author.id)
                 
-                # Generate Structured AI Report
+                # Generate Structured AI Report (now with follow-up)
                 ai_report = generate_detailed_ticket(original_data['content'], message.content)
                 
-                # Construct the JSON summary
+                # Construct the update report
                 report = {
                     "user": message.author.name,
-                    "full_name": message.author.display_name,
-                    "avatar_url": str(message.author.display_avatar.url),
-                    "user_id": str(message.author.id),
-                    "guild_id": str(original_data['guild_id']),  # Discord server ID
                     "original_issue": original_data['content'],
                     "follow_up_details": message.content,
                     "summary": ai_report.get("summary", "New report from Discord"),
@@ -55,28 +50,29 @@ class Urgency(commands.Cog):
                     "priority": ai_report.get("priority", "Medium"),
                     "location": ai_report.get("location", "Unknown"),
                     "solution": ai_report.get("solution", "Investigate conversation logs."),
-                    "urgency_score": original_data['score'],
-                    "origin_channel_id": str(original_data['channel_id']),
                     "status": "OPEN"
                 }
 
+                # UPDATE TICKET if exists, otherwise create
+                ticket_id = original_data.get("ticket_id")
+                if ticket_id:
+                    success = self.ticket_service.update_ticket(ticket_id, report)
+                    ticket_result = "Updated in Database" if success else "Update Failed"
+                else:
+                    # Fallback create if no ID found
+                    report["user_id"] = str(message.author.id)
+                    report["guild_id"] = str(original_data['guild_id'])
+                    report["urgency_score"] = original_data.get('score', 5)
+                    ticket_result = self.ticket_service.create_ticket(report)
+                    ticket_result = "Saved to Database" if ticket_result else "Failed to Save"
 
-                # CREATE TICKET via Integration
-                ticket_result = self.ticket_service.create_ticket(report)
-
-                # PRINT JSON TO TERMINAL
-                print("\n" + "="*50)
-                print(f"FINAL ISSUE REPORT ({ticket_result})")
-                print("="*50)
-                print(json.dumps(report, indent=4))
-                print("="*50 + "\n")
-
-                # Thank the user with a more detailed confirmation
+                # Thank the user
                 await message.channel.send(
-                    f"**Report Submitted!**\n\n"
+                    f"**Report Updated!**\n\n"
                     f"**Summary:** {report['summary']}\n"
                     f"**Priority:** {report['priority']}\n"
                     f"**Type:** {report['type']}\n\n"
+                    f"**Suggested Solution:**\n{report['solution']}\n\n"
                     f"Our team has been notified. You can track this ticket on your dashboard. Status: **{ticket_result}**"
                 )
 
@@ -116,20 +112,44 @@ class Urgency(commands.Cog):
         insert_message(message.author.id, message.channel.id, message.content, message.author.name, full_name, avatar_url)
 
         # Urgency Check 
-        if len(message.content) > 10: 
+        if len(message.content) > 5: 
             result = analyze_urgency(message.content)
             # Result format: "Score|Reason"
             try:
                 score_str, reason = result.split("|", 1)
                 score = int(score_str)
 
-                if score >= 7:
+                if score >= 5:
+                    # Create Ticket IMMEDIATELY (Preliminary Report)
+                    pre_report = generate_detailed_ticket(message.content, "")
+                    ticket_data = {
+                        "user": message.author.name,
+                        "full_name": message.author.display_name,
+                        "avatar_url": str(message.author.display_avatar.url),
+                        "user_id": str(message.author.id),
+                        "guild_id": str(message.guild.id),
+                        "original_issue": message.content,
+                        "follow_up_details": "Pending...",
+                        "summary": pre_report.get("summary", "New report from Discord"),
+                        "type": pre_report.get("type", "Support"),
+                        "priority": pre_report.get("priority", "Medium"),
+                        "location": pre_report.get("location", "Unknown"),
+                        "solution": pre_report.get("solution", "Analyzing report..."),
+                        "urgency_score": score,
+                        "origin_channel_id": str(message.channel.id),
+                        "status": "OPEN"
+                    }
+                    
+                    # Create ticket and get ID
+                    ticket_id = self.ticket_service.create_ticket(ticket_data)
+
                     # START ACTIVE TRACKING
                     self.active_reports[message.author.id] = {
                         "content": message.content,
                         "score": score,
                         "channel_id": message.channel.id,
-                        "guild_id": message.guild.id  # Store Discord server ID
+                        "guild_id": message.guild.id,
+                        "ticket_id": ticket_id
                     }
 
                     # A. NOTIFY ADMINS (Private)
@@ -160,15 +180,6 @@ class Urgency(commands.Cog):
                     
                     try:
                         await message.author.send(follow_up)
-                        # Log the bot's follow-up message
-                        insert_message(
-                            self.bot.user.id,
-                            message.author.id, # DM channel ID is often inferred or same as user ID in some contexts, but here we use author id for simplicity in DM logging
-                            follow_up,
-                            self.bot.user.name,
-                            self.bot.user.display_name,
-                            str(self.bot.user.display_avatar.url)
-                        )
                         await message.add_reaction("📩")
                         await message.reply("Hey! I've sent you a DM to get a few more details so we can help you faster.")
                     except discord.Forbidden:
