@@ -13,3 +13,6 @@ pythonPulse/__pycache__/
 pythonPulse/venv/
 *.sql
 GitScript.txt
+
+# Local Netlify folder
+.netlify

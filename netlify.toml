@@ -1,0 +1,16 @@
+# Root Netlify configuration for monorepo
+# This ensures Netlify knows to look into frontendPulse for the build
+
+[build]
+  base = "frontendPulse"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_API_URL,VITE_STRIPE_PUBLISHABLE_KEY"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
