@@ -97,13 +97,10 @@ const TicketTable = ({
         id: 'team',
         header: 'Team',
         cell: info => <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">{info.getValue()}</span>,
-        filterFn: (row, columnId, filterValue) => {
+        filterFn: (row, _columnId, filterValue) => {
              // Custom filter for team name or team id matching
-             const teamName = row.getValue(columnId) as string;
              // If filterValue is team ID, we might need to check row.original.team_id?
              // But the dropdown sends ID.
-             // Let's assume filterValue is the team NAME for simplicity in column filter?
-             // Or we can match ID.
              if (filterValue === 'all') return true;
              // If we want to filter by ID, we should better accessor the ID.
              // But let's check against team ID on original row
@@ -196,7 +193,7 @@ const TicketTable = ({
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getPaginationRowModel: getPaginationRowModel(),
-    globalFilterFn: (row, columnId, filterValue) => {
+    globalFilterFn: (row, _columnId, filterValue) => {
         const search = filterValue.toLowerCase();
         const title = (row.getValue('title') as string)?.toLowerCase() || '';
         const status = (row.getValue('status') as string)?.toLowerCase() || '';

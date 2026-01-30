@@ -12,8 +12,7 @@ import {
   getFacetedUniqueValues,
   getPaginationRowModel,
   type SortingState,
-  type ColumnFiltersState,
-  type FilterFn
+  type ColumnFiltersState
 } from '@tanstack/react-table';
 import { useAuth } from '../../context/AuthContext';
 import ResourceCard from '../common/ResourceCard';
@@ -189,7 +188,7 @@ const TeamList = ({
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getPaginationRowModel: getPaginationRowModel(),
     // Custom global filter to search multiple fields including nested profiles
-    globalFilterFn: (row, columnId, filterValue) => {
+    globalFilterFn: (row, _columnId, filterValue) => {
       const search = filterValue.toLowerCase();
       const email = (row.getValue('email') as string)?.toLowerCase() || '';
       const role = (row.getValue('role') as string)?.toLowerCase() || '';

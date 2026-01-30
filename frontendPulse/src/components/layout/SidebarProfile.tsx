@@ -33,7 +33,7 @@ const SidebarProfile = () => {
             </div>
             
             <a 
-                href="https://discord.gg/your-server" 
+                href={profile?.discord_guild_id ? `https://discord.com/channels/${profile.discord_guild_id}` : 'https://discord.gg/'}
                 target="_blank" 
                 rel="noopener noreferrer"
                 className={`p-1.5 rounded-lg transition-colors ${
@@ -41,7 +41,7 @@ const SidebarProfile = () => {
                     ? 'text-slate-400 hover:text-white hover:bg-white/10' 
                     : 'text-slate-400 hover:text-[#5865F2] hover:bg-[#5865F2]/10'
                 }`}
-                title="Go to your server"
+                title={profile?.discord_guild_id ? "Go to your server" : "Connect Discord"}
             >
                 <Server size={20} />
             </a>
