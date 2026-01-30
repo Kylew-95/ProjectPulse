@@ -16,7 +16,7 @@ const Demo = () => {
       <nav className="border-b border-white/5 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-            <img src="/src/assets/logo.png" alt="Pulse Logo" className="w-10 h-10 object-contain" />
+            <img src="/logo.png" alt="Pulse Logo" className="w-10 h-10 object-contain" />
             <span className="text-xl font-bold tracking-tight">Pulse</span>
           </div>
           <button 
@@ -49,7 +49,7 @@ const Demo = () => {
             title="Accessing Your Account"
             icon={User}
             iconColor="blue"
-            screenshotSrc="/src/assets/Screenshots/Login homepage.png"
+            screenshotSrc="/Screenshots/Login homepage.png"
             screenshotAlt="Login Page"
             onImageClick={setSelectedImage}
         >
@@ -64,7 +64,7 @@ const Demo = () => {
             title="Managing Your Materials"
             icon={LayoutDashboard}
             iconColor="purple"
-            screenshotSrc="/src/assets/Screenshots/Dashboard.png"
+            screenshotSrc="/Screenshots/Dashboard.png"
             screenshotAlt="Dashboard Overview"
             onImageClick={setSelectedImage}
         >
@@ -79,7 +79,7 @@ const Demo = () => {
             title="Connecting the Experience"
             icon={Settings}
             iconColor="orange"
-            screenshotSrc="/src/assets/Screenshots/Discord integration.png"
+            screenshotSrc="/Screenshots/Discord integration.png"
             screenshotAlt="Settings Page"
             onImageClick={setSelectedImage}
         >
@@ -102,7 +102,7 @@ const Demo = () => {
             title="Using the Automation Machine"
             icon={Bot}
             iconColor="emerald"
-            screenshotSrc="/src/assets/Screenshots/Discord Bot notifications.png"
+            screenshotSrc="/Screenshots/Discord Bot notifications.png"
             screenshotAlt="Discord Bot Notifications"
             onImageClick={setSelectedImage}
         >
@@ -126,7 +126,7 @@ const Demo = () => {
                 <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-4 shadow-xl hover:border-emerald-500/30 transition-all">
                     <div 
                         className="aspect-square bg-slate-800/50 rounded-xl flex items-center justify-center relative overflow-hidden p-4 cursor-pointer group"
-                        onClick={() => setSelectedImage("/src/assets/Screenshots/Ticket management .png")}
+                        onClick={() => setSelectedImage("/Screenshots/Ticket management .png")}
                     >
                          {/* We can reuse just the image part or extract a MiniCard component later, 
                              for now inline is fine as this grid layout is unique to this section. */}
@@ -134,7 +134,7 @@ const Demo = () => {
                             {/* Re-import Tooltip or just use basic logic? We need Icon here too */}
                         </div>
                         <img 
-                            src="/src/assets/Screenshots/Ticket management .png" 
+                            src="/Screenshots/Ticket management .png" 
                             alt="Ticket Management Interface" 
                             className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
                         />
@@ -153,10 +153,10 @@ const Demo = () => {
                  <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-4 shadow-xl hover:border-emerald-500/30 transition-all">
                     <div 
                         className="aspect-square bg-slate-800/50 rounded-xl flex items-center justify-center relative overflow-hidden cursor-pointer group"
-                        onClick={() => setSelectedImage("/src/assets/Screenshots/Discord Bot notifications.png")}
+                        onClick={() => setSelectedImage("/Screenshots/Discord Bot notifications.png")}
                     >
                         <img 
-                            src="/src/assets/Screenshots/Discord Bot notifications.png" 
+                            src="/Screenshots/Discord Bot notifications.png" 
                             alt="Discord Bot Notifications" 
                             className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
                         />
