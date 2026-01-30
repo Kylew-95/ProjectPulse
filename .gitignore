@@ -16,3 +16,6 @@ GitScript.txt
 
 # Local Netlify folder
 .netlify
+
+# Local Render CLI
+pythonPulse/render-bin/
