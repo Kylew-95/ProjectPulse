@@ -1,7 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Ticket, BarChart2, Settings, Users, LogOut } from 'lucide-react';
-import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, Button, AppBar } from '@mui/material';
-
 import { supabase } from '../../supabaseClient';
 import SidebarProfile from './SidebarProfile';
 import ThemeToggle from '../ui/ThemeToggle';
@@ -9,182 +7,106 @@ import CommandPalette from '../ui/CommandPalette';
 import OnboardingTour from '../ui/OnboardingTour';
 import { useTheme } from '../../context/ThemeContext';
 
-const drawerWidth = 260;
-
 const Layout = () => {
-  const location = useLocation();
-  const { theme } = useTheme();
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
-
-  const navItems = [
-    { icon: LayoutDashboard, label: 'Overview', path: '/dashboard/overview' },
-    { icon: Users, label: 'Teams', path: '/dashboard/team' },
-    { icon: Ticket, label: 'Tickets', path: '/dashboard/tickets' },
-    { icon: BarChart2, label: 'Analytics', path: '/dashboard/analytics' },
-    { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
-  ];
-
-  return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      <OnboardingTour />
-      <CommandPalette />
-      
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: drawerWidth,
-            boxSizing: 'border-box',
-            backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
-            borderRight: theme === 'dark' ? '1px solid rgba(255,255,255,0.05)' : '1px solid #e2e8f0',
-            color: theme === 'dark' ? 'white' : '#0f172a',
-            transition: 'background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease'
-          },
-        }}
-      >
-        <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Link to="/" className="flex items-center gap-3 no-underline text-inherit" title="Return to home">
-             <img src="/src/assets/logo.png" alt="Pulse Loop" style={{ width: 40, height: 40, objectFit: 'contain' }} />
-             <Typography variant="h6" fontWeight="bold" sx={{ letterSpacing: '-0.02em', color: theme === 'dark' ? 'white' : '#0f172a' }}>
-               Pulse
-             </Typography>
-          </Link>
-        </Box>
-
-        <List sx={{ px: 2, flex: 1, mt: 2 }}>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname.startsWith(item.path);
-            return (
-              <ListItem key={item.path} disablePadding sx={{ mb: 1 }}>
-                <ListItemButton
-                  component={Link}
-                  to={item.path}
-                  selected={isActive}
-                  sx={{
-                    borderRadius: 3,
-                    py: 1.5,
-                    px: 2,
-                    color: theme === 'dark' ? '#94a3b8' : '#64748b',
-                    '&.Mui-selected': {
-                      backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.15)' : '#eff6ff', // blue-50 light
-                      border: '1px solid',
-                      borderColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.3)' : '#bfdbfe', // blue-200 light
-                      color: theme === 'dark' ? 'white' : '#1e40af', // blue-800 light
-                      '&:hover': {
-                        backgroundColor: theme === 'dark' ? 'rgba(59, 130, 246, 0.25)' : '#dbeafe', // blue-100 light
-                      },
-                      '& .MuiListItemIcon-root': {
-                        color: '#60a5fa', // blue-400 (keep consistent or adjust)
-                      }
-                    },
-                    '&:hover': {
-                      backgroundColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9', // slate-100 light
-                      color: theme === 'dark' ? 'white' : '#0f172a',
-                    },
-                  }}
-                >
-                  <ListItemIcon sx={{ minWidth: 40, color: isActive ? '#3b82f6' : (theme === 'dark' ? '#94a3b8' : '#94a3b8') }}>
-                    <Icon size={20} />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={item.label} 
-                    primaryTypographyProps={{ 
-                      fontSize: '0.95rem', 
-                      fontWeight: isActive ? 700 : 500
-                    }} 
-                  />
-                  {isActive && (
-                    <Box 
-                      sx={{ 
-                        position: 'absolute', 
-                        left: 0, 
-                        width: 4, 
-                        height: '60%', 
-                        bgcolor: '#3b82f6', 
-                        borderTopRightRadius: 4, 
-                        borderBottomRightRadius: 4 
-                      }} 
-                    />
-                  )}
-                </ListItemButton>
-              </ListItem>
-            );
-          })}
-        </List>
-
-        <Box sx={{ 
-          p: 2, 
-          borderTop: '1px solid',
-          borderColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#e2e8f0',
-          bgcolor: theme === 'dark' ? 'rgba(15, 23, 42, 0.5)' : '#f8fafc' // slate-50 light
-        }}>
-          <SidebarProfile />
-           <Button
-             fullWidth
-             onClick={handleLogout}
-             startIcon={<LogOut size={18} />}
-             sx={{
-               mt: 1,
-               justifyContent: 'flex-start',
-               color: theme === 'dark' ? '#94a3b8' : '#64748b',
-               textTransform: 'none',
-               fontWeight: 'bold',
-               px: 2,
-               py: 1,
-               borderRadius: 3,
-               '&:hover': {
-                 color: '#ef4444', // red-500
-                 backgroundColor: theme === 'dark' ? 'rgba(239, 68, 68, 0.05)' : '#fef2f2', // red-50 light
-               }
-             }}
-           >
-             Sign Out
-           </Button>
-        </Box>
-      </Drawer>
-
-      <Box component="main" sx={{ 
-        flexGrow: 1, 
-        minHeight: '100vh', 
-        display: 'flex', 
-        flexDirection: 'column',
-        bgcolor: '#f1f5f9', // slate-100
-        '.dark &': {
-          bgcolor: '#0f172a' // slate-900
-        }
-      }}>
-        <AppBar 
-          position="sticky" 
-          elevation={0}
-          sx={{ 
-            height: 64,
-            justifyContent: 'center',
-            bgcolor: 'rgba(255, 255, 255, 0.8)', // Fallback for light mode
-            backdropFilter: 'blur(12px)',
-            borderBottom: '1px solid rgba(0,0,0,0.05)',
-            '.dark &': {
-               bgcolor: 'rgba(15, 23, 42, 0.8)',
-               borderColor: 'rgba(255,255,255,0.05)'
-            }
-          }}
-        >
-          <Toolbar sx={{ justifyContent: 'flex-end', px: 4 }}>
-             <ThemeToggle />
-          </Toolbar>
-        </AppBar>
+    const location = useLocation();
+    const { theme } = useTheme();
+  
+    const handleLogout = async () => {
+      await supabase.auth.signOut();
+    };
+  
+    const navItems = [
+      { icon: LayoutDashboard, label: 'Overview', path: '/dashboard/overview' },
+      { icon: Users, label: 'Teams', path: '/dashboard/team' },
+      { icon: Ticket, label: 'Tickets', path: '/dashboard/tickets' },
+      { icon: BarChart2, label: 'Analytics', path: '/dashboard/analytics' },
+      { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
+    ];
+  
+    return (
+      <div className="flex min-h-screen bg-slate-100 dark:bg-[#0f172a] transition-colors duration-300">
+        <OnboardingTour />
+        <CommandPalette />
         
-        <Box sx={{ p: 4, pt: 1, flexGrow: 1 }}>
-             <Outlet />
-        </Box>
-      </Box>
-    </Box>
-  );
+        {/* Sidebar */}
+        <aside 
+            className="w-[260px] flex-shrink-0 fixed h-full z-20 flex flex-col border-r transition-all duration-300 bg-white dark:bg-[#0f172a] border-slate-200 dark:border-white/5"
+        >
+            {/* Logo Area */}
+            <div className="p-5 flex items-center gap-3">
+                <Link to="/" className="flex items-center gap-3 group" title="Return to home">
+                    <img src="/src/assets/logo.png" alt="Pulse Loop" className="w-10 h-10 object-contain group-hover:scale-105 transition-transform" />
+                    <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                         Pulse
+                    </span>
+                </Link>
+            </div>
+  
+            {/* Navigation */}
+            <nav className="flex-1 px-3 mt-4 overflow-y-auto">
+                <ul className="space-y-1">
+                    {navItems.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = location.pathname.startsWith(item.path);
+                        
+                        return (
+                            <li key={item.path}>
+                                <Link
+                                    to={item.path}
+                                    className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                                        isActive 
+                                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400' 
+                                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200'
+                                    }`}
+                                >
+                                    {isActive && (
+                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-500 rounded-r-md" />
+                                    )}
+                                    
+                                    <Icon 
+                                        size={20} 
+                                        className={`transition-colors ${
+                                            isActive 
+                                                ? 'text-blue-600 dark:text-blue-400' 
+                                                : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
+                                        }`} 
+                                    />
+                                    <span>{item.label}</span>
+                                </Link>
+                            </li>
+                        );
+                    })}
+                </ul>
+            </nav>
+  
+            {/* Footer / Profile */}
+            <div className="p-3 border-t border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/50">
+                <SidebarProfile />
+                <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 px-3 py-2 mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400 rounded-xl hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400 transition-all duration-200"
+                >
+                    <LogOut size={18} />
+                    Sign Out
+                </button>
+            </div>
+        </aside>
+  
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col ml-[260px] min-w-0">
+            {/* Header / Topbar */}
+            <header className="sticky top-0 z-10 w-full h-16 flex items-center justify-end px-8 bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5">
+                <ThemeToggle />
+            </header>
+  
+            <main className="flex-1 p-8 pt-6">
+                <div className="max-w-7xl mx-auto">
+                    <Outlet />
+                </div>
+            </main>
+        </div>
+      </div>
+    );
 };
-
+  
 export default Layout;

@@ -7,21 +7,36 @@ import PageHeader from '../../components/common/PageHeader';
 
 const Overview = () => {
   const { user, profile } = useAuth();
-  const [stats, setStats] = useState({ total: 0, open: 0, closed: 0 });
+  const [stats, setStats] = useState({ total: 0, open: 0, closed: 0, avgUrgency: 0 });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       if (!user) return;
-      const { data } = await supabase.from('tickets').select('status');
-      if (data) {
-        const total = data.length;
-        const closed = data.filter(t => t.status === 'done' || t.status === 'closed').length;
-        const open = total - closed;
-        setStats({ total, open, closed });
+      setLoading(true);
+      try {
+        const { data } = await supabase.from('tickets').select('status, urgency_score');
+        if (data) {
+          const total = data.length;
+          const closed = data.filter(t => t.status === 'done' || t.status === 'closed').length;
+          const open = total - closed;
+          const avgUrgency = total > 0 
+            ? data.reduce((acc, t) => acc + (t.urgency_score || 0), 0) / total 
+            : 0;
+          
+          setStats({ total, open, closed, avgUrgency });
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchStats();
   }, [user]);
+
+  const resolutionRate = stats.total > 0 ? (stats.closed / stats.total) * 100 : 0;
+  const globalLoad = Math.min(stats.avgUrgency * 10, 100); // Scale avg urgency (0-10) to 0-100%
 
   const statCards = [
     { label: 'Total Operations', value: stats.total.toString(), icon: Ticket, color: 'text-primary', bg: 'bg-primary/5' },
@@ -88,11 +103,15 @@ const Overview = () => {
            <div className="grid grid-cols-2 gap-4">
               <div className="p-5 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl">
                  <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1 opacity-50">Global Load</div>
-                 <div className="text-xl font-bold text-slate-900 dark:text-slate-100">24.8%</div>
+                 <div className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                    {loading ? '...' : `${globalLoad.toFixed(1)}%`}
+                 </div>
               </div>
               <div className="p-5 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl">
                  <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1 opacity-50">Resolution Rate</div>
-                 <div className="text-xl font-bold text-slate-900 dark:text-slate-100">92.4%</div>
+                 <div className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                    {loading ? '...' : `${resolutionRate.toFixed(1)}%`}
+                 </div>
               </div>
            </div>
         </div>
