@@ -89,18 +89,18 @@ async def on_ready():
     # Sync commands globally for multi-server support
     try:
         await bot.tree.sync()
-        print("✅ Commands synced globally")
+        print("Commands synced globally")
     except discord.Forbidden:
-        print("⚠️ Warning: Could not sync commands globally (Missing Access).")
+        print("Warning: Could not sync commands globally (Missing Access).")
         print("   This is expected if the bot was JUST added or permissions are limited.")
         print("   Commands will still work in servers where the bot has permission.")
     except Exception as e:
-        print(f"❌ Failed to sync commands: {e}")
+        print(f"Failed to sync commands: {e}")
         
 @bot.event
 async def on_guild_join(guild):
     """Automatically create the required channel and link server to owner's profile."""
-    print(f"🎉 Bot joined server: {guild.name}")
+    print(f"Bot joined server: {guild.name}")
     print(f"📋 Server ID: {guild.id}")
     print(f"👥 Member count: {guild.member_count}")
     print(f"👑 Owner ID: {guild.owner_id}")
@@ -113,7 +113,7 @@ async def on_guild_join(guild):
         existing = supabase.table("profiles").select("id, email").eq("discord_guild_id", str(guild.id)).execute()
         
         if existing.data:
-            print(f"✅ Server already linked to profile: {existing.data[0].get('email')}")
+            print(f"Server already linked to profile: {existing.data[0].get('email')}")
         else:
             # Try to find owner's profile by their Discord ID in auth.users
             # Since we use Discord OAuth, the user's Discord ID is stored as the user's id
@@ -125,12 +125,12 @@ async def on_guild_join(guild):
                 supabase.table("profiles").update({
                     "discord_guild_id": str(guild.id)
                 }).eq("discord_user_id", str(guild.owner_id)).execute()
-                print(f"✅ Automatically linked server to owner's profile: {profile.get('email')}")
+                print(f"Automatically linked server to owner's profile: {profile.get('email')}")
             else:
-                print(f"⚠️ Could not find profile for server owner (Discord ID: {guild.owner_id})")
+                print(f"Warning: Could not find profile for server owner (Discord ID: {guild.owner_id})")
                 print(f"   Owner needs to sign up at ProjectPulse first!")
     except Exception as e:
-        print(f"❌ Error auto-linking server: {e}")
+        print(f"Error auto-linking server: {e}")
     
     # Create the report channel
     channel = discord.utils.get(guild.text_channels, name="report-issues-with-pulse")
@@ -161,12 +161,12 @@ async def main():
     try:
         sync_plan_tiers()
     except Exception as e:
-        print(f"⚠️ Failed to sync plan tiers on startup: {e}")
+        print(f"Failed to sync plan tiers on startup: {e}")
 
     # Auto-start Stripe Listener (Development Only)
     if os.getenv("ENV") != "production":
         try:
-            print("🎧 Starting Stripe Listener (Background)...")
+            print("Starting Stripe Listener (Background)...")
             # Run stripe listen silently
             subprocess.Popen(
                 ["stripe", "listen", "--forward-to", "localhost:8000/webhook"], 
@@ -175,9 +175,9 @@ async def main():
                 stderr=subprocess.DEVNULL
             )
         except Exception as e:
-            print(f"⚠️ Could not start Stripe Listener automatically: {e}")
+            print(f"Could not start Stripe Listener automatically: {e}")
     else:
-        print("🌍 Running in Production Mode - Skipping local Stripe Listener")
+        print("Running in Production Mode - Skipping local Stripe Listener")
     
     # Run both bot and API
     await asyncio.gather(

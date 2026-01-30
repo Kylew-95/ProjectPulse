@@ -224,7 +224,7 @@ async def cancel_subscription(data: dict):
                         print(f"DEBUG CANCEL: Found user_id {user_id} via Supabase Admin search.", flush=True)
                         break
              except Exception as auth_err:
-                 print(f"⚠️ CANCEL AUTH LOOKUP FAILED: {auth_err}", flush=True)
+                 print(f"Warning: CANCEL AUTH LOOKUP FAILED: {auth_err}", flush=True)
 
         if user_id:
             try:
@@ -240,10 +240,10 @@ async def cancel_subscription(data: dict):
                     'updated_at': 'now()'
                 }
                 supabase_admin.table('profiles').update(update_data).eq('id', user_id).execute()
-                print(f"✅ CANCEL: Force updated profile {user_id} to canceled.", flush=True)
+                print(f"CANCEL: Force updated profile {user_id} to canceled.", flush=True)
                 
             except Exception as db_err:
-                 print(f"⚠️ CANCEL DB UPDATE FAILED: {db_err}", flush=True)
+                 print(f"Warning: CANCEL DB UPDATE FAILED: {db_err}", flush=True)
         
         return {
             "status": "success", 
@@ -278,7 +278,7 @@ async def stripe_webhook(request: Request):
     url = os.getenv("SUPABASE_URL")
     key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
     if not key:
-        print("❌ WEBHOOK CRASH: No SUPABASE_SERVICE_ROLE_KEY or SUPABASE_KEY found in .env", flush=True)
+        print("WEBHOOK CRASH: No SUPABASE_SERVICE_ROLE_KEY or SUPABASE_KEY found in .env", flush=True)
         return {"status": "error", "message": "Backend Config Error"}
     supabase: Client = create_client(url, key)
 
@@ -294,7 +294,7 @@ async def stripe_webhook(request: Request):
         print(f"WEBHOOK DEBUG: UserID: {user_id}, PlanTierID: {plan_tier_id}.", flush=True)
 
         if plan_tier_id and user_id:
-            print(f"💰 Payment successful. Processing Subscription Switch Logic...", flush=True)
+            print(f"Payment successful. Processing Subscription Switch Logic...", flush=True)
             
             stripe_customer_id = session.get('customer')
             new_subscription_id = session.get('subscription')
@@ -312,16 +312,16 @@ async def stripe_webhook(request: Request):
                     for sub in existing_subs.data:
                         # If subscription is active/trialing AND it's NOT the one we just created
                         if sub.status in ['active', 'trialing'] and sub.id != new_subscription_id:
-                            print(f"🔄 SWITCHING: Found old subscription {sub.id} ({sub.status}). Canceling IMMEDIATELY...", flush=True)
+                            print(f"SWITCHING: Found old subscription {sub.id} ({sub.status}). Canceling IMMEDIATELY...", flush=True)
                             try:
                                 # Explicit DELETE implies immediate cancellation
                                 stripe.Subscription.delete(sub.id)
-                                print(f"✅ SWITCHING: Old subscription {sub.id} deleted.", flush=True)
+                                print(f"SWITCHING: Old subscription {sub.id} deleted.", flush=True)
                             except Exception as delete_err:
-                                print(f"⚠️ SWITCHING: Failed to delete sub {sub.id}: {delete_err}", flush=True)
+                                print(f"Warning: SWITCHING: Failed to delete sub {sub.id}: {delete_err}", flush=True)
                             
                 except Exception as e:
-                    print(f"⚠️ SWITCHING ERROR: Failed to assistant cancel old subscriptions: {e}", flush=True)
+                    print(f"Warning: SWITCHING ERROR: Failed to assistant cancel old subscriptions: {e}", flush=True)
             # -------------------------------------
             
             # Fetch Subscription Details
@@ -358,7 +358,7 @@ async def stripe_webhook(request: Request):
 
             # Use upsert to create profile if it's missing (failsafe)
             response = supabase.table('profiles').upsert(update_data).execute()
-            print(f"✅ WEBHOOK UPDATE SUCCESS: {response}", flush=True)
+            print(f"WEBHOOK UPDATE SUCCESS: {response}", flush=True)
         else:
             print("❌ WEBHOOK ERROR: User ID or Plan Tier ID missing in metadata.", flush=True)
 
@@ -380,7 +380,7 @@ async def stripe_webhook(request: Request):
                 'updated_at': 'now()'
              }
              supabase.table('profiles').upsert(update_data).execute()
-             print(f"✅ WEBHOOK: Profile {user_id} updated via sync (Cancel={sub.get('cancel_at_period_end')}).", flush=True)
+             print(f"WEBHOOK: Profile {user_id} updated via sync (Cancel={sub.get('cancel_at_period_end')}).", flush=True)
 
     elif event['type'] == 'customer.subscription.deleted':
         sub = event['data']['object']
@@ -395,7 +395,7 @@ async def stripe_webhook(request: Request):
                 'updated_at': 'now()'
             }
             supabase.table('profiles').upsert(update_data).execute()
-            print(f"✅ WEBHOOK: Profile {user_id} cancelled.", flush=True)
+            print(f"WEBHOOK: Profile {user_id} cancelled.", flush=True)
     
     else:
         print(f"WEBHOOK: Ignored event type {event['type']}", flush=True)
@@ -470,7 +470,7 @@ async def sync_subscription(data: dict):
                          print(f"DEBUG SYNC: Resolved current user_id {current_user_id} via Supabase Admin search.", flush=True)
                          break
              except Exception as auth_err:
-                 print(f"⚠️ SYNC AUTH LOOKUP FAILED: {auth_err}", flush=True)
+                 print(f"Warning: SYNC AUTH LOOKUP FAILED: {auth_err}", flush=True)
 
         if not current_user_id and target_sub:
              # Fallback to metadata ONLY if we couldn't find user by email/frontend
@@ -504,7 +504,7 @@ async def sync_subscription(data: dict):
                          plan_tier_id = prod.metadata.get('plan_tier_id')
                          print(f"DEBUG SYNC: Recovered plan_tier_id '{plan_tier_id}' from product {product_id}", flush=True)
                  except Exception as e:
-                     print(f"⚠️ SYNC PRODUCT LOOKUP FAILED: {e}", flush=True)
+                     print(f"Warning: SYNC PRODUCT LOOKUP FAILED: {e}", flush=True)
 
              if plan_tier_id:
                  update_data['subscription_tier'] = plan_tier_id
@@ -521,7 +521,7 @@ async def sync_subscription(data: dict):
                  update_data['trial_end'] = trial_end
                  
              supabase.table('profiles').upsert(update_data).execute()
-             print(f"✅ SYNC: Force updated profile {user_id} to {status}", flush=True)
+             print(f"SYNC: Force updated profile {user_id} to {status}", flush=True)
              return {"status": "success", "profile_status": status}
         
         return {"status": "skipped", "message": "No linked user_id found"}
@@ -580,11 +580,11 @@ async def send_invite(data: dict):
         server.send_message(msg)
         server.quit()
 
-        print(f"✅ EMAIL (SMTP): Invite sent to {email}", flush=True)
+        print(f"EMAIL (SMTP): Invite sent to {email}", flush=True)
         return {"status": "success"}
         
     except Exception as e:
-        print(f"❌ EMAIL ERROR: {e}", flush=True)
+        print(f"EMAIL ERROR: {e}", flush=True)
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
 
 

@@ -7,13 +7,13 @@ try:
         co = cohere.Client(COHERE_API_KEY)
     else:
         co = None
-        print("⚠️ COHERE_API_KEY not found. AI features will be disabled.")
+        print("COHERE_API_KEY not found. AI features will be disabled.")
 except ImportError:
     co = None
-    print("⚠️ 'cohere' library not found. AI features will be disabled.")
+    print("'cohere' library not found. AI features will be disabled.")
 except Exception as e:
     co = None
-    print(f"⚠️ Failed to initialize Cohere client: {e}")
+    print(f"Failed to initialize Cohere client: {e}")
 
 def analyze_urgency(message_content: str):
     """

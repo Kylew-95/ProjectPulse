@@ -49,7 +49,7 @@ PLAN_TIERS = [
 ]
 
 def sync_plan_tiers():
-    print("🚀 Starting Plan Tiers Sync...")
+    print("Starting Plan Tiers Sync...")
     
     for plan_tier in PLAN_TIERS:
         # 1. Search for existing product by metadata ID
@@ -57,7 +57,7 @@ def sync_plan_tiers():
         
         if existing_products.data:
             product = existing_products.data[0]
-            print(f"📦 Product '{plan_tier['name']}' already exists. Updating...")
+            print(f"Product '{plan_tier['name']}' already exists. Updating...")
             stripe.Product.modify(
                 product.id,
                 name=plan_tier['name'],
@@ -72,7 +72,7 @@ def sync_plan_tiers():
                 }
             )
         else:
-            print(f"✨ Creating new Product: '{plan_tier['name']}'")
+            print(f"Creating new Product: '{plan_tier['name']}'")
             product = stripe.Product.create(
                 name=plan_tier['name'],
                 description=plan_tier['description'],
@@ -95,9 +95,9 @@ def sync_plan_tiers():
                 break
         
         if matching_price:
-            print(f"  💰 Price found for {plan_tier['name']}: {plan_tier['amount']/100} {plan_tier['currency'].upper()}")
+            print(f"  Price found for {plan_tier['name']}: {plan_tier['amount']/100} {plan_tier['currency'].upper()}")
         else:
-            print(f"  🆕 Creating new Price for {plan_tier['name']}: {plan_tier['amount']/100} {plan_tier['currency'].upper()}")
+            print(f"  Creating new Price for {plan_tier['name']}: {plan_tier['amount']/100} {plan_tier['currency'].upper()}")
             stripe.Price.create(
                 unit_amount=plan_tier['amount'],
                 currency=plan_tier['currency'],
@@ -105,10 +105,10 @@ def sync_plan_tiers():
                 product=product.id,
             )
 
-    print("✅ Sync Complete!")
+    print("Sync Complete!")
 
 if __name__ == "__main__":
     if not os.getenv("STRIPE_KEY"):
-        print("❌ Error: STRIPE_KEY not found in .env")
+        print("Error: STRIPE_KEY not found in .env")
     else:
         sync_plan_tiers()
