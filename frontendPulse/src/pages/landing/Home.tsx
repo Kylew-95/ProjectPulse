@@ -85,7 +85,7 @@ const Home = () => {
             <button onClick={() => navigate(user ? '/dashboard' : '/signup')} className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-semibold transition-all shadow-lg shadow-blue-500/25 flex items-center gap-2 group">
               {user ? 'Go to Dashboard' : 'Start for free'} <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="px-8 py-4 bg-white/10 hover:bg-white/20 text-blue-400 rounded-full font-semibold transition-all backdrop-blur-xl border border-blue-500/10">
+            <button onClick={() => navigate('/demo')} className="px-8 py-4 bg-white/10 hover:bg-white/20 text-blue-400 rounded-full font-semibold transition-all backdrop-blur-xl border border-blue-500/10">
               View Demo
             </button>
           </div>

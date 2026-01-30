@@ -12,11 +12,20 @@ const SidebarProfile = () => {
             ? 'bg-white/5 border-white/5' 
             : 'bg-white border-slate-200 shadow-sm'
         }`}>
-            <img 
-                src={user?.user_metadata?.avatar_url} 
-                alt={`${user?.user_metadata?.full_name || 'User'}'s profile avatar`} 
-                className="w-8 h-8 rounded-full" 
-            />
+            <div className="relative">
+                <img 
+                    src={user?.user_metadata?.avatar_url} 
+                    alt={`${user?.user_metadata?.full_name || 'User'}'s profile avatar`} 
+                    className="w-8 h-8 rounded-full" 
+                />
+                <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-[#0f172a] ${
+                    profile?.discord_status === 'online' ? 'bg-emerald-500' :
+                    profile?.discord_status === 'idle' ? 'bg-amber-500' :
+                    profile?.discord_status === 'dnd' ? 'bg-red-500' :
+                    // 'offline' and 'invisible' map to gray
+                    'bg-slate-300 dark:bg-slate-600'
+                }`} title={`Discord Status: ${profile?.discord_status || 'Offline'}`} />
+            </div>
             <div className="flex-1 overflow-hidden">
               <p className={`text-sm font-medium truncate ${
                   theme === 'dark' ? 'text-white' : 'text-slate-900'

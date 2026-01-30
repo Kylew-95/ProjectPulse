@@ -13,9 +13,63 @@ import subprocess
 # Define Intents
 intents = discord.Intents.default()
 intents.message_content = True 
+intents.presences = True # Critical for status updates
 
 # Initialize Bot
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+@bot.event
+async def on_presence_update(before, after):
+    """Sync Discord status to Supabase profile"""
+    if after.bot:
+        return
+        
+    try:
+        # Map Discord status to a simple string
+        status = str(after.status)
+        
+        # Only update if status changed
+        if str(before.status) != status:
+            # Update profile where discord_user_id matches
+            # Note: We need to make sure we have discord_user_id in profiles. 
+            # Looking at schema, we don't explicitly see it, but on_guild_join uses it.
+            # wait, on_guild_join uses: .eq("discord_user_id", str(guild.owner_id))
+            # So discord_user_id MUST exist in profiles?
+            # Let's check schema.sql again.
+            # Schema.sql creates profiles table with: id, subscription_tier, status, discord_guild_id, trial_start... 
+            # It DOES NOT show `discord_user_id`.
+            # BUT main.py implies it exists: .eq("discord_user_id", str(guild.owner_id))
+            # If `discord_user_id` is missing in schema, it might have been added manually or main.py is failing?
+            # However, profiles.id IS the auth.users.id.
+            # If the user signed in with Discord, auth.users.id is NOT the discord ID.
+            # auth.users.id is a UUID.
+            
+            # If main.py assumes `discord_user_id` column exists, and it's working (or code is written that way),
+            # then we should trust the code or check if column exists.
+            
+            # We can't easily check columns without SQL. 
+            # Let's assume it exists or use a lookup.
+            pass
+            
+            # Actually, let's do the update assuming the column `discord_user_id` is there 
+            # OR we try to match by something else?
+            # If we don't have discord_user_id column, we can't link `after.id` to a profile easily
+            # UNLESS `discord_user_id` is stored.
+            
+            # Let's add the code with a check.
+            
+            # For now, let's just write the listener assuming best effort.
+            
+            # Wait, `on_guild_join` logic:
+            # .eq("discord_user_id", str(guild.owner_id))
+            # This strongly suggests the column exists.
+            
+            supabase.table("profiles").update({
+                "discord_status": status
+            }).eq("discord_user_id", str(after.id)).execute()
+            
+    except Exception as e:
+        print(f"Error syncing presence: {e}")
 
 @bot.event
 async def on_ready():

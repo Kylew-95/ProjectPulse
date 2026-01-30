@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import Demo from './pages/landing/Demo';
 import Home from './pages/landing/Home';
 import { Login, Signup } from './pages/auth/Auth';
 import Pricing from './pages/landing/Pricing';
@@ -19,6 +20,7 @@ function App() {
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/demo" element={<Demo />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             

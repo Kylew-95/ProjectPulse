@@ -25,7 +25,9 @@ const IntegrationsSection = () => {
                 </div>
                 <div>
                     <div className="font-semibold text-slate-900 dark:text-white">Discord Bot</div>
-                    <div className="text-sm text-slate-500">Add the ProjectPulse bot to your server</div>
+                    <div className="text-sm text-slate-500">Add the ProjectPulse bot to your server <br /><span 
+                    className="text-green-500 dark:text-green-400 font-semibold text-xs"
+                    >Be sure to create a server before adding the bot</span></div>
                 </div>
                 </div>
                 <button 

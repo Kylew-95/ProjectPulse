@@ -10,6 +10,7 @@ export interface Profile {
   status: string; // 'active', 'trialing', etc.
   trial_end: string | null;
   discord_guild_id?: string | null;
+  discord_status?: string | null;
   // Add other fields as needed
 }
 
@@ -91,7 +92,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Realtime subscription for profile updates
+    const channel = supabase
+      .channel('public:profiles')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+        },
+        (payload) => {
+          // Only update if it helps the current user
+          
+          // We can't easily check payload.new.id === session.user.id inside here 
+          // because of closure staleness if we used session from state.
+          // BUT we can use the callback version of setState to check against current profile.
+          
+          setProfile((currentProfile) => {
+             if (currentProfile && payload.new.id === currentProfile.id) {
+                 return { ...currentProfile, ...payload.new } as Profile;
+             }
+             return currentProfile;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const refreshProfile = async () => {

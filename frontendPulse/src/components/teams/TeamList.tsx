@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, User, Users, Trash2, Edit2, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown, Sparkles, Search, X } from 'lucide-react';
+import { Shield, User, Users, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Search, X } from 'lucide-react';
 import { 
   useReactTable, 
   getCoreRowModel, 
@@ -17,7 +17,9 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import ResourceCard from '../common/ResourceCard';
 
-const TEAM_ROLES_OPTIONS = ['Admin', 'Developer', 'Designer', 'Viewer']; 
+import { TEAM_ROLES } from '../../constants/roles';
+
+// const TEAM_ROLES_OPTIONS = ['Admin', 'Developer', 'Designer', 'Viewer']; // Replaced by TEAM_ROLES 
 
 interface TeamMember {
   id: string;
@@ -30,6 +32,7 @@ interface TeamMember {
     full_name: string | null;
     avatar_url: string | null;
     email: string | null;
+    discord_status?: string | null;
   } | null;
   avatar_url?: string | null;
 }
@@ -85,14 +88,23 @@ const TeamList = ({
         
         return (
           <div className="flex items-center gap-3">
-             <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-600 shrink-0">
-               {avatarUrl ? (
-                 <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-               ) : (
-                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                   {profile?.full_name?.[0] || info.row.original.email[0].toUpperCase()}
-                 </span>
-               )}
+             <div className="relative w-8 h-8 shrink-0">
+                 <div className="w-full h-full rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-600">
+                   {avatarUrl ? (
+                     <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                   ) : (
+                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                       {profile?.full_name?.[0] || info.row.original.email[0].toUpperCase()}
+                     </span>
+                   )}
+                 </div>
+                 {/* Discord Status Indicator */}
+                 <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-[#0f172a] ${
+                    profile?.discord_status === 'online' ? 'bg-emerald-500' :
+                    profile?.discord_status === 'idle' ? 'bg-amber-500' :
+                    profile?.discord_status === 'dnd' ? 'bg-red-500' :
+                    'bg-slate-300 dark:bg-slate-600'
+                 }`} title={`Discord Status: ${profile?.discord_status || 'Offline'}`} />
              </div>
              <div className="flex flex-col">
                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -294,7 +306,7 @@ const TeamList = ({
             className="w-full sm:w-auto px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-700 dark:text-slate-300 cursor-pointer"
           >
             <option value="">All Roles</option>
-            {TEAM_ROLES_OPTIONS.map(role => (
+            {TEAM_ROLES.map(role => (
               <option key={role} value={role}>{role}</option>
             ))}
           </select>

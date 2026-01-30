@@ -175,7 +175,7 @@ const Team = () => {
                     if (userIds.length > 0) {
                         const { data: profilesData } = await supabase
                             .from('profiles')
-                            .select('id, full_name, avatar_url, email')
+                            .select('id, full_name, avatar_url, email, discord_status')
                             .in('id', userIds);
 
                         // Merge profiles into members

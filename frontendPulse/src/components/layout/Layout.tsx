@@ -5,11 +5,10 @@ import SidebarProfile from './SidebarProfile';
 import ThemeToggle from '../ui/ThemeToggle';
 import CommandPalette from '../ui/CommandPalette';
 import OnboardingTour from '../ui/OnboardingTour';
-import { useTheme } from '../../context/ThemeContext';
 
 const Layout = () => {
     const location = useLocation();
-    const { theme } = useTheme();
+    
   
     const handleLogout = async () => {
       await supabase.auth.signOut();
