@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, User, LayoutDashboard, Bot, Settings, ZoomIn } from 'lucide-react';
 import ImageModal from './components/ImageModal';
 import DemoSection from './components/DemoSection';
@@ -15,10 +15,10 @@ const Demo = () => {
       {/* Navbar */}
       <nav className="border-b border-white/5 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img src="/logo.png" alt="Pulse Logo" className="w-10 h-10 object-contain" />
             <span className="text-xl font-bold tracking-tight">Pulse</span>
-          </div>
+          </Link>
           <button 
             onClick={() => navigate('/')} 
             className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium"

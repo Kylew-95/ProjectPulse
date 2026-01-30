@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Zap, Shield, Globe } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -50,12 +50,12 @@ const Home = () => {
       {/* Navbar */}
       <nav className="border-b border-white/5 bg-slate-900 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
-          <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img src="/logo.png" alt="Pulse Logo" className="w-10 h-10 object-contain" />
             <span className="text-xl font-bold text-white tracking-tight">
               Pulse
             </span>
-          </div>
+          </Link>
           <div className="flex items-center gap-4">
             {user ? (
                 <button onClick={() => navigate('/dashboard')} className="px-4 py-2 text-sm font-medium bg-white text-black rounded-full hover:bg-slate-200 transition-colors">Dashboard</button>

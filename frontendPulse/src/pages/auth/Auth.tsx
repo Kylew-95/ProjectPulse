@@ -21,7 +21,11 @@ export const Login = () => {
 
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+      <Link to="/" className="flex items-center gap-3 mb-8 hover:opacity-80 transition-opacity">
+        <img src="/logo.png" alt="Pulse Logo" className="w-10 h-10 object-contain" />
+        <span className="text-xl font-bold text-white tracking-tight">Pulse</span>
+      </Link>
       <div className="w-full max-w-md bg-surface p-8 rounded-2xl border border-slate-800 shadow-xl">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold tracking-tight">Welcome Back</h1>
@@ -88,7 +92,11 @@ export const Signup = () => {
     // Removed handleSignup
   
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <Link to="/" className="flex items-center gap-3 mb-8 hover:opacity-80 transition-opacity">
+          <img src="/logo.png" alt="Pulse Logo" className="w-10 h-10 object-contain" />
+          <span className="text-xl font-bold text-white tracking-tight">Pulse</span>
+        </Link>
         <div className="w-full max-w-md bg-surface p-8 rounded-2xl border border-slate-800 shadow-xl">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold tracking-tight">Join Pulse</h1>
