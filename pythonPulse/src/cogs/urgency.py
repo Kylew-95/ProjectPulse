@@ -123,7 +123,7 @@ class Urgency(commands.Cog):
         # ---------------------------------------------------------
         # 3. PLAN TIER ENFORCEMENT
         # ---------------------------------------------------------
-        is_active, sub_msg = check_guild_subscription(message.guild.id)
+        is_active, sub_msg, subscriber_id = check_guild_subscription(message.guild.id)
         print(f"\nSUBSCRIPTION CHECK for Guild {message.guild.name} (ID: {message.guild.id})")
         print(f"   Active: {is_active}")
         print(f"   Message: {sub_msg}\n")
@@ -172,6 +172,7 @@ class Urgency(commands.Cog):
                     "full_name": message.author.display_name,
                     "avatar_url": str(message.author.display_avatar.url),
                     "user_id": str(message.author.id),
+                    "reporter_id": subscriber_id, # Link ticket to the subscriber's UUID
                     "guild_id": str(message.guild.id),
                     "original_issue": message.content,
                     "follow_up_details": "Pending...",
@@ -255,7 +256,7 @@ class Urgency(commands.Cog):
         # Use the same logic as auto-detection but forced
         if ctx.guild:
             # Check tier (reusing existing logic)
-            is_active, sub_msg = check_guild_subscription(ctx.guild.id)
+            is_active, sub_msg, subscriber_id = check_guild_subscription(ctx.guild.id)
             if not is_active:
                 await ctx.send(f"**Subscription Required**: {sub_msg}")
                 return
@@ -267,6 +268,7 @@ class Urgency(commands.Cog):
             "full_name": ctx.author.display_name,
             "avatar_url": str(ctx.author.display_avatar.url),
             "user_id": str(ctx.author.id),
+            "reporter_id": subscriber_id if ctx.guild else None, # Link ticket to the subscriber's UUID
             "guild_id": str(ctx.guild.id) if ctx.guild else None,
             "original_issue": issue_content,
             "follow_up_details": "Manual Report - Initial",

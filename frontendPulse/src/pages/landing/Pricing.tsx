@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { Check, Rocket, Shield, Zap } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import ThemeToggle from '../../components/ui/ThemeToggle';
+import { getApiUrl } from '../../utils/apiConfig';
 
 const Pricing = () => {
   const { user, profile } = useAuth();
+  const { theme } = useTheme();
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -23,7 +27,7 @@ const Pricing = () => {
 
     const fetchPlans = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const apiUrl = getApiUrl();
         console.log('Fetching plans from:', `${apiUrl}/products`);
         const res = await fetch(`${apiUrl}/products`);
         if (res.ok) {
@@ -57,7 +61,7 @@ const Pricing = () => {
   const handleSubscribe = async (priceId: string) => {
     setLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,7 +83,27 @@ const Pricing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8 relative overflow-hidden">
+    <div className={`${theme} min-h-screen bg-background text-main flex flex-col items-center relative overflow-hidden transition-colors duration-300`}>
+      {/* Navbar - Using same structure as Home */}
+      <nav className="w-full border-b border-border-main bg-surface/50 backdrop-blur-xl sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <img src="/logo.png" alt="Pulse Logo" className="w-10 h-10 object-contain" />
+            <span className="text-xl font-bold text-white tracking-tight">Pulse</span>
+          </Link>
+          <div className="flex items-center gap-6">
+            <ThemeToggle />
+            <button 
+              onClick={() => navigate('/')} 
+              className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <div className="flex-1 w-full flex flex-col items-center justify-center p-8">
         {/* Background Gradients */}
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
@@ -88,7 +112,7 @@ const Pricing = () => {
         <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">
           Simple, Transparent <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Pricing</span>
         </h1>
-        <p className="text-xl text-slate-400 max-w-2xl mx-auto">
+        <p className="text-xl text-muted max-w-2xl mx-auto">
           Choose the perfect plan for your team. No hidden fees.
         </p>
       </div>
@@ -122,9 +146,9 @@ const Pricing = () => {
                <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
                <div className="flex items-baseline gap-1">
                  <span className="text-5xl font-extrabold text-white tracking-tight">{plan.price}</span>
-                 <span className="text-slate-400 font-medium">{plan.period}</span>
+                 <span className="text-muted font-medium">{plan.period}</span>
                </div>
-               <p className="text-sm font-medium text-slate-500 mt-2">
+               <p className="text-sm font-medium text-muted/80 mt-2">
                  {plan.name === 'Starter' ? 'Inc. VAT' : plan.name === 'Enterprise' ? 'Inc. VAT' : '+ VAT'}
                </p>
              </div>
@@ -133,13 +157,13 @@ const Pricing = () => {
 
              <ul className="space-y-4 mb-8 flex-1">
                {(plan.features.length ? plan.features : getFeatures(plan.name)).map((f: string) => (
-                 <li key={f} className="flex items-start gap-3 text-slate-300 group">
+                 <li key={f} className="flex items-start gap-3 text-muted group">
                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
-                       plan.name === 'Pro' ? 'bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white' : 'bg-slate-800 text-slate-500 group-hover:text-slate-300'
+                       plan.name === 'Pro' ? 'bg-primary/20 text-primary group-hover:bg-primary group-hover:text-white' : 'bg-slate-800 text-muted group-hover:text-slate-300'
                    }`}>
                        <Check size={14} strokeWidth={3} />
                    </div>
-                   <span className="text-sm font-medium leading-relaxed">{f}</span>
+                   <span className="text-sm font-medium leading-relaxed text-muted">{f}</span>
                  </li>
                ))}
              </ul>
@@ -166,12 +190,13 @@ const Pricing = () => {
       </div>
 
       <div className="mt-16 text-center">
-        <p className="text-slate-500 text-sm mb-2 flex items-center justify-center gap-2">
+        <p className="text-muted/60 text-sm mb-2 flex items-center justify-center gap-2">
             <Shield size={14} /> Secure payments powered by Stripe
         </p>
-        <p className="text-slate-600 text-xs">
+        <p className="text-muted/40 text-xs">
             Cancel anytime. No long-term contracts.
         </p>
+      </div>
       </div>
     </div>
   );

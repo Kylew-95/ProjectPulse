@@ -48,10 +48,10 @@ const TicketTable = ({
         // Or just the title.
         return (
           <div className="flex flex-col">
-            <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm truncate max-w-[200px] md:max-w-[300px]">
+            <span className="font-semibold text-main text-sm truncate max-w-[200px] md:max-w-[300px]">
               {info.getValue()}
             </span>
-            <span className="text-[10px] text-slate-400 font-mono tracking-wider">
+            <span className="text-[10px] text-muted/60 font-mono tracking-wider">
               ID: {info.row.original.id}
             </span>
           </div>
@@ -96,7 +96,7 @@ const TicketTable = ({
     columnHelper.accessor(row => row.team?.name || row.teams?.name || '—', {
         id: 'team',
         header: 'Team',
-        cell: info => <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">{info.getValue()}</span>,
+        cell: info => <span className="text-muted text-sm font-medium">{info.getValue()}</span>,
         filterFn: (row, _columnId, filterValue) => {
              // Custom filter for team name or team id matching
              // If filterValue is team ID, we might need to check row.original.team_id?
@@ -111,14 +111,14 @@ const TicketTable = ({
         header: 'Assignee',
         cell: info => {
             const profile = info.getValue();
-            if (!profile) return <span className="text-xs text-slate-400 italic">Unassigned</span>;
+            if (!profile) return <span className="text-xs text-muted/60 italic">Unassigned</span>;
 
             const isCurrentUser = info.row.original.assignee_id === user?.id;
             const avatarUrl = (isCurrentUser ? user?.user_metadata?.avatar_url : null) || profile.avatar_url;
 
             return (
                 <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center border border-slate-200 dark:border-slate-600 overflow-hidden shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-background flex items-center justify-center border border-border-main overflow-hidden shrink-0">
                         {avatarUrl ? (
                             <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -127,7 +127,7 @@ const TicketTable = ({
                             </span>
                         )}
                     </div>
-                    <span className="text-sm text-slate-700 dark:text-slate-300 truncate max-w-[120px]">
+                    <span className="text-sm text-main truncate max-w-[120px]">
                         {profile.full_name}
                     </span>
                 </div>
@@ -141,13 +141,13 @@ const TicketTable = ({
             const color = score > 7 ? 'bg-red-500' : score > 4 ? 'bg-amber-500' : 'bg-emerald-500';
             return (
                 <div className="flex items-center gap-2 w-full max-w-[120px]">
-                    <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div className="flex-1 h-1.5 bg-background rounded-full overflow-hidden">
                         <div 
                             className={`h-full rounded-full ${color} transition-all duration-500`} 
                             style={{ width: `${Math.min(score * 10, 100)}%` }} 
                         />
                     </div>
-                    <span className="text-xs text-slate-500 font-mono w-6 text-right">{score.toFixed(1)}</span>
+                    <span className="text-xs text-muted font-mono w-6 text-right">{score.toFixed(1)}</span>
                 </div>
             );
         }
@@ -159,14 +159,14 @@ const TicketTable = ({
             <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                <button 
                   onClick={(e) => { e.stopPropagation(); onEdit(info.row.original); }}
-                  className="p-1.5 text-slate-400 hover:text-blue-600 transition-colors rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="p-1.5 text-muted hover:text-blue-600 transition-colors rounded-md hover:bg-background/20"
                   title="Edit Ticket"
                >
                  <Edit2 size={14} />
                </button>
                <button 
                   onClick={(e) => { e.stopPropagation(); onDelete(info.row.original.id); }}
-                  className="p-1.5 text-slate-400 hover:text-red-600 transition-colors rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="p-1.5 text-muted hover:text-red-600 transition-colors rounded-md hover:bg-background/20"
                   title="Delete Ticket"
                >
                  <Trash2 size={14} />
@@ -211,9 +211,9 @@ const TicketTable = ({
 
   if (loading) {
      return (
-        <div className="w-full h-96 flex flex-col items-center justify-center bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-white/5 shadow-sm">
+        <div className="w-full h-96 flex flex-col items-center justify-center bg-surface rounded-xl border border-border-main shadow-sm">
             <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mb-4"></div>
-            <p className="text-slate-500 dark:text-slate-400 text-sm animate-pulse">Loading tickets...</p>
+            <p className="text-muted animate-pulse">Loading tickets...</p>
         </div>
      );
   }
@@ -225,14 +225,14 @@ const TicketTable = ({
   return (
     <div className="flex flex-col gap-4">
       {/* Table Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white dark:bg-[#0f172a] p-4 rounded-xl border border-slate-200 dark:border-white/5 shadow-sm">
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-surface p-4 rounded-xl border border-border-main shadow-sm">
         <div className="relative w-full sm:w-72">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
             value={globalFilter ?? ''}
             onChange={e => setGlobalFilter(e.target.value)}
             placeholder="Search tickets..."
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-slate-100"
+            className="w-full pl-9 pr-4 py-2 bg-background/50 border border-border-main rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 text-main"
           />
           {globalFilter && (
             <button 

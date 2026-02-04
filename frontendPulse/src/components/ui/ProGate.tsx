@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Lock, Loader2 } from 'lucide-react';
+import { getApiUrl } from '../../utils/apiConfig';
 
 interface ProGateProps {
   children: ReactNode;
@@ -21,7 +22,7 @@ const ProGate = ({
   const handleUpgrade = async () => {
     setLoading(true);
     try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const apiUrl = getApiUrl();
         
         // 1. Get Products to find Pro Price
         const prodRes = await fetch(`${apiUrl}/products`);

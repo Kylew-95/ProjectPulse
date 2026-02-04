@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, ExternalLink } from 'lucide-react';
+import { getApiUrl } from '../../utils/apiConfig';
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -17,7 +18,7 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
     if (isOpen) {
         const fetchPlans = async () => {
         try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            const apiUrl = getApiUrl();
             const res = await fetch(`${apiUrl}/products`);
             if (res.ok) {
             const data = await res.json();
@@ -51,7 +52,7 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
   const handleSubscribe = async (priceId: string) => {
     setLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,7 +78,7 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
   const handlePortal = async () => {
     setLoading(true);
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const apiUrl = getApiUrl();
         const response = await fetch(`${apiUrl}/create-portal-session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -5,28 +5,41 @@
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-border-main: var(--border-main);
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
+  --color-text-main: var(--text-primary);
+  --color-text-muted: var(--text-secondary);
   --color-primary: #3B82F6;
   --color-secondary: #0D9488;
 }
 
-:root {
-  --background: #f1f5f9; /* Slate 100 - consistent background */
-  --surface: #ffffff;    /* Pure white for ALL cards and containers */
-  --border-main: #e2e8f0; /* Slate 200 */
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  color-scheme: light;
-}
-
-:root.dark {
+:root, .dark {
   --background: #020617;
   --surface: #0f172a;    /* Navy surface for ALL cards */
   --border-main: rgba(255, 255, 255, 0.08);
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e1;
   color-scheme: dark;
+}
+
+.dark {
+  --background: #020617;
+  --surface: #0f172a;
+  --border-main: rgba(255, 255, 255, 0.08);
+  --text-primary: #fffcfc;
+  --text-secondary: #cbd5e1;
+  color-scheme: dark;
+}
+
+.light {
+  --background: #ffffff;
+  --surface: #f8fafc;
+  --border-main: rgba(0, 0, 0, 0.08);
+  --text-primary: #000000;
+  --text-secondary: #475569;
+  color-scheme: light;
+}
+
+h1, h2, h3,p {
+  color: var(--text-primary);
 }
 
 @layer base {

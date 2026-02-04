@@ -33,8 +33,10 @@ const Team = () => {
   const navigate = useNavigate();
   const [members, setMembers] = useState<TeamMember[]>([]);
 
-  // Access Control for Teams
-  if (['Free', 'Starter'].includes(profile?.subscription_tier || 'Free')) {
+  // Access Control for Teams - Restricted to Pro and Enterprise
+  const isAuthorized = ['pro', 'enterprise'].includes(profile?.subscription_tier?.toLowerCase() || '');
+
+  if (!isAuthorized) {
      return (
         <div className="p-8 max-w-[1600px] mx-auto min-h-screen flex flex-col items-center justify-center text-center animate-in fade-in duration-700">
             <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
@@ -42,9 +44,14 @@ const Team = () => {
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Team Access Restricted</h2>
             <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
-               Your current plan ({profile?.subscription_tier}) does not include access to Team Management. Upgrade to Pro or Enterprise to collaborate with your team.
+               Your plan ({profile?.subscription_tier || 'No Plan'}) does not include Team Management. Upgrade to Pro or Enterprise to add members and collaborate.
             </p>
-            {/* Optional: Add Upgrade Button if routing exists */}
+            <button 
+              onClick={() => navigate('/pricing')}
+              className="px-6 py-2 bg-primary text-white rounded-lg font-bold hover:scale-105 transition-all active:scale-95 shadow-lg shadow-primary/20"
+            >
+              View Pricing
+            </button>
         </div>
      );
   }

@@ -63,7 +63,7 @@ const Overview = () => {
                  <div className={`absolute inset-0 w-2.5 h-2.5 rounded-full animate-ping ${['active', 'trialing'].includes(profile?.status || '') ? 'bg-emerald-500' : 'bg-amber-500'} opacity-20`} />
               </div>
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                 Pulse <span className="text-slate-900 dark:text-slate-100 underline decoration-blue-500/40 underline-offset-4">{profile?.subscription_tier || 'Free'}</span>
+                 Pulse <span className="text-slate-900 dark:text-slate-100 underline decoration-blue-500/40 underline-offset-4">{profile?.subscription_tier || 'No Plan'}</span>
               </span>
            </div>
         </div>

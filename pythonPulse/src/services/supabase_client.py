@@ -77,17 +77,18 @@ def check_guild_subscription(guild_id: int):
             return False, "This Discord server is not linked to an active ProjectPulse account. Use /link in the dashboard to connect."
         
         profile = response.data[0]
-        tier = profile.get("subscription_tier", "free").lower()
-        status = profile.get("status", "active").lower() # Default to active if status is missing but tier is set
+        tier = (profile.get("subscription_tier") or "").lower()
+        status = (profile.get("status") or "active").lower()
         
         print(f"Found profile: {profile.get('email')}")
         print(f"   Tier: {tier}")
         print(f"   Status: {status}")
         
-        if tier in ["pro", "enterprise"]:
-            return True, "Active"
+        # Any valid plan tier allows bot usage
+        if tier in ["starter", "pro", "enterprise"]:
+            return True, "Active", profile.get("id")
         
-        return False, "Your ProjectPulse plan (Free) does not include Daily Pulse summaries. Please upgrade to Pro."
+        return False, "Your ProjectPulse account does not have an active plan. Please upgrade on the dashboard to Starter, Pro, or Enterprise to use the bot features.", None
     except Exception as e:
         print(f"Error checking subscription: {e}")
-        return False, f"Error verifying subscription status: {e}"
+        return False, f"Error verifying subscription status: {e}", None

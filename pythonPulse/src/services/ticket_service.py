@@ -28,92 +28,95 @@ class LogTicketService(TicketService):
         return True
 
 class SupabaseTicketService(TicketService):
-    # ... existing create_ticket and update_ticket ...
-    # (Leaving Supabase implementations as they were since they are correct)
     def create_ticket(self, report_data):
-        import uuid
-        user_id = report_data.get("user_id")
-        discord_id = str(user_id) if user_id else None
-        supabase_uuid = None
-        # Try to find the user's Supabase UUID and Team by their Discord ID
-        team_id = None
-        if discord_id:
+        # Ensure discord IDs are present
+        discord_id = str(report_data.get("discord_id") or report_data.get("user_id") or "")
+        guild_id = str(report_data.get("guild_id") or "")
+        
+        # Resolve reporter_id (supabase uuid)
+        supabase_uuid = report_data.get("reporter_id") or report_data.get("supabase_user_id")
+        
+        if not supabase_uuid and discord_id:
             try:
-                # 1. Find profile
-                profile_result = supabase.table("profiles").select("id").eq("discord_user_id", discord_id).execute()
+                # Look up user by discord_user_id (preferred) or discord_id in profiles
+                profile_res = supabase.table("profiles").select("id").eq("discord_user_id", discord_id).execute()
+                if not profile_res.data:
+                    profile_res = supabase.table("profiles").select("id").eq("discord_id", discord_id).execute()
                 
-                if profile_result.data and len(profile_result.data) > 0:
-                    supabase_uuid = profile_result.data[0].get("id")
-                    print(f"Found Supabase UUID for Discord user {discord_id}: {supabase_uuid}")
-                    
-                    # 2. Find Team (Lookup memberships)
-                    team_res = supabase.table("team_members").select("team_id").eq("user_id", supabase_uuid).limit(1).execute()
-                    if team_res.data:
-                        team_id = team_res.data[0].get("team_id")
-                        print(f"Automatically assigned ticket to team: {team_id}")
-                else:
-                    print(f"Warning: No Supabase profile found for Discord user ID: {discord_id}")
-                    print(f"   User needs to sign up at ProjectPulse with their Discord account!")
+                if profile_res.data:
+                    supabase_uuid = profile_res.data[0]["id"]
             except Exception as e:
-                print(f"Error looking up user/team: {e}")
+                print(f"DEBUG: Profile lookup failed for Discord user {discord_id}: {e}")
+                pass
+        
+        # Resolve team_id if not provided
+        team_id = report_data.get("team_id")
+        if not team_id and guild_id:
+            try:
+                guild_res = supabase.table("teams").select("id").eq("discord_guild_id", guild_id).execute()
+                if guild_res.data:
+                    team_id = guild_res.data[0]["id"]
+            except Exception as e:
+                print(f"DEBUG: Team lookup failed for guild {guild_id}: {e}")
+                pass
 
+        # Prepare insertion data using actual DB column names
         data = {
             "reporter_id": supabase_uuid,
             "team_id": team_id,
             "discord_id": discord_id,
-            "discord_guild_id": report_data.get("guild_id"),
-            "user_name": report_data["user"],
-            "description": report_data["original_issue"],
-            "title": report_data.get("summary") or report_data.get("final_summary"),
+            "discord_guild_id": guild_id,
+            "user_name": report_data.get("user", "Unknown User"),
+            "description": report_data.get("original_issue", report_data.get("description", "No description provided")),
+            "title": report_data.get("summary") or report_data.get("title") or report_data.get("final_summary") or "New Issue",
             "urgency_score": int(report_data.get("urgency_score", 5)),
             "status": (report_data.get("status") or "open").lower(),
             "type": (report_data.get("type") or "support").lower(),
             "priority": (report_data.get("priority") or "medium").lower(),
             "solution": report_data.get("solution"),
             "location": (report_data.get("location") or "unknown").lower()
-
         }
 
         try:
-            print(f"DEBUG: Attempting to insert ticket data: {json.dumps(data, indent=2)}")
+            print(f"DEBUG: Attempting to insert ticket: {data['title']} for {data['user_name']}")
+            # Use .select() to ensure the generated id is returned in response.data
             response = supabase.table("tickets").insert(data).execute()
-            print(f"DEBUG: Supabase Insert Response Data: {response.data}")
             
-            ticket_id = response.data[0].get("id") if response.data else None
-            print(f"Ticket created successfully with ID: {ticket_id}")
-            return ticket_id
-
-
+            if response.data:
+                ticket_id = response.data[0].get("id")
+                print(f"DEBUG: Ticket created successfully. ID: {ticket_id}")
+                return ticket_id
+            else:
+                print("!!!! Supabase insert succeeded but returned no data.")
+                return None
         except Exception as e:
-            print(f"!!!! Supabase Ticket Insert Error: {e}")
+            print(f"!!!! Supabase Ticket Insert ERROR: {e}")
             import traceback
             traceback.print_exc()
             return None
 
     def update_ticket(self, ticket_id, report_data):
         if not ticket_id:
-            print("DEBUG: update_ticket called with no ticket_id")
             return False
 
         data = {
-            "description": f"{report_data['original_issue']}\n\nFOLLOW-UP:\n{report_data['follow_up_details']}",
-            "title": report_data.get("summary") or report_data.get("final_summary"),
+            "description": f"{report_data['original_issue']}\n\nFOLLOW-UP:\n{report_data.get('follow_up_details', '')}",
+            "title": report_data.get("summary") or report_data.get("title") or report_data.get("final_summary"),
             "type": (report_data.get("type") or "support").lower(),
             "priority": (report_data.get("priority") or "medium").lower(),
+            "status": (report_data.get("status") or "open").lower(),
             "solution": report_data.get("solution"),
-            "location": (report_data.get("location") or "unknown").lower(),
-            # Removed updated_at: now() as it can cause type errors if sent as a raw string across the API
+            "location": (report_data.get("location") or "unknown").lower()
         }
+        
+        # Clean None values to avoid overwriting with nulls if update is partial
+        data = {k: v for k, v in data.items() if v is not None}
 
         try:
-            print(f"DEBUG: Attempting to update ticket {ticket_id} with data: {json.dumps(data, indent=2)}")
-            response = supabase.table("tickets").update(data).eq("id", ticket_id).execute()
-            print(f"DEBUG: Supabase Update Response Data: {response.data}")
+            supabase.table("tickets").update(data).eq("id", ticket_id).execute()
             return True
         except Exception as e:
-            print(f"!!!! Supabase Ticket Update Error: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"!!!! Supabase Ticket Update ERROR: {e}")
             return False
 
 class TrelloTicketService(TicketService):

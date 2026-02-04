@@ -236,7 +236,7 @@ async def cancel_subscription(data: dict):
                 update_data = {
                     'id': user_id,
                     'status': 'canceled',
-                    'subscription_tier': 'free', 
+                    'subscription_tier': None, 
                     'updated_at': 'now()'
                 }
                 supabase_admin.table('profiles').update(update_data).eq('id', user_id).execute()
@@ -262,17 +262,29 @@ async def stripe_webhook(request: Request):
     payload = await request.body()
     sig_header = request.headers.get('stripe-signature')
 
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, os.getenv('STRIPE_WEBHOOK_SECRET')
-        )
-        print(f"DEBUG WEBHOOK: Received event type '{event['type']}'", flush=True)
-    except ValueError as e:
-        print(f"DEBUG WEBHOOK ERROR (Payload): {e}")
-        raise HTTPException(status_code=400, detail='Invalid payload')
-    except stripe.error.SignatureVerificationError as e:
-        print(f"DEBUG WEBHOOK ERROR (Signature): {e}")
-        raise HTTPException(status_code=400, detail='Invalid signature')
+    # Support multiple secrets for local vs production transparency
+    webhook_secrets = [
+        os.getenv('STRIPE_WEBHOOK_SECRET'),
+        os.getenv('STRIPE_WEBHOOK_SECRET_LOCAL')  # Fallback for CLI testing
+    ]
+    webhook_secrets = [s for s in webhook_secrets if s]
+
+    event = None
+    last_error = None
+
+    for secret in webhook_secrets:
+        try:
+            event = stripe.Webhook.construct_event(payload, sig_header, secret)
+            break # Success!
+        except Exception as e:
+            last_error = e
+            continue
+
+    if not event:
+        print(f"DEBUG WEBHOOK ERROR: Signature verification failed for all secrets. Last error: {last_error}")
+        raise HTTPException(status_code=400, detail='Invalid signature or secret mismatch')
+
+    print(f"DEBUG WEBHOOK: Received event type '{event['type']}'", flush=True)
 
     from supabase import create_client, Client
     url = os.getenv("SUPABASE_URL")
@@ -398,7 +410,7 @@ async def stripe_webhook(request: Request):
             update_data = {
                 'id': user_id,
                 'status': 'canceled',
-                'subscription_tier': 'free', 
+                'subscription_tier': None, 
                 'updated_at': 'now()'
             }
             supabase.table('profiles').upsert(update_data).execute()
@@ -441,7 +453,7 @@ async def sync_subscription(data: dict):
             target_sub = sorted_subs[0]
             
         # 3. Determine Status
-        status = 'free'
+        status = 'none'
         trial_end = None
         
         if target_sub:
@@ -521,8 +533,8 @@ async def sync_subscription(data: dict):
                      update_data['status'] = 'active'
                  print(f"DEBUG SYNC: Found tier {plan_tier_id} for {user_id}. Status set to: {update_data.get('status', status)}", flush=True)
 
-             if status == 'free' and not plan_tier_id:
-                 update_data['subscription_tier'] = 'free' # Explicitly reset tier
+             if status == 'none' and not plan_tier_id:
+                  update_data['subscription_tier'] = None # Explicitly reset tier
 
              if trial_end:
                  update_data['trial_end'] = trial_end

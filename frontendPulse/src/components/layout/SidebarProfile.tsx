@@ -1,17 +1,11 @@
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 import { Server } from 'lucide-react';
 
 const SidebarProfile = () => {
     const { user, profile } = useAuth();
-    const { theme } = useTheme();
 
     return (
-        <div className={`flex items-center gap-3 px-4 py-3 mb-2 rounded-xl border transition-colors ${
-            theme === 'dark' 
-            ? 'bg-white/5 border-white/5' 
-            : 'bg-white border-slate-200 shadow-sm'
-        }`}>
+        <div className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl border transition-colors bg-white/5 border-border-main">
             <div className="relative">
                 <img 
                     src={user?.user_metadata?.avatar_url} 
@@ -27,29 +21,19 @@ const SidebarProfile = () => {
                 }`} title={`Discord Status: ${profile?.discord_status || 'Offline'}`} />
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className={`text-sm font-medium truncate ${
-                  theme === 'dark' ? 'text-white' : 'text-slate-900'
-              }`}>
+              <p className="text-sm font-medium truncate text-main">
                   {user?.user_metadata?.full_name || 'User'}
               </p>
-              <p className={`font-semibold text-xs ${
-                  theme === 'dark' ? 'text-slate-300' : 'text-slate-600'
-              }`}>
-                  {profile?.subscription_tier || 'Free'} <span className={`text-xs uppercase tracking-wider font-semibold ${
-                      theme === 'dark' ? 'text-slate-500' : 'text-slate-400'
-                  }`}>Plan</span>
-              </p>
+                <p className="text-sm font-bold text-white flex items-center gap-1.5">
+                  {profile?.subscription_tier || 'No Active'} <span className="text-xs uppercase tracking-wider font-semibold text-muted/60">Plan</span>
+                </p>
             </div>
             
             <a 
                 href={profile?.discord_guild_id ? `https://discord.com/channels/${profile.discord_guild_id}` : 'https://discord.gg/'}
                 target="_blank" 
                 rel="noopener noreferrer"
-                className={`p-1.5 rounded-lg transition-colors ${
-                    theme === 'dark' 
-                    ? 'text-slate-400 hover:text-white hover:bg-white/10' 
-                    : 'text-slate-400 hover:text-[#5865F2] hover:bg-[#5865F2]/10'
-                }`}
+                className="p-1.5 rounded-lg transition-colors text-muted hover:text-main hover:bg-white/10"
                 title={profile?.discord_guild_id ? "Go to your server" : "Connect Discord"}
             >
                 <Server size={20} />

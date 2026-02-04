@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MoreHorizontal, ChevronDown } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
+import { getApiUrl } from '../../utils/apiConfig';
 
 interface InviteMemberModalProps {
   isOpen: boolean;
@@ -50,7 +51,7 @@ const InviteMemberModal = ({ isOpen, onClose, onSuccess }: InviteMemberModalProp
       // If invitation is via email, trigger the backend email
       if (!isDiscord) {
           try {
-              const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+              const apiUrl = getApiUrl();
               await fetch(`${apiUrl}/send-invite`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },

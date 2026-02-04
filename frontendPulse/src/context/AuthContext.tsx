@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '../supabaseClient';
 import type { Session, User } from '@supabase/supabase-js';
+import { getApiUrl } from '../utils/apiConfig';
 
 // Define Profile interface based on your schema
 export interface Profile {
   id: string;
   email: string | null;
-  subscription_tier: string; // 'free', 'pro', etc.
-  status: string; // 'active', 'trialing', etc.
+  subscription_tier: string | null; // 'starter', 'pro', 'enterprise'
+  status: string; // 'active', 'trialing', 'canceled', 'none'
   trial_end: string | null;
   discord_guild_id?: string | null;
   discord_status?: string | null;
@@ -51,7 +52,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Function to sync with IDP/Stripe
   const syncSubscription = async (email: string, userId: string) => {
     try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const apiUrl = getApiUrl();
         await fetch(`${apiUrl}/sync-subscription`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

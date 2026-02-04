@@ -2,6 +2,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Zap, Shield, Globe } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const InteractivePulse = () => {
     const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -37,11 +39,12 @@ const InteractivePulse = () => {
 const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { theme } = useTheme();
 
   return (
-    <div className="min-h-screen bg-background selection:bg-primary/30">
+    <div className={`${theme} min-h-screen bg-background selection:bg-primary/30 text-main transition-colors duration-300`}>
       {/* Navbar */}
-      <nav className="border-b border-white/5 bg-slate-900 backdrop-blur-xl">
+      <nav className="border-b border-border-main bg-surface/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img src="/logo.png" alt="Pulse Logo" className="w-10 h-10 object-contain" />
@@ -49,16 +52,19 @@ const Home = () => {
               Pulse
             </span>
           </Link>
-          <div className="flex items-center gap-4">
-            {user ? (
-                <button onClick={() => navigate('/dashboard')} className="px-4 py-2 text-sm font-medium bg-white text-black rounded-full hover:bg-slate-200 transition-colors">Dashboard</button>
-            ) : (
-                <>
-                    <button onClick={() => navigate('/login')} className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">Sign In</button>
-                    <button onClick={() => navigate('/signup')} className="px-4 py-2 text-sm font-medium bg-white text-black rounded-full hover:bg-slate-200 transition-colors">Get Started</button>
-                </>
-            )}
-        </div>
+          <div className="flex items-center gap-6">
+            <ThemeToggle />
+            <div className="flex items-center gap-4">
+              {user ? (
+                  <button onClick={() => navigate('/dashboard')} className="px-4 py-2 text-sm font-medium bg-white text-black rounded-full hover:bg-slate-200 transition-colors">Dashboard</button>
+              ) : (
+                  <>
+                      <button onClick={() => navigate('/login')} className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">Sign In</button>
+                      <button onClick={() => navigate('/signup')} className="px-4 py-2 text-sm font-medium bg-white text-black rounded-full hover:bg-slate-200 transition-colors">Get Started</button>
+                  </>
+              )}
+            </div>
+          </div>
         </div>
       </nav>
 
@@ -77,7 +83,7 @@ const Home = () => {
             The heart of a business needs a <InteractivePulse />
           </h1>
           
-          <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+          <p className="text-xl text-muted max-w-2xl mx-auto mb-10 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
             Streamline your workflow, manage tickets efficiently, and get real-time insights into your team's performance.
           </p>
           
@@ -105,7 +111,7 @@ const Home = () => {
                         <feature.icon size={24} />
                     </div>
                     <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
-                    <p className="text-slate-400">{feature.desc}</p>
+                    <p className="text-muted">{feature.desc}</p>
                 </div>
             ))}
          </div>

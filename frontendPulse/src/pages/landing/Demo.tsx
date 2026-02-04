@@ -3,28 +3,34 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, User, LayoutDashboard, Bot, Settings, ZoomIn } from 'lucide-react';
 import ImageModal from './components/ImageModal';
 import DemoSection from './components/DemoSection';
+import { useTheme } from '../../context/ThemeContext';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const Demo = () => {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white selection:bg-blue-500/30">
+    <div className={`${theme} min-h-screen bg-background text-main selection:bg-blue-500/30 transition-colors duration-300`}>
       <ImageModal selectedImage={selectedImage} onClose={() => setSelectedImage(null)} />
       
       {/* Navbar */}
-      <nav className="border-b border-white/5 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-50">
+      <nav className="border-b border-border-main bg-surface/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img src="/logo.png" alt="Pulse Logo" className="w-10 h-10 object-contain" />
             <span className="text-xl font-bold tracking-tight">Pulse</span>
           </Link>
-          <button 
-            onClick={() => navigate('/')} 
-            className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm font-medium"
-          >
-            <ArrowLeft size={16} /> Back to Home
-          </button>
+          <div className="flex items-center gap-6">
+            <ThemeToggle />
+            <button 
+              onClick={() => navigate('/')} 
+              className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+            >
+              Back to Home
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -35,10 +41,10 @@ const Demo = () => {
             <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
             User Guide
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent pb-2">
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 pb-2">
             Getting Started with Pulse
           </h1>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
+          <p className="text-lg text-muted max-w-2xl mx-auto">
             A step-by-step guide to accessing your account, managing your materials, and leveraging our powerful automation tools.
           </p>
         </div>
@@ -108,7 +114,7 @@ const Demo = () => {
               ProjectPulse's core "Machine" is our intelligent ticket automation. 
               The system automatically routes tickets, assigns urgency scores, and notifies the right team members via Discord.
             </p>
-            <ul className="list-disc pl-5 space-y-2 mt-4 text-slate-400 mb-8">
+            <ul className="list-disc pl-5 space-y-2 mt-4 text-muted mb-8">
                 <li>Create a ticket via the Dashboard or Discord Bot.</li>
                 <li>Watch as the system automatically assigns an <strong>Urgency Score</strong>.</li>
                 <li>Team updates are synced in real-time.</li>
@@ -131,7 +137,7 @@ const Demo = () => {
                             className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
                         />
                     </div>
-                    <p className="text-center text-sm text-slate-500 mt-3 font-medium">Ticket Management Interface</p>
+                    <p className="text-center text-sm text-muted mt-3 font-medium">Ticket Management Interface</p>
                 </div>
 
                 {/* Discord Bot Notifications */}
@@ -149,7 +155,7 @@ const Demo = () => {
                             className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
                         />
                     </div>
-                    <p className="text-center text-sm text-slate-500 mt-3 font-medium">Discord Bot Notifications</p>
+                    <p className="text-center text-sm text-muted mt-3 font-medium">Discord Bot Notifications</p>
                 </div>
             </div>
         </DemoSection>
