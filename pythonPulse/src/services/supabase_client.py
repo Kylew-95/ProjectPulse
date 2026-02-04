@@ -92,3 +92,54 @@ def check_guild_subscription(guild_id: int):
     except Exception as e:
         print(f"Error checking subscription: {e}")
         return False, f"Error verifying subscription status: {e}", None
+
+def add_knowledge_base_item(question: str, answer: str):
+    """Adds a new Q&A pair to the knowledge base."""
+    try:
+        data = {"question": question, "answer": answer}
+        response = supabase.table("knowledge_base").insert(data).execute()
+        return True if response.data else False
+    except Exception as e:
+        print(f"Error adding to KB: {e}")
+        return False
+
+def search_knowledge_base(query: str):
+    """Searches the knowledge base using keyword matching (simple full-text simulation)."""
+    try:
+        # Common stop words to ignore even if >= 3 chars
+        stop_words = {
+            "the", "and", "how", "what", "where", "when", "why", "who", "can", "does", "did", "are", "is", 
+            "for", "you", "your", "with", "that", "this", "from", "have", "has", "had", "not", "but"
+        }
+        
+        # Split query into words, lowercase, and filter
+        # Keep words if length >= 3 AND not in stop_words
+        # This allows "log", "pay", "api", "app", "add", "use" which are crucial but short.
+        keywords = [
+            word.lower() for word in query.split() 
+            if len(word) >= 3 and word.lower() not in stop_words
+        ]
+        
+        # Always try to include the original query as a single phrase search too (for exact matches)
+        if len(query) > 5 and query.lower() not in keywords:
+             pass # actually, strict phrase search is implied if we don't split, but here we want OR logic.
+             # We can'teasily mix AND (phrase) and OR (keywords) in one simple PostgREST call.
+             # Let's stick to OR logic for broad recall.
+        
+        if not keywords:
+            # Fallback: if everything was filtered (e.g. "is it ok"), use the original query string as a single token
+            keywords = [query.strip()]
+
+        # Construct an OR filter
+        conditions = []
+        for word in keywords:
+            conditions.append(f"question.ilike.%{word}%")
+            conditions.append(f"answer.ilike.%{word}%")
+        
+        search_filter = ",".join(conditions)
+        
+        response = supabase.table("knowledge_base").select("*").or_(search_filter).limit(5).execute()
+        return response.data or []
+    except Exception as e:
+        print(f"Error searching KB: {e}")
+        return []

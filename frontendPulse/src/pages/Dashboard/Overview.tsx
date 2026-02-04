@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
 import { Ticket, Activity, ExternalLink, ShieldCheck } from 'lucide-react';
@@ -10,30 +10,47 @@ const Overview = () => {
   const [stats, setStats] = useState({ total: 0, open: 0, closed: 0, avgUrgency: 0 });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      if (!user) return;
-      setLoading(true);
-      try {
-        const { data } = await supabase.from('tickets').select('status, urgency_score');
-        if (data) {
-          const total = data.length;
-          const closed = data.filter(t => t.status === 'done' || t.status === 'closed').length;
-          const open = total - closed;
-          const avgUrgency = total > 0 
-            ? data.reduce((acc, t) => acc + (t.urgency_score || 0), 0) / total 
-            : 0;
-          
-          setStats({ total, open, closed, avgUrgency });
-        }
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      } finally {
-        setLoading(false);
+  const fetchStats = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { data } = await supabase.from('tickets').select('status, urgency_score');
+      if (data) {
+        const total = data.length;
+        const closed = data.filter(t => t.status === 'done' || t.status === 'closed').length;
+        const open = total - closed;
+        const avgUrgency = total > 0 
+          ? data.reduce((acc, t) => acc + (t.urgency_score || 0), 0) / total 
+          : 0;
+        
+        setStats({ total, open, closed, avgUrgency });
       }
-    };
-    fetchStats();
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchStats();
+
+    // Subscribe to real-time changes to tickets to refresh stats
+    const channel = supabase
+      .channel('overview-realtime')
+      .on(
+        'postgres_changes', 
+        { event: '*', schema: 'public', table: 'tickets' }, 
+        () => {
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchStats]);
 
   const resolutionRate = stats.total > 0 ? (stats.closed / stats.total) * 100 : 0;
   const globalLoad = Math.min(stats.avgUrgency * 10, 100); // Scale avg urgency (0-10) to 0-100%

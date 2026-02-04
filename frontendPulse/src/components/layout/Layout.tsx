@@ -1,13 +1,15 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Ticket, BarChart2, Settings, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, Ticket, BarChart2, Settings, Users, LogOut, Book, Lock } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import SidebarProfile from './SidebarProfile';
 import ThemeToggle from '../ui/ThemeToggle';
 import CommandPalette from '../ui/CommandPalette';
 import OnboardingTour from '../ui/OnboardingTour';
+import { useAuth } from '../../context/AuthContext';
 
 const Layout = () => {
     const location = useLocation();
+    const { profile } = useAuth();
     
   
     const handleLogout = async () => {
@@ -18,9 +20,12 @@ const Layout = () => {
       { icon: LayoutDashboard, label: 'Overview', path: '/dashboard/overview' },
       { icon: Users, label: 'Teams', path: '/dashboard/team' },
       { icon: Ticket, label: 'Tickets', path: '/dashboard/tickets' },
-      { icon: BarChart2, label: 'Analytics', path: '/dashboard/analytics' },
+      { icon: BarChart2, label: 'Analytics', path: '/dashboard/analytics', isEnterprise: true },
+      { icon: Book, label: 'Knowledge Base', path: '/dashboard/knowledge-base', isEnterprise: true },
       { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
     ];
+
+    const isEnterprise = profile?.subscription_tier === 'enterprise';
   
     return (
       <div className="flex min-h-screen bg-background transition-colors duration-300">
@@ -64,13 +69,16 @@ const Layout = () => {
                                     
                                     <Icon 
                                         size={20} 
-                                        className={`transition-colors ${
+                                        className={`sidebar-icon-animate transition-colors ${
                                             isActive 
                                                 ? 'text-blue-600 dark:text-blue-400' 
                                                 : 'text-muted group-hover:text-main'
                                         }`} 
                                     />
                                     <span>{item.label}</span>
+                                    {item.isEnterprise && !isEnterprise && (
+                                        <Lock size={12} className="ml-auto text-slate-400 opacity-60" />
+                                    )}
                                 </Link>
                             </li>
                         );

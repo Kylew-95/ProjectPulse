@@ -79,22 +79,49 @@ async def on_ready():
     # 1. Randomized delay to reduce race conditions in multi-bot setups
     await asyncio.sleep(os.getpid() % 3 + 1) # Simple way to stagger instances
     
-    # 2. Robust Channel Check & Creation
+    # 3. Robust Channel Check & Creation (Reports + Info)
     for guild in bot.guilds:
-        channel_name = "report-issues-with-pulse"
-        # Case-insensitive check for existing channel
-        channel = discord.utils.get(guild.text_channels, name=channel_name)
-        
-        if not channel:
-            # Final safety check: refresh cache or look again
-            # discord.py cache should be up to date after the sleep
+        # A. Report Channel
+        report_channel = discord.utils.get(guild.text_channels, name="report-issues-with-pulse")
+        if not report_channel:
             try:
-                await guild.create_text_channel(channel_name)
-                print(f"Created #{channel_name} in {guild.name}")
-            except discord.Forbidden:
-                print(f"Forbidden: Cannot create channel in {guild.name}")
+                await guild.create_text_channel("report-issues-with-pulse")
+                print(f"Created #report-issues-with-pulse in {guild.name}")
             except Exception as e:
-                print(f"Failed to create channel in {guild.name}: {e}")
+                print(f"Error creating report channel in {guild.name}: {e}")
+
+        # B. Info/Help Channel
+        info_channel = discord.utils.get(guild.text_channels, name="pulse-help")
+        if not info_channel:
+            try:
+                info_channel = await guild.create_text_channel(
+                    "pulse-help", 
+                    topic="Getting started with Project Pulse Support and AI Assistant."
+                )
+                embed = discord.Embed(
+                    title="🚀 Project Pulse Support Guide", 
+                    description="Welcome to Project Pulse! I am your AI-powered support assistant here to help you resolve issues and manage your team efficiently.",
+                    color=discord.Color.brand_green()
+                )
+                embed.add_field(
+                    name="❓ How to Get Help", 
+                    value=f"• **Ask AI**: Use `!pulse ask <your question>` for quick answers.\n"
+                          f"• **Report Issues**: Post details in {report_channel.mention if report_channel else '#report-issues-with-pulse'} or use `!report`.\n"
+                          "• **Dashboard**: Access [ProjectPulse Dashboard](https://project-pulse-theta-six.vercel.app/) for analytics.", 
+                    inline=False
+                )
+                embed.add_field(
+                    name="📜 Community Rules", 
+                    value="1. **Be Descriptive**: More details lead to faster resolutions.\n"
+                          "2. **Respect Privacy**: Do not post sensitive personal data.\n"
+                          "3. **Stay Relevant**: Use specific channels for their intended purpose.", 
+                    inline=False
+                )
+                embed.set_footer(text="Powered by Project Pulse AI")
+                await info_channel.send(embed=embed)
+                print(f"Created #pulse-help in {guild.name}")
+            except Exception as e:
+                print(f"Error creating info channel in {guild.name}: {e}")
     
     # Sync commands globally for multi-server support
     try:
@@ -109,29 +136,23 @@ async def on_ready():
         
 @bot.event
 async def on_guild_join(guild):
-    """Automatically create the required channel and link server to owner's profile."""
+    """Automatically create the required channels and link server to owner's profile."""
     print(f"Bot joined server: {guild.name}")
-    print(f"📋 Server ID: {guild.id}")
-    print(f"👥 Member count: {guild.member_count}")
+    print(f"Server ID: {guild.id}")
+    print(f"Member count: {guild.member_count}")
     print(f"Owner ID: {guild.owner_id}")
     
     # Automatically link this Discord server to the owner's profile
     try:
-        
-        # Find the profile by Discord user ID (owner_id)
-        # First, check if there's already a profile with this discord_guild_id
         existing = supabase.table("profiles").select("id, email").eq("discord_guild_id", str(guild.id)).execute()
         
         if existing.data:
             print(f"Server already linked to profile: {existing.data[0].get('email')}")
         else:
-            # Try to find owner's profile by their Discord ID in auth.users
-            # Since we use Discord OAuth, the user's Discord ID is stored as the user's id
             owner_profile = supabase.table("profiles").select("id, email, discord_guild_id").eq("discord_user_id", str(guild.owner_id)).execute()
             
             if owner_profile.data and len(owner_profile.data) > 0:
                 profile = owner_profile.data[0]
-                # Update the owner's profile with this guild ID
                 supabase.table("profiles").update({
                     "discord_guild_id": str(guild.id)
                 }).eq("discord_user_id", str(guild.owner_id)).execute()
@@ -142,23 +163,57 @@ async def on_guild_join(guild):
     except Exception as e:
         print(f"Error auto-linking server: {e}")
     
-    # 3. Robust Channel Creation on Join
-    channel_name = "report-issues-with-pulse"
-    channel = discord.utils.get(guild.text_channels, name=channel_name)
-    if not channel:
+    # Create Channels on Join
+    # 1. Report Channel
+    if not discord.utils.get(guild.text_channels, name="report-issues-with-pulse"):
         try:
-            await guild.create_text_channel(channel_name)
-            print(f"Created #{channel_name} in {guild.name} (on join)")
-        except discord.Forbidden:
-            print(f"Forbidden: Cannot create channel in {guild.name} on join")
-        except Exception as e:
-            print(f"Failed to create channel in {guild.name} on join: {e}")
+            await guild.create_text_channel("report-issues-with-pulse")
+        except Exception: pass
+            
+    # 2. Info Channel
+    if not discord.utils.get(guild.text_channels, name="pulse-help"):
+        try:
+            info_channel = await guild.create_text_channel(
+                "pulse-help", 
+                topic="Getting started with Project Pulse Support and AI Assistant."
+            )
+            embed = discord.Embed(
+                title="🚀 Project Pulse Support Guide", 
+                description="Welcome to Project Pulse! I am your AI-powered support assistant here to help you resolve issues and manage your team efficiently.",
+                color=discord.Color.brand_green()
+            )
+            report_channel = discord.utils.get(guild.text_channels, name="report-issues-with-pulse")
+            embed.add_field(
+                name="❓ How to Get Help", 
+                value=f"• **Ask AI**: Use `!pulse ask <your question>` for quick answers.\n"
+                      f"• **Report Issues**: Post details in {report_channel.mention if report_channel else '#report-issues-with-pulse'} or use `!report`.\n"
+                      "• **Dashboard**: Access [ProjectPulse Dashboard](https://project-pulse-theta-six.vercel.app/) for analytics.", 
+                inline=False
+            )
+            embed.add_field(
+                name="📜 Community Rules", 
+                value="1. **Be Descriptive**: More details lead to faster resolutions.\n"
+                      "2. **Respect Privacy**: Do not post sensitive personal data.\n"
+                      "3. **Stay Relevant**: Use specific channels for their intended purpose.", 
+                inline=False
+            )
+            embed.set_footer(text="Powered by Project Pulse AI")
+            await info_channel.send(embed=embed)
+        except Exception: pass
 
 
 
 async def load_extensions():
-    for filename in os.listdir('./src/cogs'):
-        if filename.endswith('.py') and filename != 'knowledge.py':
+    # Make path relative to this file's location
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    cogs_dir = os.path.join(base_dir, 'cogs')
+    
+    if not os.path.exists(cogs_dir):
+        print(f"Warning: Cogs directory not found at {cogs_dir}")
+        return
+
+    for filename in os.listdir(cogs_dir):
+        if filename.endswith('.py'):
             await bot.load_extension(f'cogs.{filename[:-3]}')
             print(f"Loaded extension: {filename}")
 
@@ -193,23 +248,59 @@ async def main():
         print("Running in Production Mode - Skipping local Stripe Listener")
     
     # Run both bot and API
+    loop = asyncio.get_running_loop()
+    
+    # 1. Load extensions first
     try:
-        await asyncio.gather(
-            load_extensions(),
-            bot.start(DISCORD_TOKEN),
-            run_fastapi()
-        )
+        await load_extensions()
     except Exception as e:
-        if "429" in str(e):
-            print("\nCRITICAL ERROR: Discord Rate Limit (429) hit.")
-            print("Render IP is likely blocked by Cloudflare/Discord.")
-            print("Action: Restart Render service to try a new IP.\n")
-        else:
-            print(f"Main Loop error: {e}")
+        print(f"Failed to load extensions: {e}")
+        return
+
+    # 2. Start long-running services
+    tasks = [
+        loop.create_task(bot.start(DISCORD_TOKEN)),
+        loop.create_task(run_fastapi())
+    ]
+    
+    try:
+        # Wait for either the Bot or API to fail or complete
+        done, pending = await asyncio.wait(
+            tasks, 
+            return_when=asyncio.FIRST_COMPLETED
+        )
+        
+        # Check for exceptions in done tasks
+        for task in done:
+            if task.exception():
+                e = task.exception()
+                if "429" in str(e):
+                    print("\nCRITICAL ERROR: Discord Rate Limit (429) hit.")
+                    print("Render IP is likely blocked by Cloudflare/Discord.")
+                    print("Action: Restart Render service to try a new IP.\n")
+                else:
+                    print(f"Task failed with error: {e}")
+                    
+    except asyncio.CancelledError:
+        print("Shutdown signal received...")
+    except Exception as e:
+        print(f"Main Loop error: {e}")
     finally:
+        print("Cleaning up tasks...")
+        # Cancel all pending tasks
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        
+        # Wait for tasks to finish cancelling
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+            
         print("Shutting down bot...")
         if not bot.is_closed():
             await bot.close()
+        
+        print("Shutdown complete.")
 
 
 

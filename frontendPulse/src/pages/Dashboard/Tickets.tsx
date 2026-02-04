@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
 
@@ -60,15 +60,11 @@ const Tickets = () => {
     fetchUserTeams();
   }, [session, refreshTrigger]);
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     if (!session) return;
     setLoading(true);
     try {
-      // Client-side filtering: Fetch ALL tickets
-      // Limiting to reasonably high number if needed, but for now fetch all assigned/related to user
-      // or filtering by RLS handled by backend. RLS usually handles "my tickets" or "my team's tickets".
-      
-      let query = supabase
+      const query = supabase
         .from('tickets')
         .select(`
           *,
@@ -78,9 +74,6 @@ const Tickets = () => {
         `)
         .order('created_at', { ascending: false });
 
-      // If we want to support server-side filtering later we can add it back, 
-      // but for now we fetch all relevant tickets.
-      
       const { data, error } = await query;
       
       if (error) throw error;
@@ -90,11 +83,27 @@ const Tickets = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session]);
 
   useEffect(() => {
     fetchTickets();
-  }, [session, refreshTrigger]);
+
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel('tickets-realtime')
+      .on(
+        'postgres_changes', 
+        { event: '*', schema: 'public', table: 'tickets' }, 
+        () => {
+          fetchTickets();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session, fetchTickets, refreshTrigger]);
 
   const handleDelete = async (id: string | number) => {
     setDeleteModal({ isOpen: true, id });
@@ -107,9 +116,10 @@ const Tickets = () => {
       if (error) throw error;
       setTickets(prev => prev.filter(t => t.id !== deleteModal.id));
       setDeleteModal(prev => ({ ...prev, isOpen: false }));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error deleting ticket:', err);
-      alert(`Error: ${err.message}`);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      alert(`Error: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -154,10 +164,6 @@ const Tickets = () => {
           <TicketList 
             tickets={tickets}
             loading={loading}
-            // For List view, might need to pass plain pagination props if it doesn't support client-side yet,
-            // or we might need to refactor TicketList too.
-            // Assuming TicketList is legacy or alternative view.
-            // For now, focus on Table view refactor.
             totalCount={tickets.length}
             currentPage={1}
             pageSize={1000}

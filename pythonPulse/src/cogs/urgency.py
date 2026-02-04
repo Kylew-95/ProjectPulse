@@ -154,12 +154,17 @@ class Urgency(commands.Cog):
 
         # Urgency Check 
         result = analyze_urgency(message.content)
-        # Result format: "Score|Reason"
+        # Result format: "Score|Factor Breakdown|Reason"
         try:
-            if "|" in result:
-                score_str, reason = result.split("|", 1)
+            parts = result.split("|")
+            if len(parts) >= 3:
+                score_str, breakdown, reason = parts[0], parts[1], "|".join(parts[2:])
+            elif len(parts) == 2:
+                score_str, reason = parts[0], parts[1]
+                breakdown = "N/A"
             else:
                 score_str = result
+                breakdown = "N/A"
                 reason = "No reason provided by AI"
             
             score = int(score_str)
@@ -223,7 +228,8 @@ class Urgency(commands.Cog):
 
                 if admin_channel:
                     await admin_channel.send(
-                        f"Urgency Alert (Level {score}/10)\n"
+                        f"🚨 **Urgency Alert (Level {score}/10)**\n"
+                        f"**Breakdown:** `{breakdown}`\n"
                         f"**User:** {message.author.mention}\n"
                         f"**Reason:** {reason}\n"
                         f"**Content:** {message.content}"

@@ -11,6 +11,7 @@ import Overview from './pages/Dashboard/Overview';
 import Settings from './pages/Dashboard/Settings';
 import Tickets from './pages/Dashboard/Tickets';
 import Analytics from './pages/Dashboard/Analytics';
+import KnowledgeBase from './pages/Dashboard/KnowledgeBase';
 import Team from './pages/Dashboard/Team';
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
                <Route path="overview" element={<Overview />} />
                <Route path="tickets" element={<Tickets />} />
                <Route path="analytics" element={<Analytics />} />
+               <Route path="knowledge-base" element={<KnowledgeBase />} />
                <Route path="team" element={<Team />} />
                <Route path="team/:teamId" element={<Team />} />
                <Route path="settings" element={<Settings />} />

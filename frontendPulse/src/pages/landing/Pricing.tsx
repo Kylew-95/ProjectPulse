@@ -6,20 +6,24 @@ import { Check, Rocket, Shield, Zap } from 'lucide-react';
 import ThemeToggle from '../../components/ui/ThemeToggle';
 import { getApiUrl } from '../../utils/apiConfig';
 
+interface Plan {
+  id: string;
+  name: string;
+  price: string;
+  priceId: string;
+  period: string;
+  features: string[];
+  isEnterprise: boolean;
+}
+
 const Pricing = () => {
   const { user, profile } = useAuth();
   const { theme } = useTheme();
-  const [plans, setPlans] = useState<any[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If user is already active/trialing, maybe redirect to dashboard?
-    // User asked to be sent to Pricing Page. Maybe they want to upgrade?
-    // But typically if paid, go to dashboard.
-    // If user is already active/trialing, maybe redirect to dashboard?
-    // User asked to be sent to Pricing Page. Maybe they want to upgrade?
-    // But typically if paid, go to dashboard.
     const isTrialActive = profile?.trial_end ? new Date(profile.trial_end) > new Date() : false;
     if (['active', 'trialing'].includes(profile?.status || '') || isTrialActive) {
        navigate('/dashboard/overview');
@@ -28,17 +32,15 @@ const Pricing = () => {
     const fetchPlans = async () => {
       try {
         const apiUrl = getApiUrl();
-        console.log('Fetching plans from:', `${apiUrl}/products`);
         const res = await fetch(`${apiUrl}/products`);
         if (res.ok) {
           const data = await res.json();
-          console.log('Plans fetched:', data);
-          // Sort by price
           const formatted = data.sort((a: any, b: any) => a.price - b.price).map((p: any) => ({
+             id: p.id,
              name: p.name,
              price: `£${p.price}`,
              period: '/mo',
-             features: p.description ? p.description.split(',') : [],
+             features: p.description && !p.name.includes('Enterprise') ? p.description.split(',') : [],
              priceId: p.price_id,
              isEnterprise: p.name === 'Enterprise'
           }));
@@ -54,7 +56,7 @@ const Pricing = () => {
   const getFeatures = (name: string) => {
       if (name === 'Starter') return ['2,000 Tickets/mo', 'Basic analytics', 'Community support', 'Email notifications'];
       if (name === 'Pro') return ['10,000 Tickets/mo', 'Auto-sync to Jira/Trello/GitHub', 'Advanced analytics', 'Priority support', 'Custom workflows'];
-      if (name === 'Enterprise') return ['Unlimited Tickets', 'Custom Integrations', 'Dedicated account manager', 'SLA & Uptime Guarantee', 'SSO authentication'];
+      if (name === 'Enterprise') return ['Unlimited Tickets', 'AI Analytics (Enterprise Only)', 'Knowledge Base & AI Replies', 'Dedicated account manager', 'SLA & Uptime Guarantee'];
       return [];
   };
 
@@ -168,23 +170,19 @@ const Pricing = () => {
                ))}
              </ul>
 
-             {plan.isEnterprise ? (
-                 <button className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all font-bold border border-white/5 hover:border-white/10 active:scale-95">
-                     Contact Sales
-                 </button>
-             ) : (
-                 <button
-                   onClick={() => handleSubscribe(plan.priceId)}
-                   disabled={loading}
-                   className={`w-full py-4 rounded-xl transition-all font-bold shadow-lg active:scale-95 ${
-                       plan.name === 'Pro' 
-                       ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-primary/25 hover:shadow-primary/40' 
-                       : 'bg-white text-slate-900 hover:bg-slate-200 hover:shadow-xl'
-                   }`}
-                 >
-                   {loading ? 'Processing...' : (plan.name === 'Pro' ? 'Start 1-Week Free Trial' : 'Get Started')}
-                 </button>
-             )}
+             <button
+               onClick={() => handleSubscribe(plan.priceId)}
+               disabled={loading}
+               className={`w-full py-4 rounded-xl transition-all font-bold shadow-lg active:scale-95 ${
+                   plan.name === 'Pro' 
+                   ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-primary/25 hover:shadow-primary/40' 
+                   : plan.name === 'Enterprise'
+                   ? 'bg-slate-100 text-slate-900 hover:bg-white'
+                   : 'bg-white text-slate-900 hover:bg-slate-200 hover:shadow-xl'
+               }`}
+             >
+               {loading ? 'Processing...' : (plan.name === 'Pro' ? 'Start 1-Week Free Trial' : 'Get Started')}
+             </button>
           </div>
         ))}
       </div>

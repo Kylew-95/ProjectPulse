@@ -11,6 +11,7 @@ const Breadcrumbs = () => {
     { path: '/dashboard/team/:teamId', breadcrumb: 'Members' },
     { path: '/dashboard/tickets', breadcrumb: 'Tickets' },
     { path: '/dashboard/analytics', breadcrumb: 'Analytics' },
+    { path: '/dashboard/knowledge-base', breadcrumb: 'Knowledge Base' },
     { path: '/dashboard/settings', breadcrumb: 'Settings' },
   ]);
 

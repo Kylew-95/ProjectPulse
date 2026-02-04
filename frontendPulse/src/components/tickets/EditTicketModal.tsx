@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Sparkles, Copy, Check, Lock } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import SearchableSelect from '../ui/SearchableSelect';
 import type { Ticket } from '../../types/ticket';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface Profile {
   id: string;
@@ -21,7 +23,12 @@ interface EditTicketModalProps {
 }
 
 const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTicketModalProps) => {
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [suggestionLoading, setSuggestionLoading] = useState(false);
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<string>(ticket.team_id || '');
   const [autoAssign, setAutoAssign] = useState(false);
@@ -33,6 +40,43 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
     assignee_id: ticket.assignee_id || '',
     urgency_score: ticket.urgency_score || 0
   });
+
+  const isEnterprise = profile?.subscription_tier === 'enterprise';
+
+  const handleSuggestReply = async () => {
+    if (!isEnterprise) {
+        navigate('/pricing');
+        return;
+    }
+    if (!user) return;
+    setSuggestionLoading(true);
+    setSuggestion(null);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/suggest-reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticket_id: ticket.id, user_id: user.id })
+      });
+      if (response.status === 403) {
+          setSuggestion('This feature requires an Enterprise subscription.');
+          return;
+      }
+      const result = await response.json();
+      setSuggestion(result.suggestion);
+    } catch (error) {
+      console.error('Error fetching suggestion:', error);
+      setSuggestion('Could not generate suggestion at this time.');
+    } finally {
+      setSuggestionLoading(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    if (!suggestion) return;
+    navigator.clipboard.writeText(suggestion);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     if (autoAssign && selectedTeamId) {
@@ -124,9 +168,10 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
       if (error) throw error;
       onTicketUpdated();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error updating ticket:', err);
-      alert(`Error updating ticket: ${err.message || 'Unknown error'}`);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      alert(`Error updating ticket: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -162,6 +207,46 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
               onChange={e => setFormData({ ...formData, description: e.target.value })}
               className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-primary/50 focus:ring-4 focus:ring-primary/10 outline-none transition-all placeholder:text-slate-600 resize-none"
             />
+          </div>
+
+          <div className="space-y-3">
+             <div className="flex items-center justify-between">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">AI Assistant</label>
+                <button 
+                    type="button"
+                    onClick={handleSuggestReply}
+                    disabled={suggestionLoading}
+                    className="flex items-center gap-1.5 text-[10px] font-bold text-primary hover:text-blue-400 transition-colors disabled:opacity-50"
+                >
+                    {isEnterprise ? (
+                        <>
+                            <Sparkles size={12} className={suggestionLoading ? "animate-pulse" : ""} />
+                            {suggestionLoading ? 'Thinking...' : 'Suggest Reply'}
+                        </>
+                    ) : (
+                        <>
+                            <Lock size={10} className="text-slate-500" />
+                            <span className="text-slate-500">Suggest Reply</span>
+                        </>
+                    )}
+                </button>
+             </div>
+
+             {suggestion && (
+                <div className="relative group bg-primary/5 border border-primary/20 rounded-xl p-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <p className="text-xs text-slate-300 leading-relaxed italic pr-8">
+                        "{suggestion}"
+                    </p>
+                    <button 
+                        type="button"
+                        onClick={copyToClipboard}
+                        className="absolute top-3 right-3 p-1.5 bg-slate-900/50 rounded-lg text-slate-400 hover:text-white transition-all opacity-0 group-hover:opacity-100"
+                        title="Copy to clipboard"
+                    >
+                        {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                    </button>
+                </div>
+             )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

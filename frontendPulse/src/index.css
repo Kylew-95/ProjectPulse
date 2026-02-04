@@ -89,3 +89,41 @@ h1, h2, h3,p {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-primary);
 }
+
+/* Sidebar Icon Animations */
+@keyframes icon-draw {
+  0% {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    opacity: 0.5;
+  }
+  100% {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.sidebar-icon-animate {
+  overflow: visible !important;
+}
+
+.sidebar-icon-animate path,
+.sidebar-icon-animate circle,
+.sidebar-icon-animate rect,
+.sidebar-icon-animate line,
+.sidebar-icon-animate polyline,
+.sidebar-icon-animate polygon {
+  transition: stroke 0.4s ease, stroke-width 0.4s ease;
+}
+
+/* Trigger animation on parent link hover */
+a:hover .sidebar-icon-animate path,
+a:hover .sidebar-icon-animate circle,
+a:hover .sidebar-icon-animate rect,
+a:hover .sidebar-icon-animate line,
+a:hover .sidebar-icon-animate polyline,
+a:hover .sidebar-icon-animate polygon {
+  animation: icon-draw 1.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  stroke-width: 2.5px;
+}

@@ -23,20 +23,47 @@ except Exception as e:
 def analyze_urgency(message_content: str):
     """
     Returns a score 0-10 and a reason if urgent.
+    Uses a mathematical rubric for objectivity.
     """
     prompt = f"""
-    Analyze the following Discord message for urgency and sentiment.
+    Analyze the following Discord message for urgency using this MATHEMATICAL RUBRIC (Total 0-10):
+
+    1. IMPACT (0-3 points): 
+       - 3: System-wide (all users/all servers affected)
+       - 2: Segmented (specific group or multiple users affected)
+       - 1: Individual (only the reporter affected)
+       - 0: None/Informational
+
+    2. CRITICALITY (0-3 points):
+       - 3: Mission Critical (Payments failing, Login broken, Security breach)
+       - 2: Business Core (Primary dashboard broken, data not syncing)
+       - 1: Minor (UI glitch, slow performance, non-blocking bug)
+       - 0: Cosmetic (Typos, wrong colors, suggestion)
+
+    3. SENTIMENT/FRUSTRATION (0-2 points):
+       - 2: High Frustration (Irate, using caps, "Emergency", "Angry")
+       - 1: Concerned (Standard bug report, polite but needs fix)
+       - 0: Neutral/Positive (Question, "Thanks", "Feature idea")
+
+    4. PERSISTENCE (0-2 points):
+       - 2: Permanent (Consistent failure, "Always", "Every time")
+       - 1: Intermittent (Happens sometimes, "Randomly")
+       - 0: New/Unknown (First time seeing it, "Just happened once")
+
     Message: "{message_content}"
+
+    Return ONLY a single line in this EXACT pipe-separated format (NO MARKDOWN, NO OTHER TEXT):
+    Score|Factor Breakdown|Reason
     
-    If it is a bug report, system outage, or very frustrated customer, rate urgency 7-10.
-    If it is a general question, rate 0-3.
+    - Score: Sum of the 4 points (0-10)
+    - Factor Breakdown: I:n, C:n, S:n, P:n
+    - Reason: One sentence justification
     
-    Return strict format: Score|Reason
-    Example: 8|Critical bug report affecting payment
+    Example: 8|I:3, C:3, S:1, P:1|System-wide login failure affecting all users.
     """
 
     if not co:
-        return "0|AI Unavailable"
+        return "0|Breakdown: N/A|AI Unavailable"
     try:
         response = co.chat(
             message=prompt,
@@ -44,8 +71,8 @@ def analyze_urgency(message_content: str):
         )
         return response.text.strip()
     except Exception as e:
-        print(f"Cohere Error: {e}")
-        return "0|Error"
+        print(f"Cohere Urgency Error: {e}")
+        return "0|Breakdown: Error|Service Error"
 
 def generate_followup_questions(message_content: str):
     """
@@ -206,3 +233,65 @@ def generate_summary(messages_text: str):
     except Exception as e:
         print(f"Cohere Error: {e}")
         return "Could not generate summary."
+
+def generate_suggested_reply(ticket_content: str, kb_context: str):
+    """
+    Generates a suggested reply based on ticket content and knowledge base context.
+    """
+    prompt = f"""
+    You are a support agent for Project Pulse. 
+    A user has reported the following issue: "{ticket_content}"
+    
+    Use the following Knowledge Base entries for context:
+    {kb_context}
+    
+    Draft a professional, friendly, and helpful reply. If the answer is in the context, provide it clearly. 
+    If not, ask for more details or provide general troubleshooting steps related to the topic.
+    
+    Keep the tone premium and empathetic.
+    """
+
+    if not co:
+        return "I'm sorry, I couldn't generate a suggestion right now. Please check our documentation."
+    try:
+        from services.ai_service import co
+        response = co.chat(
+            message=prompt,
+            model="command-a-03-2025"
+        )
+        return response.text.strip()
+    except Exception as e:
+        print(f"Cohere Suggestion Error: {e}")
+        return "Could not generate suggested reply."
+
+def generate_kb_answer(user_query: str, kb_context: str):
+    """
+    Generates a direct answer to a user's question based on KB context.
+    """
+    prompt = f"""
+    You are the Project Pulse AI Support Assistant.
+    A user asked: "{user_query}"
+    
+    Here is the relevant information from our Knowledge Base:
+    {kb_context}
+    
+    INSTRUCTIONS:
+    1. Answer the user's question clearly and concisely using ONLY the provided context.
+    2. If the context contains the answer, rewrite it in a friendly, helpful tone.
+    3. If the context does NOT contain the answer, politely say: "I couldn't find the exact answer in my database. valid commands are !ticket create <title> | <description> to open a support ticket."
+    4. Do not make up information not in the context.
+    
+    Keep the response under 200 words.
+    """
+
+    if not co:
+        return "I'm sorry, my AI brain is currently offline. Please check the manual or open a ticket."
+    try:
+        response = co.chat(
+            message=prompt,
+            model="command-a-03-2025"
+        )
+        return response.text.strip()
+    except Exception as e:
+        print(f"Cohere KB Answer Error: {e}")
+        return "I encountered an error trying to process your question. Please try again later."
