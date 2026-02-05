@@ -11,6 +11,7 @@ export interface Ticket {
     assignee_id: string | null;
     team_id: string;
     urgency_score: number | null;
+    position: number | null;
     assignee_profile?: { full_name: string; avatar_url: string } | null;
     reporter_profile?: { full_name: string; avatar_url: string } | null;
     team?: { name: string };

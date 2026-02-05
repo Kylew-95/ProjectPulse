@@ -5,6 +5,7 @@ import SubscriptionSection from '../../components/settings/SubscriptionSection';
 import IntegrationsSection from '../../components/settings/IntegrationsSection';
 import AccountSection from '../../components/settings/AccountSection';
 import SubscriptionModal from '../../components/settings/SubscriptionModal';
+import AuditLogViewer from '../../components/settings/AuditLogViewer';
 
 
 const Settings = () => {
@@ -23,6 +24,10 @@ const Settings = () => {
       <IntegrationsSection />
 
       <AccountSection user={user} profile={profile} />
+      
+      <div className="mt-8">
+        <AuditLogViewer />
+      </div>
 
       {/* Subscription Modal */}
       <SubscriptionModal 

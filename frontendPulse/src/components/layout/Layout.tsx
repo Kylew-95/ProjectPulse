@@ -7,6 +7,7 @@ import CommandPalette from '../ui/CommandPalette';
 import OnboardingTour from '../ui/OnboardingTour';
 import DiscordChat from '../ui/DiscordChat';
 import { useAuth } from '../../context/AuthContext';
+import NotificationDropdown from '../notifications/NotificationDropdown';
 
 const Layout = () => {
     const location = useLocation();
@@ -104,7 +105,8 @@ const Layout = () => {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col ml-[260px] min-w-0">
             {/* Header / Topbar */}
-            <header className="sticky top-0 z-10 w-full h-16 flex items-center justify-end px-8 bg-surface/80 backdrop-blur-md border-b border-border-main">
+            <header className="sticky top-0 z-10 w-full h-16 flex items-center justify-end px-8 bg-surface/80 backdrop-blur-md border-b border-border-main gap-4">
+                <NotificationDropdown />
                 <ThemeToggle />
             </header>
   
