@@ -9,6 +9,7 @@
   --color-text-muted: var(--text-secondary);
   --color-primary: #3B82F6;
   --color-secondary: #0D9488;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root, .dark {
@@ -47,15 +48,15 @@ h1, h2, h3,p {
     margin: 0;
     background-color: var(--background);
     color: var(--text-primary);
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--font-sans);
     transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
                 color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   h1, h2, h3, h4, h5, h6 {
     color: var(--text-primary);
-    font-weight: 800;
-    letter-spacing: -0.025em;
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
 
   /* Core Card Layout - Uniform across app */
@@ -126,4 +127,14 @@ a:hover .sidebar-icon-animate polyline,
 a:hover .sidebar-icon-animate polygon {
   animation: icon-draw 1.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   stroke-width: 2.5px;
+}
+
+@layer utilities {
+  .card-professional {
+    @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-xl shadow-sm transition-all duration-200;
+  }
+  
+  .badge-status {
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border;
+  }
 }

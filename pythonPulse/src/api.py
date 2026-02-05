@@ -3,10 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import billing, analytics, knowledge_base, intelligence, general
 from dotenv import load_dotenv
 import os
+from rate_limiter import limiter, _rate_limit_exceeded_handler, RateLimitExceeded
 
 load_dotenv()
 
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,

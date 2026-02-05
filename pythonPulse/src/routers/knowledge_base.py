@@ -1,11 +1,13 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from services.supabase_client import supabase
 from dependencies import check_enterprise_tier
+from rate_limiter import limiter
 
 router = APIRouter()
 
 @router.get("/knowledge-base")
-async def get_knowledge_base(user_id: str = Query(...)):
+@limiter.limit("30/minute")
+async def get_knowledge_base(request: Request, user_id: str = Query(...)):
     try:
         await check_enterprise_tier(user_id)
         
@@ -19,7 +21,8 @@ async def get_knowledge_base(user_id: str = Query(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/knowledge-base")
-async def add_knowledge_base(data: dict):
+@limiter.limit("10/minute")
+async def add_knowledge_base(request: Request, data: dict):
     try:
         user_id = data.get("user_id")
         await check_enterprise_tier(user_id)
@@ -35,7 +38,8 @@ async def add_knowledge_base(data: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/knowledge-base/{kb_id}")
-async def update_knowledge_base(kb_id: int, data: dict):
+@limiter.limit("10/minute")
+async def update_knowledge_base(request: Request, kb_id: int, data: dict):
     try:
         user_id = data.get("user_id")
         await check_enterprise_tier(user_id)
@@ -51,7 +55,8 @@ async def update_knowledge_base(kb_id: int, data: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/knowledge-base/{kb_id}")
-async def delete_knowledge_base(kb_id: int, user_id: str = Query(...)):
+@limiter.limit("10/minute")
+async def delete_knowledge_base(request: Request, kb_id: int, user_id: str = Query(...)):
     try:
         await check_enterprise_tier(user_id)
         

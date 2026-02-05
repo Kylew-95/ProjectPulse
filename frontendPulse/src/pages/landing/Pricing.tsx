@@ -46,7 +46,7 @@ const Pricing = () => {
           const formatted = data.sort((a, b) => a.price - b.price).map((p) => ({
              id: p.id,
              name: p.name,
-             price: `£${p.price}`,
+             price: `£${Math.floor(p.price)}`,
              period: '/mo',
              features: p.description && !p.name.includes('Enterprise') ? p.description.split(',') : [],
              priceId: p.price_id,

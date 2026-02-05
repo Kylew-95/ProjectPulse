@@ -4,10 +4,12 @@ import traceback
 from supabase import create_client
 from dependencies import check_enterprise_tier
 from services.ai_service import generate_suggested_reply
+from rate_limiter import limiter
 
 router = APIRouter()
 
 @router.post("/send-reply")
+@limiter.limit("10/minute")
 async def send_reply(data: dict, request: Request):
     try:
         user_id = data.get("user_id") # Admin's Supabase ID
@@ -68,7 +70,8 @@ async def send_reply(data: dict, request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/suggest-reply")
-async def suggest_reply(data: dict):
+@limiter.limit("5/minute")
+async def suggest_reply(data: dict, request: Request):
     try:
         user_id = data.get("user_id")
         await check_enterprise_tier(user_id)

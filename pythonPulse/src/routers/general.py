@@ -1,10 +1,12 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from rate_limiter import limiter
 import os
 
 router = APIRouter()
 
 @router.post("/send-invite")
-async def send_invite(data: dict):
+@limiter.limit("10/minute")
+async def send_invite(request: Request, data: dict):
     # Retrieve email from request
     email = data.get("email")
     role = data.get("role", "member")

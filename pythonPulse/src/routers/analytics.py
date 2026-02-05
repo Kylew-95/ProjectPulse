@@ -1,11 +1,13 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from rate_limiter import limiter
 import os
 from dependencies import check_enterprise_tier
 
 router = APIRouter()
 
 @router.get("/analytics")
-async def get_analytics(user_id: str = None):
+@limiter.limit("20/minute")
+async def get_analytics(request: Request, user_id: str = None):
     try:
         await check_enterprise_tier(user_id)
         from services.supabase_client import supabase
