@@ -44,7 +44,7 @@ const KnowledgeBase = () => {
   }, [user]);
 
   useEffect(() => {
-    if (profile && profile.subscription_tier !== 'enterprise') {
+    if (profile && !['enterprise', 'super_admin'].includes(profile.subscription_tier || '')) {
         setForbidden(true);
         setLoading(false);
         return;
@@ -114,7 +114,7 @@ const KnowledgeBase = () => {
     }
   };
 
-  if (forbidden || (profile && profile.subscription_tier !== 'enterprise')) {
+  if (forbidden || (profile && !['enterprise', 'super_admin'].includes(profile.subscription_tier || ''))) {
     return (
       <PremiumGate 
         title="Knowledge Engine"

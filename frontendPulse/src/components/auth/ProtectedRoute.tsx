@@ -60,7 +60,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   const isTrialActive = profile?.trial_end ? new Date(profile.trial_end) > new Date() : false;
-  const isPaid = ['active', 'trialing'].includes(profile?.status || '') || isTrialActive;
+  const isPaid = ['active', 'trialing'].includes(profile?.status || '') || isTrialActive || profile?.subscription_tier === 'super_admin';
   const isPricingPage = location.pathname === '/pricing';
 
   if (!isPaid && !isPricingPage) {

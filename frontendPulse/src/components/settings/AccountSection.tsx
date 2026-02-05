@@ -1,8 +1,10 @@
 import { CreditCard } from 'lucide-react';
+import type { User } from '@supabase/supabase-js';
+import type { Profile } from '../../types/auth';
 
 interface AccountSectionProps {
-  user: any;
-  profile: any;
+  user: User | null;
+  profile: Profile | null;
 }
 
 const AccountSection = ({ user }: AccountSectionProps) => {

@@ -245,16 +245,24 @@ def generate_suggested_reply(ticket_content: str, kb_context: str):
     Use the following Knowledge Base entries for context:
     {kb_context}
     
-    Draft a professional, friendly, and helpful reply. If the answer is in the context, provide it clearly. 
-    If not, ask for more details or provide general troubleshooting steps related to the topic.
+    Draft a CONCISE, friendly, and helpful reply for DISCORD.
     
-    Keep the tone premium and empathetic.
+    RULES:
+    1. Keep it under 150 words.
+    2. Use Discord markdown (e.g., **bold** for emphasis).
+    3. DO NOT use email-style formalisms (no "Dear...", no "Warm regards...", no "Subject:").
+    4. Start directly with the answer or a friendly greeting like "Hey there!".
+    5. If the answer is in the context, provide it clearly. 
+    6. If not, ask one specific follow-up question or provide a single troubleshooting step.
+    
+    The response will be sent directly to the user who reported the issue.
     """
 
     if not co:
         return "I'm sorry, I couldn't generate a suggestion right now. Please check our documentation."
     try:
-        from services.ai_service import co
+        if not co:
+            return "AI service is currently unavailable."
         response = co.chat(
             message=prompt,
             model="command-a-03-2025"

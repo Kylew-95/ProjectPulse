@@ -36,7 +36,7 @@ const TeamSection = () => {
     id: ''
   });
 
-  const isPro = profile?.subscription_tier === 'pro' || profile?.subscription_tier === 'enterprise';
+  const isPro = ['pro', 'enterprise', 'super_admin'].includes(profile?.subscription_tier || '');
 
   useEffect(() => {
     if (user && isPro) {
@@ -96,8 +96,9 @@ const TeamSection = () => {
       setInviteEmail('');
       setInviteDiscord('');
       fetchMembers(team.id);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
     } finally {
       setInviting(false);
     }
@@ -113,9 +114,10 @@ const TeamSection = () => {
       await supabase.from('team_members').delete().eq('id', deleteModal.id);
       if (team) fetchMembers(team.id);
       setDeleteModal(prev => ({ ...prev, isOpen: false }));
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError(err.message);
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

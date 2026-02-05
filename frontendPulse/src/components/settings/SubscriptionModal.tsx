@@ -2,17 +2,40 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, ExternalLink } from 'lucide-react';
 import { getApiUrl } from '../../utils/apiConfig';
+import type { User } from '@supabase/supabase-js';
+import type { Profile } from '../../types/auth';
 
 interface SubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: any;
-  profile: any;
+  user: User | null;
+  profile: Profile | null;
+}
+
+interface ModalPlan {
+  name: string;
+  price: string;
+  period: string;
+  features: string[];
+  active: boolean;
+  priceId: string;
+  isEnterprise: boolean;
+}
+
+interface StripeProduct {
+  id: string;
+  name: string;
+  price: number;
+  price_id: string;
+  description: string | null;
+  metadata?: {
+    plan_tier_id?: string;
+  };
 }
 
 const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModalProps) => {
   const [loading, setLoading] = useState(false);
-  const [plans, setPlans] = useState<any[]>([]);
+  const [plans, setPlans] = useState<ModalPlan[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -21,9 +44,9 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
             const apiUrl = getApiUrl();
             const res = await fetch(`${apiUrl}/products`);
             if (res.ok) {
-            const data = await res.json();
+            const data: StripeProduct[] = await res.json();
             // Sort by price
-            const formatted = data.sort((a: any, b: any) => a.price - b.price).map((p: any) => ({
+            const formatted: ModalPlan[] = data.sort((a, b) => a.price - b.price).map((p) => ({
                 name: p.name,
                 price: `£${p.price}`,
                 period: '/mo',
@@ -35,7 +58,8 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
             setPlans(formatted);
             }
         } catch (e) {
-            console.error("Failed to fetch plans", e);
+            const error = e as Error;
+            console.error("Failed to fetch plans", error);
         }
         };
         fetchPlans();
@@ -69,7 +93,8 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
          console.error('No checkout URL returned', data);
       }
     } catch (err) {
-      console.error('Checkout error:', err);
+      const error = err as Error;
+      console.error('Checkout error:', error);
     } finally {
         setLoading(false);
     }
@@ -91,7 +116,8 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
           window.location.href = data.url;
         }
       } catch (err) {
-        console.error('Portal error:', err);
+        const error = err as Error;
+        console.error('Portal error:', error);
       } finally {
           setLoading(false);
       }
@@ -165,14 +191,14 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
                                     <button disabled className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-lg text-sm font-medium border border-slate-200 dark:border-slate-700 cursor-default">Current Plan</button>
                                 ) : (
                                     <button 
-                                        onClick={() => plan.isEnterprise ? null : handleSubscribe(plan.priceId)}
+                                        onClick={() => handleSubscribe(plan.priceId)}
                                         className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${
                                             plan.isEnterprise 
-                                            ? 'bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 border border-slate-700'
+                                            ? 'bg-white text-black hover:bg-slate-50 border border-slate-200 shadow-md shadow-black/5'
                                             : 'bg-white text-black hover:bg-slate-50 border border-slate-200'
                                         }`}
                                     >
-                                        {plan.isEnterprise ? 'Contact Sales' : loading ? 'Processing...' : 'Switch to this plan'}
+                                        {loading ? 'Processing...' : 'Switch to this plan'}
                                     </button>
                                 )}
                              </div>

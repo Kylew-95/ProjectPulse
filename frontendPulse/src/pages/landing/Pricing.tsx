@@ -16,6 +16,14 @@ interface Plan {
   isEnterprise: boolean;
 }
 
+interface StripeProduct {
+  id: string;
+  name: string;
+  price: number;
+  price_id: string;
+  description: string | null;
+}
+
 const Pricing = () => {
   const { user, profile } = useAuth();
   const { theme } = useTheme();
@@ -25,7 +33,7 @@ const Pricing = () => {
 
   useEffect(() => {
     const isTrialActive = profile?.trial_end ? new Date(profile.trial_end) > new Date() : false;
-    if (['active', 'trialing'].includes(profile?.status || '') || isTrialActive) {
+    if (['active', 'trialing'].includes(profile?.status || '') || isTrialActive || profile?.subscription_tier === 'super_admin') {
        navigate('/dashboard/overview');
     }
 
@@ -34,8 +42,8 @@ const Pricing = () => {
         const apiUrl = getApiUrl();
         const res = await fetch(`${apiUrl}/products`);
         if (res.ok) {
-          const data = await res.json();
-          const formatted = data.sort((a: any, b: any) => a.price - b.price).map((p: any) => ({
+          const data: StripeProduct[] = await res.json();
+          const formatted = data.sort((a, b) => a.price - b.price).map((p) => ({
              id: p.id,
              name: p.name,
              price: `£${p.price}`,
@@ -170,19 +178,17 @@ const Pricing = () => {
                ))}
              </ul>
 
-             <button
-               onClick={() => handleSubscribe(plan.priceId)}
-               disabled={loading}
-               className={`w-full py-4 rounded-xl transition-all font-bold shadow-lg active:scale-95 ${
-                   plan.name === 'Pro' 
-                   ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-primary/25 hover:shadow-primary/40' 
-                   : plan.name === 'Enterprise'
-                   ? 'bg-slate-100 text-slate-900 hover:bg-white'
-                   : 'bg-white text-slate-900 hover:bg-slate-200 hover:shadow-xl'
-               }`}
-             >
-               {loading ? 'Processing...' : (plan.name === 'Pro' ? 'Start 1-Week Free Trial' : 'Get Started')}
-             </button>
+              <button
+                onClick={() => handleSubscribe(plan.priceId)}
+                disabled={loading}
+                className={`w-full py-4 rounded-xl transition-all font-bold shadow-lg active:scale-95 ${
+                    plan.name === 'Pro' 
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-primary/25 hover:shadow-primary/40' 
+                    : 'bg-white text-slate-900 hover:bg-slate-200 hover:shadow-xl'
+                }`}
+              >
+                {loading ? 'Processing...' : (plan.name === 'Pro' ? 'Start 1-Week Free Trial' : 'Switch to this plan')}
+              </button>
           </div>
         ))}
       </div>

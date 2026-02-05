@@ -225,12 +225,32 @@ async def cancel_subscription(data: dict):
                 key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
                 supabase_admin = create_client(url, key)
 
+                # --- PROTECT SUPER_ADMIN ---
+                current_tier = None
+                try:
+                    profile_res = supabase_admin.table('profiles').select('subscription_tier').eq('id', user_id).single().execute()
+                    if profile_res.data:
+                        current_tier = profile_res.data.get('subscription_tier')
+                except:
+                    pass
+
+                if current_tier == 'super_admin':
+                    print(f"CANCEL: User {user_id} is 'super_admin'. Skipping status change.", flush=True)
+                    return {
+                        "status": "success", 
+                        "message": "User is a Super Admin. No changes needed.", 
+                        "sub_status": "active"
+                    }
+                # ---------------------------
+
                 update_data = {
                     'id': user_id,
                     'status': 'canceled',
-                    'subscription_tier': None, 
                     'updated_at': 'now()'
                 }
+                # Only reset tier if NOT super_admin
+                if current_tier != 'super_admin':
+                    update_data['subscription_tier'] = None
                 supabase_admin.table('profiles').update(update_data).eq('id', user_id).execute()
                 print(f"CANCEL: Force updated profile {user_id} to canceled.", flush=True)
                 
@@ -347,18 +367,34 @@ async def stripe_webhook(request: Request):
             else:
                 status = 'active'
 
+            # --- PROTECT SUPER_ADMIN ---
+            current_tier = None
+            try:
+                profile_res = supabase.table('profiles').select('subscription_tier').eq('id', user_id).single().execute()
+                if profile_res.data:
+                    current_tier = profile_res.data.get('subscription_tier')
+            except:
+                pass
+            
+            if current_tier == 'super_admin':
+                print(f"WEBHOOK: User {user_id} is 'super_admin'. Skipping tier overwrite in checkout.", flush=True)
+                plan_tier_id = 'super_admin' # Keep existing
+            # ---------------------------
+
             # Update Supabase
             stripe_customer_id = session.get('customer')
 
             update_data = {
                 'id': user_id,
                 'stripe_customer_id': stripe_customer_id,
-                'subscription_tier': plan_tier_id,
                 'updated_at': 'now()',
                 'trial_start': trial_start,
                 'trial_end': trial_end,
-                'status': status
+                'status': 'active' if current_tier == 'super_admin' else status
             }
+
+            if current_tier != 'super_admin':
+                update_data['subscription_tier'] = plan_tier_id
 
             # Use upsert to create profile if it's missing (failsafe)
             try:
@@ -385,6 +421,16 @@ async def stripe_webhook(request: Request):
              if sub.get('cancel_at_period_end'):
                  new_status = 'canceled' # Force our DB to say canceled so UI shows Red Badge
              
+             # --- PROTECT SUPER_ADMIN ---
+             try:
+                 profile_res = supabase.table('profiles').select('subscription_tier').eq('id', user_id).single().execute()
+                 if profile_res.data and profile_res.data.get('subscription_tier') == 'super_admin':
+                     print(f"WEBHOOK: User {user_id} is 'super_admin'. Skipping status sync.", flush=True)
+                     return {"status": "success", "message": "super_admin protected"}
+             except:
+                 pass
+             # ---------------------------
+
              update_data = {
                 'id': user_id,
                 'status': new_status,
@@ -399,12 +445,29 @@ async def stripe_webhook(request: Request):
         
         user_id = sub.get('metadata', {}).get('user_id')
         if user_id:
+            # --- PROTECT SUPER_ADMIN ---
+            current_tier = None
+            try:
+                profile_res = supabase.table('profiles').select('subscription_tier').eq('id', user_id).single().execute()
+                if profile_res.data:
+                    current_tier = profile_res.data.get('subscription_tier')
+            except:
+                pass
+            
+            if current_tier == 'super_admin':
+                print(f"WEBHOOK: User {user_id} is 'super_admin'. Skipping deletion update.", flush=True)
+                return {"status": "success", "message": "Super Admin - Access preserved"}
+            # ---------------------------
+
             update_data = {
                 'id': user_id,
                 'status': 'canceled',
-                'subscription_tier': None, 
                 'updated_at': 'now()'
             }
+            # Only reset tier if NOT super_admin
+            if current_tier != 'super_admin':
+                 update_data['subscription_tier'] = None
+            
             supabase.table('profiles').upsert(update_data).execute()
             print(f"WEBHOOK: Profile {user_id} cancelled.", flush=True)
     
@@ -491,39 +554,43 @@ async def sync_subscription(data: dict):
              key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
              supabase_admin = create_client(url, key)
              
+             # Check if current tier is super_admin to avoid overwriting it
+             current_tier = None
+             try:
+                 profile_res = supabase_admin.table('profiles').select('subscription_tier').eq('id', user_id).single().execute()
+                 if profile_res.data:
+                     current_tier = profile_res.data.get('subscription_tier')
+             except:
+                 pass
+
              update_data = {
                  'id': user_id,
-                 'status': status,
+                 'status': 'active' if current_tier == 'super_admin' else status,
                  'updated_at': 'now()',
              }
              
-             # Sync the tier if available in metadata
-             plan_tier_id = target_sub.metadata.get('plan_tier_id') if target_sub else None
-             
-             # Fallback: If plan_tier_id is missing but we have a subscription, check the Product metadata
-             if target_sub and not plan_tier_id:
-                 try:
-                     print(f"DEBUG SYNC: plan_tier_id missing on subscription {target_sub.id}. Fetching product...", flush=True)
-                     # target_sub.plan.product is usually an ID string unless expanded
-                     product_id = target_sub.plan.product
-                     if product_id:
-                         prod = stripe.Product.retrieve(product_id)
-                         print(f"DEBUG SYNC: Product {product_id} metadata: {prod.metadata}", flush=True)
-                         plan_tier_id = prod.metadata.get('plan_tier_id')
-                         print(f"DEBUG SYNC: Recovered plan_tier_id '{plan_tier_id}' from product {product_id}", flush=True)
-                 except Exception as e:
-                     print(f"Warning: SYNC PRODUCT LOOKUP FAILED: {e}", flush=True)
+             # If NOT super_admin, we handle tier updates
+             if current_tier != 'super_admin':
+                 # Sync the tier if available in metadata
+                 plan_tier_id = target_sub.metadata.get('plan_tier_id') if target_sub else None
+                 
+                 # Fallback: If plan_tier_id is missing but we have a subscription, check the Product metadata
+                 if target_sub and not plan_tier_id:
+                     try:
+                         print(f"DEBUG SYNC: plan_tier_id missing on subscription {target_sub.id}. Fetching product...", flush=True)
+                         product_id = target_sub.plan.product
+                         if product_id:
+                             prod = stripe.Product.retrieve(product_id)
+                             plan_tier_id = prod.metadata.get('plan_tier_id')
+                     except Exception as e:
+                         print(f"Warning: SYNC PRODUCT LOOKUP FAILED: {e}", flush=True)
 
-             if plan_tier_id:
-                 update_data['subscription_tier'] = plan_tier_id
-                 # If we have a paid tier, we'll treat the status as 'active' for the UI/DB
-                 # unless it's explicitly cancelled at period end
-                 if status != 'cancelled':
-                     update_data['status'] = 'active'
-                 print(f"DEBUG SYNC: Found tier {plan_tier_id} for {user_id}. Status set to: {update_data.get('status', status)}", flush=True)
-
-             if status == 'none' and not plan_tier_id:
-                  update_data['subscription_tier'] = None # Explicitly reset tier
+                 if plan_tier_id:
+                     update_data['subscription_tier'] = plan_tier_id
+                 elif status == 'none':
+                      update_data['subscription_tier'] = None # Explicitly reset tier
+             else:
+                 print(f"SYNC: User {user_id} is 'super_admin'. Skipping tier overwrite.", flush=True)
 
              if trial_end:
                  update_data['trial_end'] = trial_end

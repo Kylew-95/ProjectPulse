@@ -122,6 +122,14 @@ async def on_ready():
                 print(f"Created #pulse-help in {guild.name}")
             except Exception as e:
                 print(f"Error creating info channel in {guild.name}: {e}")
+
+        # C. Auto-enable Widget for WidgetBot/Chat
+        try:
+            if not guild.widget_enabled:
+                await guild.edit(widget_enabled=True, widget_channel=report_channel or guild.text_channels[0])
+                print(f"✅ Automated: Enabled Discord Widget for {guild.name}")
+        except Exception as e:
+            print(f"⚠️ Could not auto-enable widget in {guild.name}: {e} (Bot might need 'Manage Server' permission)")
     
     # Sync commands globally for multi-server support
     try:
@@ -169,6 +177,14 @@ async def on_guild_join(guild):
         try:
             await guild.create_text_channel("report-issues-with-pulse")
         except Exception: pass
+            
+    # 3. Auto-enable Widget on join
+    try:
+        report_channel = discord.utils.get(guild.text_channels, name="report-issues-with-pulse")
+        await guild.edit(widget_enabled=True, widget_channel=report_channel or guild.text_channels[0])
+        print(f"✅ Automated: Enabled Discord Widget on join for {guild.name}")
+    except Exception as widget_err:
+        print(f"⚠️ Could not enable widget on join in {guild.name}: {widget_err}")
             
     # 2. Info Channel
     if not discord.utils.get(guild.text_channels, name="pulse-help"):
@@ -258,6 +274,7 @@ async def main():
         return
 
     # 2. Start long-running services
+    fastapi_app.state.bot = bot
     tasks = [
         loop.create_task(bot.start(DISCORD_TOKEN)),
         loop.create_task(run_fastapi())

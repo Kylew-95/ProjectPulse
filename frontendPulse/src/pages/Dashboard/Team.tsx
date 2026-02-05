@@ -34,7 +34,7 @@ const Team = () => {
   const [members, setMembers] = useState<TeamMember[]>([]);
 
   // Access Control for Teams - Restricted to Pro and Enterprise
-  const isAuthorized = ['pro', 'enterprise'].includes(profile?.subscription_tier?.toLowerCase() || '');
+  const isAuthorized = ['pro', 'enterprise', 'super_admin'].includes(profile?.subscription_tier?.toLowerCase() || '');
 
   if (!isAuthorized) {
      return (
@@ -44,7 +44,7 @@ const Team = () => {
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Team Access Restricted</h2>
             <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
-               Your plan ({profile?.subscription_tier || 'No Plan'}) does not include Team Management. Upgrade to Pro or Enterprise to add members and collaborate.
+               Your plan ({profile?.subscription_tier || 'No Plan'}) does not include Team Management. Upgrade to Pro, Enterprise, or contact support to add members and collaborate.
             </p>
             <button 
               onClick={() => navigate('/pricing')}

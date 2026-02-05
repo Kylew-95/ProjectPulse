@@ -17,7 +17,7 @@ const ProGate = ({
 }: ProGateProps) => {
   const { profile, user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const isPro = ['pro', 'enterprise'].includes(profile?.subscription_tier || '');
+  const isPro = ['pro', 'enterprise', 'super_admin'].includes(profile?.subscription_tier || '');
 
   const handleUpgrade = async () => {
     setLoading(true);

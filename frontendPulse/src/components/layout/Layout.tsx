@@ -5,6 +5,7 @@ import SidebarProfile from './SidebarProfile';
 import ThemeToggle from '../ui/ThemeToggle';
 import CommandPalette from '../ui/CommandPalette';
 import OnboardingTour from '../ui/OnboardingTour';
+import DiscordChat from '../ui/DiscordChat';
 import { useAuth } from '../../context/AuthContext';
 
 const Layout = () => {
@@ -25,12 +26,13 @@ const Layout = () => {
       { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
     ];
 
-    const isEnterprise = profile?.subscription_tier === 'enterprise';
+    const isEnterprise = ['enterprise', 'super_admin'].includes(profile?.subscription_tier || '');
   
     return (
       <div className="flex min-h-screen bg-background transition-colors duration-300">
         <OnboardingTour />
         <CommandPalette />
+        <DiscordChat />
         
         {/* Sidebar */}
         <aside 

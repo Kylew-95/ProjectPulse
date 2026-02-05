@@ -1,7 +1,8 @@
 import { Rocket } from 'lucide-react';
+import type { Profile } from '../../types/auth';
 
 interface SubscriptionSectionProps {
-  profile: any;
+  profile: Profile | null;
   onManageClick: () => void;
 }
 

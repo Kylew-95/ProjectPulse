@@ -15,7 +15,7 @@ async def check_enterprise_tier(user_id: str):
         # Use maybe_single() to return None if not found, rather than raising an error
         res = supabase.table("profiles").select("subscription_tier").eq("id", user_id).maybe_single().execute()
         
-        if not res.data or res.data.get("subscription_tier") != "enterprise":
+        if not res.data or res.data.get("subscription_tier") not in ["enterprise", "super_admin"]:
             print(f"Access Denied: User {user_id} tier is {res.data.get('subscription_tier') if res.data else 'none'}", flush=True)
             raise HTTPException(status_code=403, detail="Enterprise tier required for this feature")
     except Exception as e:

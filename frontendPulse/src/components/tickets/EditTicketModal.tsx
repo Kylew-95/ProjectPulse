@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { X, Loader2, Sparkles, Copy, Check, Lock } from 'lucide-react';
+import { X, Loader2, Sparkles, Copy, Check, Lock, Send } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import SearchableSelect from '../ui/SearchableSelect';
 import type { Ticket } from '../../types/ticket';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-interface Profile {
+interface TicketProfile {
   id: string;
   full_name: string | null;
   avatar_url: string | null;
@@ -28,8 +28,10 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
   const [loading, setLoading] = useState(false);
   const [suggestionLoading, setSuggestionLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [editableReply, setEditableReply] = useState<string>('');
+  const [sendLoading, setSendLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [profiles, setProfiles] = useState<TicketProfile[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<string>(ticket.team_id || '');
   const [autoAssign, setAutoAssign] = useState(false);
   const [formData, setFormData] = useState({
@@ -41,7 +43,7 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
     urgency_score: ticket.urgency_score || 0
   });
 
-  const isEnterprise = profile?.subscription_tier === 'enterprise';
+  const isEnterprise = ['enterprise', 'super_admin'].includes(profile?.subscription_tier || '');
 
   const handleSuggestReply = async () => {
     if (!isEnterprise) {
@@ -63,6 +65,7 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
       }
       const result = await response.json();
       setSuggestion(result.suggestion);
+      setEditableReply(result.suggestion);
     } catch (error) {
       console.error('Error fetching suggestion:', error);
       setSuggestion('Could not generate suggestion at this time.');
@@ -71,9 +74,37 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
     }
   };
 
+  const handleSendToDiscord = async () => {
+    if (!user || !editableReply) return;
+    setSendLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/send-reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          ticket_id: ticket.id, 
+          user_id: user.id,
+          message: editableReply
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.detail || 'Failed to send reply');
+      }
+
+      alert('Reply sent to Discord!');
+    } catch (error) {
+      console.error('Error sending reply:', error);
+      alert(error instanceof Error ? error.message : 'Error sending reply');
+    } finally {
+      setSendLoading(false);
+    }
+  };
+
   const copyToClipboard = () => {
-    if (!suggestion) return;
-    navigator.clipboard.writeText(suggestion);
+    if (!editableReply) return;
+    navigator.clipboard.writeText(editableReply);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -233,17 +264,38 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
              </div>
 
              {suggestion && (
-                <div className="relative group bg-primary/5 border border-primary/20 rounded-xl p-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <p className="text-xs text-slate-300 leading-relaxed italic pr-8">
-                        "{suggestion}"
-                    </p>
-                    <button 
+                <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="relative group bg-primary/5 border border-primary/20 rounded-xl p-4">
+                        <textarea
+                            value={editableReply}
+                            onChange={(e) => setEditableReply(e.target.value)}
+                            className="w-full bg-transparent border-none p-0 text-xs text-slate-300 leading-relaxed italic pr-8 focus:ring-0 outline-none resize-none overflow-hidden"
+                            placeholder="Edit the reply..."
+                            rows={4}
+                            onInput={(e) => {
+                                const target = e.target as HTMLTextAreaElement;
+                                target.style.height = 'auto';
+                                target.style.height = `${target.scrollHeight}px`;
+                            }}
+                        />
+                        <button 
+                            type="button"
+                            onClick={copyToClipboard}
+                            className="absolute top-3 right-3 p-1.5 bg-slate-900/50 rounded-lg text-slate-400 hover:text-white transition-all opacity-100 sm:opacity-0 group-hover:opacity-100"
+                            title="Copy to clipboard"
+                        >
+                            {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                        </button>
+                    </div>
+                    
+                    <button
                         type="button"
-                        onClick={copyToClipboard}
-                        className="absolute top-3 right-3 p-1.5 bg-slate-900/50 rounded-lg text-slate-400 hover:text-white transition-all opacity-0 group-hover:opacity-100"
-                        title="Copy to clipboard"
+                        onClick={handleSendToDiscord}
+                        disabled={sendLoading || !editableReply}
+                        className="w-full flex items-center justify-center gap-2 py-2 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-50"
                     >
-                        {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                        {sendLoading ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                        {sendLoading ? 'Sending...' : 'Send to Discord'}
                     </button>
                 </div>
              )}

@@ -74,7 +74,8 @@ class SupabaseTicketService(TicketService):
             "type": (report_data.get("type") or "support").lower(),
             "priority": (report_data.get("priority") or "medium").lower(),
             "solution": report_data.get("solution"),
-            "location": (report_data.get("location") or "unknown").lower()
+            "location": (report_data.get("location") or "unknown").lower(),
+            "discord_channel_id": str(report_data.get("origin_channel_id") or report_data.get("discord_channel_id") or "")
         }
 
         try:
