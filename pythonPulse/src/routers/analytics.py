@@ -8,15 +8,12 @@ router = APIRouter()
 async def get_analytics(user_id: str = None):
     try:
         await check_enterprise_tier(user_id)
-        from supabase import create_client
-        url = os.getenv("SUPABASE_URL")
-        key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
-        supabase = create_client(url, key)
+        from services.supabase_client import supabase
 
         # 1. Fetch all tickets for aggregation
         # In a real enterprise app, we'd use SQL aggregations, but for MVP, 
         # we can fetch and process or use Supabase's count features.
-        res = supabase.table("tickets").select("*").execute()
+        res = supabase.table("tickets").select("id, status, priority, type, urgency_score, created_at").execute()
         tickets = res.data or []
 
         # 2. Aggregations

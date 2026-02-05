@@ -6,6 +6,7 @@ import PageHeader from '../../components/common/PageHeader';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, BarChart, Bar } from 'recharts';
 import { useAuth } from '../../context/AuthContext';
 import PremiumGate from '../../components/ui/PremiumGate';
+import type { Ticket } from '../../types/ticket';
 
 const COLORS = ['#6366f1', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6'];
 
@@ -28,14 +29,64 @@ const Analytics = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/analytics?user_id=${user.id}`);
-      if (response.status === 403) {
-        setForbidden(true);
+      const { data: tickets, error } = await supabase
+        .from('tickets')
+        .select('id, status, priority, type, urgency_score, created_at')
+        .returns<Ticket[]>();
+
+      if (error) throw error;
+
+      // Client-side Aggregation
+      const stats: AnalyticsData = {
+        total: tickets?.length || 0,
+        by_status: {},
+        by_priority: {},
+        by_type: {},
+        urgency_avg: 0,
+        daily_trends: []
+      };
+
+      if (!tickets || tickets.length === 0) {
+        setData(stats);
         setLoading(false);
         return;
       }
-      const result = await response.json();
-      setData(result);
+
+      let totalUrgency = 0;
+      const trendsMap: Record<string, number> = {};
+
+      tickets.forEach(t => {
+        // Status
+        const status = (t.status || 'open').toLowerCase();
+        stats.by_status[status] = (stats.by_status[status] || 0) + 1;
+
+        // Priority
+        const priority = (t.priority || 'medium').toLowerCase();
+        stats.by_priority[priority] = (stats.by_priority[priority] || 0) + 1;
+
+        // Type (fix: use 'type' field or default)
+        // Note: usage of 't.type' requires ensuring it exists in schema/types, assuming it does based on db schema
+        const type = ((t as Ticket).type || 'support').toLowerCase();
+        stats.by_type[type] = (stats.by_type[type] || 0) + 1;
+
+        // Urgency
+        totalUrgency += (t.urgency_score || 0);
+
+        // Daily Trends
+        const date = t.created_at.substring(0, 10); // YYYY-MM-DD
+        trendsMap[date] = (trendsMap[date] || 0) + 1;
+      });
+
+      stats.urgency_avg = totalUrgency / tickets.length;
+
+      // Transform trends map to sorted array (last 7 days logic could be added or just show all/recent)
+      // Showing all sorted by date
+      stats.daily_trends = Object.entries(trendsMap)
+        .map(([date, count]) => ({ date, count }))
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(-7); // Keep last 7 days for the chart
+
+      setData(stats);
     } catch (error) {
       console.error('Error fetching analytics:', error);
     } finally {

@@ -1,4 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
 
@@ -13,15 +15,45 @@ import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal
 
 import type { Ticket } from '../../types/ticket';
 
+interface GetTicketsQuery {
+  ticketsCollection: {
+    edges: Array<{
+      node: {
+        id: string;
+        title: string;
+        status: string;
+        priority: string;
+        urgency_score: number;
+        created_at: string;
+        description: string;
+        assignee_id: string | null;
+        team_id: string;
+        assignee_profile: {
+          full_name: string;
+          avatar_url: string;
+        } | null;
+        reporter_profile: {
+          full_name: string;
+          avatar_url: string;
+        } | null;
+        teams: {
+          name: string;
+        } | null;
+      };
+    }>;
+  };
+}
+
 const Tickets = () => {
   const { session } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [userTeams, setUserTeams] = useState<{ id: string; name: string }[]>([]);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   const [viewMode] = useState<'table' | 'list'>('table');
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
@@ -35,8 +67,85 @@ const Tickets = () => {
   // We keep 'viewMode' here or move it to header? Kept here for switching between Table/List views if needed.
   // Actually, TicketList is likely duplicate/alternative view. We might want to pass data to it too.
   
-  const refreshData = () => setRefreshTrigger(prev => prev + 1);
+  // GraphQL Query
+  const GET_TICKETS = gql`
+    query GetTickets {
+      ticketsCollection(orderBy: {created_at: DescNullsLast}) {
+        edges {
+          node {
+            id
+            title
+            status
+            priority
+            urgency_score
+            created_at
+            description
+            assignee_id
+            team_id
+            teams {
+              name
+            }
+          }
+        }
+      }
+    }
+  `;
 
+  const { data: graphqlData, loading: graphqlLoading, error: graphqlError, refetch } = useQuery<GetTicketsQuery>(GET_TICKETS, {
+    fetchPolicy: 'cache-and-network', // Ensure we check network but show cache
+    pollInterval: 5000, // Simple polling for realtime-ish updates, or rely on subscriptions later
+  });
+
+  useEffect(() => {
+    if (graphqlData?.ticketsCollection?.edges) {
+      const fetchProfiles = async () => {
+        const rawTickets = graphqlData.ticketsCollection.edges.map((edge) => edge.node);
+        
+        // Extract unique User IDs
+        const userIds = new Set<string>();
+        rawTickets.forEach((t) => {
+          if (t.assignee_id) userIds.add(t.assignee_id);
+          // if (t.reporter_id) userIds.add(t.reporter_id); // Add reporter_id field to query if needed
+        });
+
+        const profilesMap: Record<string, { full_name: string; avatar_url: string }> = {};
+
+        if (userIds.size > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url')
+            .in('id', Array.from(userIds));
+            
+          profiles?.forEach(p => {
+            profilesMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+          });
+        }
+
+        const mappedTickets = rawTickets.map((t) => ({
+          ...t,
+          teams: t.teams || undefined,
+          assignee: (t.assignee_id && profilesMap[t.assignee_id]?.full_name) || null,
+          assignee_profile: (t.assignee_id && profilesMap[t.assignee_id]) || undefined,
+          reporter_profile: t.reporter_profile || undefined
+        }));
+
+        setTickets(mappedTickets);
+        setLoading(false);
+      };
+
+      fetchProfiles();
+    } else if (graphqlLoading) {
+       setLoading(true);
+    }
+    
+    if (graphqlError) {
+      console.error('GraphQL Error:', graphqlError);
+      setError(graphqlError.message);
+      setLoading(false);
+    }
+  }, [graphqlData, graphqlLoading, graphqlError]);
+
+  // Keep user teams fetch for creating tickets (could be separate query later)
   useEffect(() => {
     const fetchUserTeams = async () => {
       if (!session?.user?.id) return;
@@ -58,44 +167,23 @@ const Tickets = () => {
       setUserTeams(teams);
     };
     fetchUserTeams();
-  }, [session, refreshTrigger]);
-
-  const fetchTickets = useCallback(async () => {
-    if (!session) return;
-    setLoading(true);
-    try {
-      const query = supabase
-        .from('tickets')
-        .select(`
-          *,
-          assignee_profile:profiles!tickets_assignee_id_fkey(full_name, avatar_url),
-          reporter_profile:profiles!tickets_reporter_id_fkey(full_name, avatar_url),
-          teams(name)
-        `)
-        .order('created_at', { ascending: false });
-
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      setTickets(data || []);
-    } catch (err) {
-      console.error('Error fetching tickets:', err);
-    } finally {
-      setLoading(false);
-    }
   }, [session]);
 
-  useEffect(() => {
-    fetchTickets();
+  // Manual refresh now just calls refetch
+  const refreshData = () => {
+    refetch();
+  };
 
-    // Subscribe to real-time changes
+  // Realtime subscription can be kept via Supabase or moved to GraphQL subscriptions. 
+  // For now, let's rely on polling (pollInterval: 5000) or keep the supabase subscription to trigger refetch.
+  useEffect(() => {
     const channel = supabase
       .channel('tickets-realtime')
       .on(
         'postgres_changes', 
         { event: '*', schema: 'public', table: 'tickets' }, 
         () => {
-          fetchTickets();
+          refetch();
         }
       )
       .subscribe();
@@ -103,7 +191,7 @@ const Tickets = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [session, fetchTickets, refreshTrigger]);
+  }, [refetch]);
 
   const handleDelete = async (id: string | number) => {
     setDeleteModal({ isOpen: true, id });
@@ -149,6 +237,12 @@ const Tickets = () => {
         onCreateOpen={() => setIsModalOpen(true)}
       />
 
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 p-4 rounded-lg mb-6 text-red-600 dark:text-red-400">
+          <strong>Error loading tickets:</strong> {error}
+        </div>
+      )}
+
       <div className="space-y-6">
         {/* TicketFilters removed - logic moved to Table */}
         
@@ -176,7 +270,7 @@ const Tickets = () => {
       {isModalOpen && (
         <CreateTicketModal 
           onClose={() => setIsModalOpen(false)} 
-          onTicketCreated={fetchTickets}
+          onTicketCreated={refreshData}
           teamId={userTeams[0]?.id || null} 
           userTeams={userTeams}
         />
@@ -186,7 +280,7 @@ const Tickets = () => {
         <EditTicketModal 
           ticket={selectedTicket}
           onClose={() => { setIsEditModalOpen(false); setSelectedTicket(null); }} 
-          onTicketUpdated={fetchTickets}
+          onTicketUpdated={refreshData}
           userTeams={userTeams}
         />
       )}

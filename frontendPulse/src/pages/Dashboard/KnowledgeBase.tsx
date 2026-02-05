@@ -28,14 +28,13 @@ const KnowledgeBase = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/knowledge-base?user_id=${user.id}`);
-      if (response.status === 403) {
-        setForbidden(true);
-        setLoading(false);
-        return;
-      }
-      const result = await response.json();
-      setEntries(result);
+      const { data, error } = await supabase
+        .from('knowledge_base')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      setEntries(data || []);
     } catch (error) {
       console.error('Error fetching KB:', error);
     } finally {
@@ -74,24 +73,27 @@ const KnowledgeBase = () => {
     if (!user) return;
     setSubmitting(true);
     try {
-      const url = editingEntry 
-        ? `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/knowledge-base/${editingEntry.id}`
-        : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/knowledge-base`;
-      
-      const method = editingEntry ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, user_id: user.id })
-      });
-
-      if (response.ok) {
-        setIsModalOpen(false);
-        setEditingEntry(null);
-        setFormData({ question: '', answer: '' });
-        fetchData();
+      if (editingEntry) {
+         // Update
+         const { error } = await supabase
+            .from('knowledge_base')
+            .update({ question: formData.question, answer: formData.answer })
+            .eq('id', editingEntry.id);
+            
+         if (error) throw error;
+      } else {
+         // Create
+         const { error } = await supabase
+            .from('knowledge_base')
+            .insert([{ question: formData.question, answer: formData.answer }]);
+            
+         if (error) throw error;
       }
+
+      setIsModalOpen(false);
+      setEditingEntry(null);
+      setFormData({ question: '', answer: '' });
+      fetchData();
     } catch (error) {
       console.error('Error saving KB entry:', error);
     } finally {
@@ -103,12 +105,13 @@ const KnowledgeBase = () => {
     if (!user) return;
     if (!confirm('Are you sure you want to delete this entry?')) return;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/knowledge-base/${id}?user_id=${user.id}`, {
-        method: 'DELETE'
-      });
-      if (response.ok) {
-        fetchData();
-      }
+      const { error } = await supabase
+        .from('knowledge_base')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      fetchData();
     } catch (error) {
       console.error('Error deleting KB entry:', error);
     }
