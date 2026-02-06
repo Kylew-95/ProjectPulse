@@ -107,12 +107,18 @@ export default function OverviewScreen() {
         {/* System Intelligence Section */}
         <View style={[styles.intelligenceSection, { backgroundColor: colors.surface, borderColor: colors.tabIconDefault + '10' }]}>
           <View style={styles.intelligenceHeader}>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={[styles.intelligenceTitle, { color: colors.text }]}>System Intelligence</Text>
               <Text style={[styles.intelligenceSubtitle, { color: colors.icon }]}>
                 Monitoring automated urgency scoring and team analytics
               </Text>
             </View>
+            <TouchableOpacity 
+              onPress={() => router.push('/analytics')}
+              style={[styles.analyticsLink, { borderColor: colors.primary + '30' }]}
+            >
+              <Text style={[styles.analyticsLinkText, { color: colors.primary }]}>View Detailed</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.metricsGrid}>
@@ -225,6 +231,9 @@ const styles = StyleSheet.create({
   },
   intelligenceHeader: {
     marginBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   intelligenceTitle: {
     fontSize: 18,
@@ -234,6 +243,16 @@ const styles = StyleSheet.create({
   intelligenceSubtitle: {
     fontSize: 13,
     fontWeight: '500',
+  },
+  analyticsLink: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  analyticsLinkText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   metricsGrid: {
     flexDirection: 'row',

@@ -19,6 +19,8 @@ export const Colors = {
     tabIconSelected: tintColorLight,
     secondary: '#0D9488',
     error: '#ef4444',
+    primary: tintColorLight,
+    border: '#e2e8f0', // slate-200
   },
   dark: {
     text: '#ffffff',
@@ -30,6 +32,8 @@ export const Colors = {
     tabIconSelected: tintColorDark,
     secondary: '#10B981',
     error: '#ef4444',
+    primary: tintColorDark,
+    border: '#334155', // slate-700
   },
 };
 
