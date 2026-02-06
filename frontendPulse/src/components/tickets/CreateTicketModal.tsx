@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../context/AuthContext';
+import PrioritySelector, { type Priority } from '../common/PrioritySelector';
+import { TagSelector, type Tag } from '../common/TagComponents';
 
 interface CreateTicketModalProps {
   onClose: () => void;
@@ -15,6 +17,8 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
   const [loading, setLoading] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<string>(teamId || '');
   const [autoAssign, setAutoAssign] = useState(true);
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -29,6 +33,46 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
       handleAutoAssign(selectedTeamId);
     }
   }, [selectedTeamId, autoAssign]);
+
+  useEffect(() => {
+    if (selectedTeamId) {
+      fetchTags(selectedTeamId);
+    }
+  }, [selectedTeamId]);
+
+  const fetchTags = async (tId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('tags')
+        .select('*')
+        .eq('team_id', tId);
+      
+      if (error) throw error;
+      setAvailableTags(data || []);
+    } catch (err) {
+      console.error('Error fetching tags:', err);
+    }
+  };
+
+  const handleCreateTag = async (name: string, color: string) => {
+    if (!selectedTeamId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('tags')
+        .insert([{ name, color, team_id: selectedTeamId }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      if (data) {
+        setAvailableTags([...availableTags, data]);
+        setSelectedTags([...selectedTags, data]);
+      }
+    } catch (err) {
+      console.error('Error creating tag:', err);
+    }
+  };
 
   const handleAutoAssign = async (tId: string) => {
     if (!tId) return;
@@ -89,7 +133,8 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
         throw new Error('Please select a team.');
       }
 
-      const { error } = await supabase.from('tickets').insert([
+      // Create the ticket
+      const { data: newTicket, error } = await supabase.from('tickets').insert([
         {
           title: formData.title,
           description: formData.description,
@@ -100,18 +145,35 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
           team_id: selectedTeamId,
           assignee_id: formData.assignee_id || null
         }
-      ]);
+      ]).select().single();
 
       if (error) throw error;
+
+      // Add tag associations if any tags are selected
+      if (newTicket && selectedTags.length > 0) {
+        const tagAssociations = selectedTags.map(tag => ({
+          ticket_id: newTicket.id,
+          tag_id: tag.id
+        }));
+
+        const { error: tagError } = await supabase
+          .from('ticket_tags')
+          .insert(tagAssociations);
+
+        if (tagError) console.error('Error adding tags:', tagError);
+      }
+
       onTicketCreated();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error creating ticket:', err);
-      alert(err.message || 'Failed to create ticket'); 
+      const message = err instanceof Error ? err.message : 'Failed to create ticket';
+      alert(message); 
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -148,32 +210,26 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Priority</label>
-              <select
-                value={formData.priority}
-                onChange={e => setFormData({ ...formData, priority: e.target.value })}
-                className="w-full bg-black/50 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-1 focus:ring-primary outline-none"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="critical">Critical</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">Status</label>
-              <select
-                value={formData.status}
-                onChange={e => setFormData({ ...formData, status: e.target.value })}
-                className="w-full bg-black/50 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-1 focus:ring-primary outline-none"
-              >
-                <option value="open">Open</option>
-                <option value="in_progress">In Progress</option>
-                <option value="done">Done</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Priority</label>
+            <PrioritySelector 
+              value={formData.priority}
+              onChange={(priority: Priority) => setFormData({ ...formData, priority })}
+              size="sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-1">Status</label>
+            <select
+              value={formData.status}
+              onChange={e => setFormData({ ...formData, status: e.target.value })}
+              className="w-full bg-black/50 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-1 focus:ring-primary outline-none"
+            >
+              <option value="open">Open</option>
+              <option value="in_progress">In Progress</option>
+              <option value="done">Done</option>
+            </select>
           </div>
 
           <div>
@@ -188,6 +244,16 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
                 <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Tags</label>
+            <TagSelector
+              availableTags={availableTags}
+              selectedTags={selectedTags}
+              onTagsChange={setSelectedTags}
+              onCreateTag={handleCreateTag}
+            />
           </div>
 
           <div className="flex items-center gap-2">

@@ -79,3 +79,551 @@ Sending invite to test@example.com as member...
 INFO:     127.0.0.1:37014 - "POST /send-invite HTTP/1.1" 200 OK
 INFO:     127.0.0.1:37016 - "POST /send-invite HTTP/1.1" 429 Too Many Requests
 INFO:     127.0.0.1:37018 - "POST /send-invite HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:1967 - "OPTIONS /sync-subscription HTTP/1.1" 200 OK
+SYNC: User 84b9ac34-24ee-4d65-a381-8f757c8c01c8 is 'super_admin'. Skipping tier overwrite.
+SYNC: Force updated profile 84b9ac34-24ee-4d65-a381-8f757c8c01c8 to active
+INFO:     127.0.0.1:1967 - "POST /sync-subscription HTTP/1.1" 200 OK
+SYNC: User 84b9ac34-24ee-4d65-a381-8f757c8c01c8 is 'super_admin'. Skipping tier overwrite.
+SYNC: Force updated profile 84b9ac34-24ee-4d65-a381-8f757c8c01c8 to active
+INFO:     127.0.0.1:32676 - "POST /sync-subscription HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:50175 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:50178 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:50179 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:50175 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:50178 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:50181 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:50179 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:50183 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:50185 - "POST /webhook HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57738 - "OPTIONS /sync-subscription HTTP/1.1" 200 OK
+SYNC: User 84b9ac34-24ee-4d65-a381-8f757c8c01c8 is 'super_admin'. Skipping tier overwrite.
+SYNC: Force updated profile 84b9ac34-24ee-4d65-a381-8f757c8c01c8 to active
+INFO:     127.0.0.1:57738 - "POST /sync-subscription HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:42706 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:42707 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:42708 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:42706 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:42710 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:42712 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:42714 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:42707 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:42708 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:42716 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:42718 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:42720 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31659 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31661 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31663 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31665 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31667 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31659 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31661 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31670 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31663 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31665 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31671 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31673 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31675 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31677 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31679 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52120 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52121 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52123 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52125 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52120 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52128 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52129 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52123 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52134 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52135 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52121 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52133 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52138 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52139 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52141 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52144 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52145 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:52147 - "POST /webhook HTTP/1.1" 200 OK
+SYNC: User 84b9ac34-24ee-4d65-a381-8f757c8c01c8 is 'super_admin'. Skipping tier overwrite.
+SYNC: Force updated profile 84b9ac34-24ee-4d65-a381-8f757c8c01c8 to active
+INFO:     127.0.0.1:38503 - "POST /sync-subscription HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58801 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58802 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58803 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58805 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58802 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58801 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58807 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58808 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58803 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58810 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58812 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58817 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58816 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58819 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58820 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58822 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58824 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58828 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58827 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58830 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:58832 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13602 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13604 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13607 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13608 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13610 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13604 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13602 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13612 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13615 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13607 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13608 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13616 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13618 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13620 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13622 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13626 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13627 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13628 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13630 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13632 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13634 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13636 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13640 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13639 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13639 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31734 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31736 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31738 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31741 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31734 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:13639 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31742 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31744 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31736 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31738 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31747 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31748 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31753 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31754 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31752 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31759 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31760 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31761 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31762 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31764 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31766 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31768 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31770 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31772 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31774 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31776 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31791 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31792 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31794 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31796 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31798 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31792 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31791 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31800 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31803 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31796 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31794 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31804 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31806 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31808 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31810 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31812 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31815 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31816 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31820 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31821 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31822 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31824 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31830 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31833 - "POST /webhook HTTP/1.1" 200 OK
+DEBUG WEBHOOK: Received event type 'product.updated'
+WEBHOOK: Ignored event type product.updated
+INFO:     127.0.0.1:31834 - "POST /webhook HTTP/1.1" 200 OK
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\uvicorn\protocols\http\h11_impl.py", line 410, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\applications.py", line 1135, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\applications.py", line 107, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+    raise exc
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\routing.py", line 115, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\routing.py", line 101, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\routing.py", line 355, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\routing.py", line 243, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "e:\2nd drive files\School of code\SOC lessons\playground Apps\ProjectPulse\pythonPulse\src\routers\billing.py", line 274, in stripe_webhook
+    payload = await request.body()
+              ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\requests.py", line 243, in body
+    async for chunk in self.stream():
+        chunks.append(chunk)
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\site-packages\starlette\requests.py", line 237, in stream
+    raise ClientDisconnect()
+starlette.requests.ClientDisconnect
+Task exception was never retrieved
+future: <Task finished name='Task-421' coro=<IocpProactor.accept.<locals>.accept_coro() done, defined at C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\asyncio\windows_events.py:564> exception=OSError(22, 'The specified network name is no longer available', None, 64, None)>
+Traceback (most recent call last):
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\asyncio\windows_events.py", line 567, in accept_coro
+    await future
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\asyncio\windows_events.py", line 804, in _poll
+    value = callback(transferred, key, ov)
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\asyncio\windows_events.py", line 556, in finish_accept
+    ov.getresult()
+    ~~~~~~~~~~~~^^
+OSError: [WinError 64] The specified network name is no longer available
+Accept failed on a socket
+socket: <asyncio.TransportSocket fd=1004, family=2, type=1, proto=6, laddr=('0.0.0.0', 8000)>
+Traceback (most recent call last):
+  File "C:\Users\yeait\AppData\Local\Programs\Python\Python313\Lib\asyncio\proactor_events.py", line 843, in loop
+    conn, addr = f.result()
+                 ~~~~~~~~^^
+OSError: [WinError 64] The specified network name is no longer available

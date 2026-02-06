@@ -5,6 +5,7 @@ import SearchableSelect from '../ui/SearchableSelect';
 import type { Ticket } from '../../types/ticket';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import CommentList from './CommentList';
 
 interface TicketProfile {
   id: string;
@@ -370,6 +371,11 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
             </button>
           </div>
         </form>
+
+        {/* Comments Section */}
+        <div className="border-t border-white/5 bg-white/5 p-6 max-h-96 overflow-y-auto">
+          <CommentList ticketId={typeof ticket.id === 'string' ? parseInt(ticket.id) : ticket.id} />
+        </div>
       </div>
     </div>
   );

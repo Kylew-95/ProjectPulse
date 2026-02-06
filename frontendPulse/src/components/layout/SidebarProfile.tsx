@@ -9,7 +9,7 @@ const SidebarProfile = () => {
             <div className="relative">
                 <img 
                     src={user?.user_metadata?.avatar_url} 
-                    alt={`${user?.user_metadata?.full_name || 'User'}'s profile avatar`} 
+                    alt={`${profile?.full_name || user?.user_metadata?.full_name || 'User'}'s profile avatar`} 
                     className="w-8 h-8 rounded-full" 
                 />
                 <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-[#0f172a] ${
@@ -22,7 +22,7 @@ const SidebarProfile = () => {
             </div>
             <div className="flex-1 overflow-hidden">
               <p className="text-sm font-medium truncate text-main">
-                  {user?.user_metadata?.full_name || 'User'}
+                  {profile?.full_name || user?.user_metadata?.full_name || 'User'}
               </p>
                 <p className="text-sm font-bold text-white flex items-center gap-1.5">
                   {profile?.subscription_tier || 'No Active'} <span className="text-xs uppercase tracking-wider font-semibold text-muted/60">Plan</span>

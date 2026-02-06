@@ -1,0 +1,1 @@
+app/(tabs)/tickets.tsx(3,10): error TS2305: Module '"@apollo/client"' has no exported member 'useQuery'.

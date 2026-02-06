@@ -48,7 +48,7 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img src="/logo.png" alt="Pulse Logo" className="w-10 h-10 object-contain" />
-            <span className="text-xl font-bold text-white tracking-tight">
+            <span className="text-xl font-bold text-main tracking-tight">
               Pulse
             </span>
           </Link>

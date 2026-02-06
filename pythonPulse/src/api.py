@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import billing, analytics, knowledge_base, intelligence, general
+from routers import billing, analytics, knowledge_base, intelligence, general, tags
 from dotenv import load_dotenv
 import os
 from rate_limiter import limiter, _rate_limit_exceeded_handler, RateLimitExceeded
@@ -25,6 +25,7 @@ app.include_router(analytics.router, tags=["Analytics"])
 app.include_router(knowledge_base.router, tags=["Knowledge Base"])
 app.include_router(intelligence.router, tags=["Intelligence"])
 app.include_router(general.router, tags=["General"])
+app.include_router(tags.router, tags=["Tags"])
 
 @app.get("/")
 def read_root():

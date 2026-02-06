@@ -3,6 +3,8 @@ import type { Session, User } from '@supabase/supabase-js';
 export interface Profile {
     id: string;
     email: string | null;
+    full_name: string | null;
+    avatar_url: string | null;
     subscription_tier: string | null; // 'starter', 'pro', 'enterprise', 'super_admin'
     status: string; // 'active', 'trialing', 'canceled', 'none'
     trial_end: string | null;

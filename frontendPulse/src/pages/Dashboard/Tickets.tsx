@@ -15,6 +15,8 @@ import TicketTable from '../../components/tickets/TicketTable';
 import KanbanBoard from '../../components/tickets/KanbanBoard';
 import { exportToCSV } from '../../utils/exportUtils';
 import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal';
+import QuickFilters, { type QuickFilterType } from '../../components/common/QuickFilters';
+import BulkActionToolbar from '../../components/tickets/BulkActionToolbar';
 
 import type { Ticket } from '../../types/ticket';
 
@@ -49,7 +51,7 @@ interface GetTicketsQuery {
 }
 
 const Tickets = () => {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +60,7 @@ const Tickets = () => {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [userTeams, setUserTeams] = useState<{ id: string; name: string }[]>([]);
   const [viewMode, setViewMode] = useState<'table' | 'board'>('board');
+  const [activeFilter, setActiveFilter] = useState<QuickFilterType>('all');
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     id: string | number;
@@ -65,6 +68,8 @@ const Tickets = () => {
     isOpen: false,
     id: ''
   });
+  const [selectedTicketIds, setSelectedTicketIds] = useState<(string | number)[]>([]);
+  const [profiles, setProfiles] = useState<{ id: string; full_name: string | null; email: string | null }[]>([]);
   
   // GraphQL Query
   const GET_TICKETS = gql`
@@ -222,6 +227,17 @@ const Tickets = () => {
     fetchUserTeams();
   }, [session]);
 
+  // Fetch profiles for bulk actions
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, email');
+      if (data) setProfiles(data);
+    };
+    fetchProfiles();
+  }, []);
+
   const refreshData = () => {
     refetch();
   };
@@ -366,6 +382,33 @@ const Tickets = () => {
     exportToCSV(data, 'project-pulse-tickets');
   };
 
+  // Filter tickets based on active filter
+  const filteredTickets = tickets.filter(ticket => {
+    switch (activeFilter) {
+      case 'my-tickets':
+        return ticket.assignee_id === user?.id;
+      case 'unassigned':
+        return !ticket.assignee_id;
+      case 'high-priority':
+        return ticket.priority === 'high' || ticket.priority === 'urgent';
+      case 'overdue':
+        // TODO: Implement when due_date is added
+        return false;
+      case 'all':
+      default:
+        return true;
+    }
+  });
+
+  // Calculate filter counts
+  const filterCounts = {
+    all: tickets.length,
+    myTickets: tickets.filter(t => t.assignee_id === user?.id).length,
+    unassigned: tickets.filter(t => !t.assignee_id).length,
+    highPriority: tickets.filter(t => t.priority === 'high' || t.priority === 'urgent').length,
+    overdue: 0 // TODO: Implement when due_date is added
+  };
+
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="p-8 max-w-[1600px] mx-auto min-h-screen animate-in fade-in duration-700">
@@ -442,6 +485,15 @@ const Tickets = () => {
         </div>
       </div>
 
+      {/* Quick Filters */}
+      <div className="mb-6">
+        <QuickFilters 
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+          counts={filterCounts}
+        />
+      </div>
+
       {error && (
         <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 p-4 rounded-lg mb-6 text-red-600 dark:text-red-400">
           <strong>Error loading tickets:</strong> {error}
@@ -451,7 +503,7 @@ const Tickets = () => {
       <div className="space-y-6 h-full">
         {viewMode === 'table' ? (
           <TicketTable 
-            tickets={tickets}
+            tickets={filteredTickets}
             loading={loading}
             userTeams={userTeams}
             onEdit={(t) => { setSelectedTicket(t); setIsEditModalOpen(true); }}
@@ -459,7 +511,7 @@ const Tickets = () => {
           />
         ) : (
           <KanbanBoard 
-            tickets={tickets}
+            tickets={filteredTickets}
             loading={loading}
             onEdit={(t) => { setSelectedTicket(t); setIsEditModalOpen(true); }}
           />
@@ -491,6 +543,13 @@ const Tickets = () => {
         title="Delete Ticket"
         message="Are you sure you want to delete this ticket? This action cannot be undone."
         loading={loading}
+      />
+
+      <BulkActionToolbar
+        selectedIds={selectedTicketIds}
+        onClearSelection={() => setSelectedTicketIds([])}
+        onActionComplete={refreshData}
+        profiles={profiles}
       />
       </div>
     </DragDropContext>

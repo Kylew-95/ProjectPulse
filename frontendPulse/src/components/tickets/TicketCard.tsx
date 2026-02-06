@@ -1,6 +1,8 @@
 import { Draggable } from '@hello-pangea/dnd';
 import type { Ticket } from '../../types/ticket';
 import { useAuth } from '../../context/AuthContext';
+import PriorityBadge from '../common/PriorityBadge';
+import { TagBadge } from '../common/TagComponents';
 
 interface TicketCardProps {
   ticket: Ticket;
@@ -10,17 +12,6 @@ interface TicketCardProps {
 
 const TicketCard = ({ ticket, index, onEdit }: TicketCardProps) => {
   const { user } = useAuth();
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'critical': return 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800';
-      case 'high': return 'text-orange-600 bg-orange-50 dark:bg-orange-900/20 dark:text-orange-400 border-orange-200 dark:border-orange-800';
-      case 'medium': return 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800';
-      default: return 'text-slate-500 bg-slate-50 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700';
-    }
-  };
-
-  const priorityColor = getPriorityColor(ticket.priority);
 
   // Avatar logic
   const isCurrentUser = ticket.assignee_id === user?.id;
@@ -47,15 +38,28 @@ const TicketCard = ({ ticket, index, onEdit }: TicketCardProps) => {
           {/* Header: ID + Priority */}
           <div className="flex justify-between items-center mb-2">
             <span className="text-[10px] font-mono text-slate-400">#{ticket.id}</span>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${priorityColor} uppercase tracking-wider`}>
-              {ticket.priority}
-            </span>
+            <PriorityBadge priority={ticket.priority} size="sm" />
           </div>
 
           {/* Title */}
-          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3 line-clamp-2">
+          <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2 line-clamp-2">
             {ticket.title}
           </h4>
+
+          {/* Tags */}
+          {ticket.tags && ticket.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-3">
+              {ticket.tags.slice(0, 3).map(tag => (
+                <TagBadge key={tag.id} tag={tag} size="sm" />
+              ))}
+              {ticket.tags.length > 3 && (
+                <span className="text-[10px] text-slate-400 px-1.5 py-0.5">
+                  +{ticket.tags.length - 3}
+                </span>
+              )}
+            </div>
+          )}
+
 
           {/* Footer: Team + Assignee */}
           <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800/50">

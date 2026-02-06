@@ -1,3 +1,10 @@
+export interface Tag {
+    id: string;
+    name: string;
+    color: string;
+    team_id: string;
+}
+
 export interface Ticket {
     id: string | number;
     title: string;
@@ -16,4 +23,6 @@ export interface Ticket {
     reporter_profile?: { full_name: string; avatar_url: string } | null;
     team?: { name: string };
     teams?: { name: string };
+    tags?: Tag[];
 }
+

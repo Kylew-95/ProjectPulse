@@ -8,10 +8,13 @@ import OnboardingTour from '../ui/OnboardingTour';
 import DiscordChat from '../ui/DiscordChat';
 import { useAuth } from '../../context/AuthContext';
 import NotificationDropdown from '../notifications/NotificationDropdown';
+import { useGlobalShortcuts } from '../../hooks/useKeyboardShortcuts';
+import ShortcutHelpModal from '../common/ShortcutHelpModal';
 
 const Layout = () => {
     const location = useLocation();
     const { profile } = useAuth();
+    const { showHelp, setShowHelp } = useGlobalShortcuts();
     
   
     const handleLogout = async () => {
@@ -34,6 +37,7 @@ const Layout = () => {
         <OnboardingTour />
         <CommandPalette />
         <DiscordChat />
+        <ShortcutHelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
         
         {/* Sidebar */}
         <aside 

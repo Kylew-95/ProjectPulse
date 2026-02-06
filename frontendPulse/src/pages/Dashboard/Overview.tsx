@@ -47,7 +47,7 @@ const Overview = () => {
   return (
     <div className="max-w-[1400px] mx-auto p-6 md:p-10 animate-in fade-in duration-500">
       <CommandHeader 
-        userName={user?.user_metadata.full_name || 'User'} 
+        userName={profile?.full_name || user?.user_metadata.full_name || 'User'} 
         plan={profile?.subscription_tier || 'Starter'} 
       />
 
