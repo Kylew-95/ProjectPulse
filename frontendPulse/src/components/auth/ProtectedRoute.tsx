@@ -1,7 +1,6 @@
 import React, { type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { supabase } from '../../supabaseClient';
 import HeartbeatLoader from '../ui/HeartbeatLoader';
 
 interface ProtectedRouteProps {
@@ -23,21 +22,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Safety Timeout: If loading for > 10s (e.g. user deleted in DB but session active), force logout
-  // BUT: Don't trigger this if returning from successful payment (isSuccess=true)
+  // Safety Reminder: If profile is missing but session exists, we just wait.
+  // Webhooks can sometimes take a few seconds to propagate.
+  const [showRetry, setShowRetry] = React.useState(false);
   React.useEffect(() => {
-      if (session && !profile && !loading && !isSuccess) {
-          const timeout = setTimeout(async () => {
-              console.warn("Profile load timeout - assume stale session. Logging out.");
-              // Force logout
-              const { error } = await supabase.auth.signOut();
-              if (error) console.error("Error signing out:", error);
-              // Force redirect just in case
-              window.location.href = '/'; 
-          }, 10000); // 10 seconds
-          return () => clearTimeout(timeout);
-      }
-  }, [session, profile, loading, isSuccess]);
+    if (session && !profile) {
+      const timer = setTimeout(() => {
+        setShowRetry(true);
+      }, 15000); // Show retry notice after 15 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [session, profile]);
 
   // If returning from Stripe successfully, poll for status update
   React.useEffect(() => {
@@ -68,10 +63,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       if (isSuccess) {
           // Show loading state while waiting for webhook
           return (
-            <div className="min-h-screen bg-background text-white flex flex-col items-center justify-center">
+            <div className="min-h-screen bg-background text-white flex flex-col items-center justify-center p-6 text-center">
                 <HeartbeatLoader />
                 <h2 className="text-xl font-bold mt-4">Verifying Subscription...</h2>
-                <p className="text-slate-400">Please wait while we confirm your payment.</p>
+                <p className="text-slate-400 max-w-xs mt-2">Please wait while we confirm your payment. This usually takes a few seconds.</p>
+                {showRetry && (
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className="mt-6 px-6 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Taking a while? Click to refresh
+                  </button>
+                )}
             </div>
           );
       }

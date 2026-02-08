@@ -8,3 +8,5 @@ python-dotenv
 cohere
 APScheduler
 slowapi
+pandas
+openpyxl

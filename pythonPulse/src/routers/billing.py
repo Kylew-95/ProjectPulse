@@ -41,20 +41,34 @@ async def create_checkout_session(data: dict):
         customer_email = data.get("email")
         user_id = data.get("user_id")
         
-        # 1. Try to find the existing Stripe Customer ID from Supabase
+        # 1. Try to find the existing Stripe Customer ID and last plan change from Supabase
         stripe_customer_id = None
+        last_plan_change_at = None
         try:
             from supabase import create_client
             supabase_url = os.getenv("SUPABASE_URL")
             supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
             supabase_client = create_client(supabase_url, supabase_key)
             
-            profile_res = supabase_client.table('profiles').select('stripe_customer_id').eq('id', user_id).single().execute()
+            profile_res = supabase_client.table('profiles').select('stripe_customer_id, last_plan_change_at').eq('id', user_id).single().execute()
             if profile_res.data:
                 stripe_customer_id = profile_res.data.get('stripe_customer_id')
+                last_plan_change_at_str = profile_res.data.get('last_plan_change_at')
+                
+                # Enforce 30-day Cooldown
+                if last_plan_change_at_str:
+                    from datetime import datetime, timezone, timedelta
+                    # Parse as UTC-aware datetime
+                    last_change = datetime.fromisoformat(last_plan_change_at_str.replace('Z', '+00:00'))
+                    if datetime.now(timezone.utc) - last_change < timedelta(days=30):
+                         diff = timedelta(days=30) - (datetime.now(timezone.utc) - last_change)
+                         days_left = diff.days
+                         raise HTTPException(status_code=403, detail=f"You can only change plans once every 30 days. Please try again in {days_left} days.")
+                
                 print(f"DEBUG CHECKOUT: Found existing stripe_customer_id: {stripe_customer_id}")
         except Exception as e:
-            print(f"DEBUG CHECKOUT: Error fetching customer_id from DB: {e}")
+            if isinstance(e, HTTPException): raise e
+            print(f"DEBUG CHECKOUT: Error fetching customer_id/cooldown from DB: {e}")
 
         # Retrieve the price to check for product metadata (trial_days)
         price = stripe.Price.retrieve(price_id, expand=['product'])
@@ -194,8 +208,11 @@ async def cancel_subscription(data: dict):
         if not target_sub:
              raise HTTPException(status_code=404, detail="No active subscription found")
              
-        # 3. Cancel Immediately
-        deleted_sub = stripe.Subscription.delete(target_sub.id)
+        # 3. Cancel at Period End (Phone Bill Logic)
+        deleted_sub = stripe.Subscription.modify(
+            target_sub.id,
+            cancel_at_period_end=True
+        )
         
         # 4. Immediate Supabase Update
         user_id = target_sub.metadata.get('user_id')
@@ -338,9 +355,9 @@ async def stripe_webhook(request: Request):
                         if sub.status in ['active', 'trialing'] and sub.id != new_subscription_id:
                             print(f"SWITCHING: Found old subscription {sub.id} ({sub.status}). Canceling IMMEDIATELY...", flush=True)
                             try:
-                                # Explicit DELETE implies immediate cancellation
-                                stripe.Subscription.delete(sub.id)
-                                print(f"SWITCHING: Old subscription {sub.id} deleted.", flush=True)
+                                # Use cancel_at_period_end for 'phone bill' logic
+                                stripe.Subscription.modify(sub.id, cancel_at_period_end=True)
+                                print(f"SWITCHING: Old subscription {sub.id} scheduled for cancellation.", flush=True)
                             except Exception as delete_err:
                                 print(f"Warning: SWITCHING: Failed to delete sub {sub.id}: {delete_err}", flush=True)
                             
@@ -390,7 +407,8 @@ async def stripe_webhook(request: Request):
                 'updated_at': 'now()',
                 'trial_start': trial_start,
                 'trial_end': trial_end,
-                'status': 'active' if current_tier == 'super_admin' else status
+                'status': 'active' if current_tier == 'super_admin' else status,
+                'last_plan_change_at': 'now()' # Update cooldown on successful checkout
             }
 
             if current_tier != 'super_admin':
@@ -436,6 +454,26 @@ async def stripe_webhook(request: Request):
                 'status': new_status,
                 'updated_at': 'now()'
              }
+
+             # Sync Tier if not super_admin
+             try:
+                 profile_res = supabase.table('profiles').select('subscription_tier').eq('id', user_id).single().execute()
+                 if profile_res.data and profile_res.data.get('subscription_tier') != 'super_admin':
+                     # Fetch tier from sub metadata
+                     plan_tier_id = sub.get('metadata', {}).get('plan_tier_id')
+                     if not plan_tier_id:
+                         # Fallback to product
+                         product_id = sub.get('plan', {}).get('product')
+                         if product_id:
+                             prod = stripe.Product.retrieve(product_id)
+                             plan_tier_id = prod.metadata.get('plan_tier_id')
+                     
+                     if plan_tier_id:
+                         update_data['subscription_tier'] = plan_tier_id
+                         update_data['last_plan_change_at'] = 'now()' # Update cooldown on tier change
+             except Exception as e:
+                 print(f"WEBHOOK ERROR: Failed to resolve tier on update: {e}", flush=True)
+
              supabase.table('profiles').upsert(update_data).execute()
              print(f"WEBHOOK: Profile {user_id} updated via sync (Cancel={sub.get('cancel_at_period_end')}).", flush=True)
 

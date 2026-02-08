@@ -1,8 +1,10 @@
-import { Clock } from 'lucide-react';
+import { Clock, Download } from 'lucide-react';
 import { useState } from 'react';
 import Breadcrumbs from '../../components/ui/Breadcrumbs';
 import PageHeader from '../../components/common/PageHeader';
 import SubscriptionGate from '../../components/ui/SubscriptionGate';
+import { useAuth } from '../../context/AuthContext';
+import { getApiUrl } from '../../utils/apiConfig';
 
 // Components
 import VolumeTrends from './components/Analytics/VolumeTrends';
@@ -19,13 +21,40 @@ import { useAnalyticsData, type TimeRange } from './hooks/useAnalyticsData';
 const COLORS = ['#6366f1', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6'];
 
 const Analytics = () => {
+  const { profile } = useAuth();
   const [timeRange, setTimeRange] = useState<TimeRange>('7d');
   const [activeWidgets, setActiveWidgets] = useState<Record<string, boolean>>({
     volume: true, priority: true, status: true, type: true, workload: true, heatmap: true
   });
   const [showCustomizer, setShowCustomizer] = useState(false);
+  const [exporting, setExporting] = useState(false);
   
   const { data, loading, refresh } = useAnalyticsData(timeRange);
+
+  const toggleWidget = (id: string) => setActiveWidgets(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const handleExport = async () => {
+    if (!profile?.id) return;
+    setExporting(true);
+    try {
+      const response = await fetch(`${getApiUrl()}/analytics/export?user_id=${profile.id}`);
+      if (!response.ok) throw new Error('Export failed');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "Intelligence_Analytics.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to export analytics. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   if (loading && !data) {
     return (
@@ -34,8 +63,6 @@ const Analytics = () => {
       </div>
     );
   }
-
-  const toggleWidget = (id: string) => setActiveWidgets(prev => ({ ...prev, [id]: !prev[id] }));
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto min-h-screen font-sans selection:bg-primary/30 space-y-8 animate-in fade-in duration-700">
@@ -59,6 +86,15 @@ const Analytics = () => {
 
             <button onClick={refresh} className="p-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 rounded-lg transition-all border border-slate-200 dark:border-white/5 active:scale-95 group shadow-sm" title="Refresh data">
                 <Clock size={16} className={`${loading ? "animate-spin" : "group-hover:rotate-180"} transition-transform duration-500`} />
+            </button>
+
+            <button 
+              onClick={handleExport} 
+              disabled={exporting}
+              className="p-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 rounded-lg transition-all border border-slate-200 dark:border-white/5 active:scale-95 group shadow-sm disabled:opacity-50" 
+              title="Export to Excel"
+            >
+                <Download size={16} className={exporting ? "animate-bounce" : "group-hover:translate-y-0.5 transition-transform"} />
             </button>
 
             <AnalyticsCustomizer showCustomizer={showCustomizer} setShowCustomizer={setShowCustomizer} activeWidgets={activeWidgets} toggleWidget={toggleWidget} />
