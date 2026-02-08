@@ -164,7 +164,13 @@ async def on_guild_join(guild):
                 supabase.table("profiles").update({
                     "discord_guild_id": str(guild.id)
                 }).eq("discord_user_id", str(guild.owner_id)).execute()
-                print(f"Automatically linked server to owner's profile: {profile.get('email')}")
+
+                # Also link the owner's teams to this new Discord guild
+                supabase.table("teams").update({
+                    "discord_guild_id": str(guild.id)
+                }).eq("owner_id", profile.get("id")).execute()
+
+                print(f"Automatically linked server and teams to owner's profile: {profile.get('email')}")
             else:
                 print(f"Warning: Could not find profile for server owner (Discord ID: {guild.owner_id})")
                 print(f"   Owner needs to sign up at ProjectPulse first!")

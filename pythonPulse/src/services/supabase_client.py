@@ -206,7 +206,12 @@ def set_learning_channel(guild_id: str, channel_id: str):
             .update({"learning_channel_id": str(channel_id)})\
             .eq("discord_guild_id", str(guild_id))\
             .execute()
-        return True if response.data else False
+        
+        if not response.data:
+            print(f"Warning: No team found with discord_guild_id={guild_id}. Ensure the owner has synced their guild in the dashboard.")
+            return False
+            
+        return True
     except Exception as e:
-        print(f"Error setting learning channel: {e}")
-        return False
+        print(f"Database Error setting learning channel: {e}")
+        raise e # Let the router handle the exception
