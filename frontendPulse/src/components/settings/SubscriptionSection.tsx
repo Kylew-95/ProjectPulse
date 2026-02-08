@@ -8,13 +8,13 @@ interface SubscriptionSectionProps {
 
 const SubscriptionSection = ({ profile, onManageClick }: SubscriptionSectionProps) => {
   return (
-    <section className="mb-6">
-      <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+    <section className="mb-2">
+      <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
         <Rocket className="text-primary" size={24} /> Subscription
       </h2>
       
       <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl overflow-hidden">
-         <div className="p-6 border-b border-slate-800 flex justify-between items-center">
+         <div className="p-3 border-b border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
            <div>
               <p className="text-sm text-slate-400">Current Plan</p>
               <div className="flex items-baseline gap-2 mt-1">

@@ -42,7 +42,7 @@ const DeleteConfirmationModal = ({
         </div>
 
         {/* Body */}
-        <div className="p-6">
+        <div className="p-6 max-h-[60vh] overflow-y-auto">
           <p className="text-text-secondary leading-relaxed">
             {message}
           </p>

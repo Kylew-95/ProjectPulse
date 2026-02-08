@@ -42,11 +42,11 @@ const AccountSection = ({ user, profile }: AccountSectionProps) => {
 
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+      <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
         <CreditCard className="text-slate-400" size={24} /> Account Details
       </h2>
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl p-6">
-          <div className="grid gap-6">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl p-3">
+          <div className="grid gap-3">
               <div>
                   <label className="block text-sm font-medium text-slate-400 mb-1">Email</label>
                   <input 

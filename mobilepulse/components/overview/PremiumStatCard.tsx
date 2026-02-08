@@ -11,6 +11,7 @@ interface PremiumStatCardProps {
   color: string;
   trend: string;
   trendIsPositive?: boolean;
+  style?: any;
 }
 
 export default function PremiumStatCard({
@@ -20,12 +21,13 @@ export default function PremiumStatCard({
   color,
   trend,
   trendIsPositive = true,
+  style,
 }: PremiumStatCardProps) {
   const colorScheme = useColorScheme() ?? 'dark';
   const colors = Colors[colorScheme];
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.tabIconDefault + '20' }]}>
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.tabIconDefault + '20' }, style]}>
       <View style={styles.header}>
         <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}> 
           <Ionicons name={iconName} size={20} color={color} />

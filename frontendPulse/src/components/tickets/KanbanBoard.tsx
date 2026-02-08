@@ -35,7 +35,7 @@ const KanbanBoard = ({ tickets, onEdit, loading }: KanbanBoardProps) => {
   }
 
   return (
-    <div className="relative flex flex-col h-full gap-4">
+    <div className="relative flex flex-col h-[calc(100vh-250px)] md:h-full gap-4">
       <div className="flex h-full gap-4 overflow-x-auto pb-24">
           {columns.map(col => (
               <div key={col.id} className="h-full min-w-[300px]"> 

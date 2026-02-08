@@ -13,7 +13,7 @@ const Settings = () => {
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   return (
-    <div className="p-8 max-w-4xl mx-auto relative">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto relative">
       <PageHeader title="Settings" className="mb-8" />
 
       <SubscriptionSection 
@@ -21,11 +21,15 @@ const Settings = () => {
         onManageClick={() => setShowSubscriptionModal(true)} 
       />
 
-      <IntegrationsSection />
-
-      <AccountSection user={user} profile={profile} />
+      <div className="mb-6">
+        <IntegrationsSection profile={profile} />
+      </div>
       
-      <div className="mt-8">
+      <div className="mb-6">
+        <AccountSection user={user} profile={profile} />
+      </div>
+      
+      <div className="mt-8 border-t border-slate-100 dark:border-white/5 pt-8">
         <AuditLogViewer />
       </div>
 

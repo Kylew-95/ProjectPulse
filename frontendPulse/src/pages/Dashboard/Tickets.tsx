@@ -411,7 +411,7 @@ const Tickets = () => {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="p-8 max-w-[1600px] mx-auto min-h-screen animate-in fade-in duration-700">
+      <div className="p-4 md:p-8 max-w-[1600px] mx-auto min-h-screen animate-in fade-in duration-700">
         <Breadcrumbs />
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">

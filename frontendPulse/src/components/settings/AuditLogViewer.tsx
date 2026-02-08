@@ -21,6 +21,7 @@ const AuditLogViewer = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [errorStatus, setErrorStatus] = useState<string | null>(null);
 
   useEffect(() => {
     fetchLogs();
@@ -28,6 +29,7 @@ const AuditLogViewer = () => {
 
   const fetchLogs = async () => {
     setLoading(true);
+    setErrorStatus(null);
     try {
       // Join with profiles to get actor names
       const { data, error } = await supabase
@@ -39,10 +41,17 @@ const AuditLogViewer = () => {
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === 'PGRST205') {
+          setErrorStatus('TABLE_MISSING');
+        } else {
+          throw error;
+        }
+      }
       setLogs((data || []) as unknown as AuditLog[]);
     } catch (err) {
       console.error('Error fetching audit logs:', err);
+      setErrorStatus('ERROR');
     } finally {
       setLoading(false);
     }
@@ -73,7 +82,7 @@ const AuditLogViewer = () => {
             />
           </div>
           <button 
-            onClick={() => setRefreshKey(k => k + 1)}
+            onClick={() => setRefreshKey(prev => prev + 1)}
             className="p-2 bg-surface border border-border-main rounded-lg hover:bg-background transition-colors"
           >
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
@@ -96,6 +105,25 @@ const AuditLogViewer = () => {
             <tbody className="divide-y divide-border-main">
               {loading && logs.length === 0 ? (
                  <tr><td colSpan={5} className="px-4 py-8 text-center text-muted">Loading logs...</td></tr>
+              ) : errorStatus === 'TABLE_MISSING' ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-12 text-center">
+                    <div className="max-w-md mx-auto">
+                      <ShieldAlert className="text-amber-500 mx-auto mb-3 opacity-50" size={32} />
+                      <h4 className="font-semibold text-main mb-2">Audit Logs Setup Required</h4>
+                      <p className="text-xs text-muted leading-relaxed mb-4">
+                        The audit_logs table hasn't been created in your Supabase database yet. 
+                        Please run the provided SQL migration in your dashboard to enable this feature.
+                      </p>
+                      <button 
+                        onClick={() => window.open('https://supabase.com/dashboard/project/ztzmykkriwjlsijazvoi/sql', '_blank')}
+                        className="text-xs font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-widest"
+                      >
+                        Open SQL Editor
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               ) : filteredLogs.length === 0 ? (
                  <tr><td colSpan={5} className="px-4 py-8 text-center text-muted">No audit logs found</td></tr>
               ) : (

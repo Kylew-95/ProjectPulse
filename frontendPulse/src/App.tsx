@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthProvider';
 import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import ScrollToTop from './components/common/ScrollToTop';
 import Demo from './pages/landing/Demo';
 import Home from './pages/landing/Home';
 import { Login, Signup } from './pages/auth/Auth';
@@ -19,6 +20,7 @@ import Team from './pages/Dashboard/Team';
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <ThemeProvider>
         <AuthProvider>
           <Toaster position="top-right" />

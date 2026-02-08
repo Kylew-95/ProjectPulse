@@ -303,3 +303,86 @@ def generate_kb_answer(user_query: str, kb_context: str):
     except Exception as e:
         print(f"Cohere KB Answer Error: {e}")
         return "I encountered an error trying to process your question. Please try again later."
+
+def generate_suggestions_from_logs(messages_text: str):
+    """
+    Analyzes logs for "needs", "wants", and "feature requests" and returns a list of suggestions.
+    """
+    if not messages_text:
+        return []
+
+    prompt = f"""
+    Analyze the following Discord chat logs to extract "user needs", "wants", and "feature requests" for the company.
+    
+    Logs:
+    {messages_text}
+    
+    Return ONLY a JSON list of objects. Each object must have:
+    - type: (one of: "suggestion", "feature_request", "user_need")
+    - content: (a concise, actionable summary of the request/need)
+    
+    Example Output:
+    [
+      {{"type": "feature_request", "content": "Users are asking for a dark mode option in the dashboard."}},
+      {{"type": "user_need", "content": "Multiple users reported difficulty finding the password reset link."}}
+    ]
+    
+    If no suggestions are found, return an empty list [].
+    """
+
+    if not co:
+        return []
+    try:
+        response = co.chat(
+            message=prompt,
+            model="command-a-03-2025"
+        )
+        json_str = response.text.strip()
+        if json_str.startswith("```json"):
+            json_str = json_str[7:-3].strip()
+        elif json_str.startswith("```"):
+            json_str = json_str[3:-3].strip()
+        
+        return json.loads(json_str)
+    except Exception as e:
+        print(f"Cohere Suggestions Error: {e}")
+        return []
+
+def process_company_info(info_text: str):
+    """
+    Breaks down a block of company info into Q&A pairs for the KB.
+    """
+    if not info_text:
+        return []
+
+    prompt = f"""
+    Transform the following company information into a list of Question and Answer pairs for a Knowledge Base.
+    Focus on facts, mission, motto, policies, and general info that a customer support bot should know.
+    
+    Company Info:
+    {info_text}
+    
+    Return ONLY a JSON list of objects. Each object must have:
+    - question: (a likely user question)
+    - answer: (the factual answer from the text)
+    
+    Return at most 10 high-quality pairs.
+    """
+
+    if not co:
+        return []
+    try:
+        response = co.chat(
+            message=prompt,
+            model="command-a-03-2025"
+        )
+        json_str = response.text.strip()
+        if json_str.startswith("```json"):
+            json_str = json_str[7:-3].strip()
+        elif json_str.startswith("```"):
+            json_str = json_str[3:-3].strip()
+        
+        return json.loads(json_str)
+    except Exception as e:
+        print(f"Cohere Info Process Error: {e}")
+        return []

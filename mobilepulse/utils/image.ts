@@ -7,9 +7,11 @@ export const getCleanAvatarUrl = (url: string | null | undefined): string | unde
 
     // Handle concatenated URLs by taking the last valid starting point
     const lastHttps = url.lastIndexOf('https://');
+    let clean = url;
     if (lastHttps > 0) {
-        return url.substring(lastHttps);
+        clean = url.substring(lastHttps);
     }
 
-    return url;
+    // Fix double extension if present
+    return clean.replace('.png.png', '.png');
 };

@@ -1,8 +1,8 @@
 import discord
 from discord.ext import commands
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from services.supabase_client import get_messages_last_24h, check_guild_subscription
-from services.ai_service import generate_summary
+from services.supabase_client import get_messages_last_24h, check_guild_subscription, add_ai_suggestion, get_learning_channel, get_messages_from_channel
+from services.ai_service import generate_summary, generate_suggestions_from_logs
 import os
 
 class Summary(commands.Cog):
@@ -30,8 +30,15 @@ class Summary(commands.Cog):
 
             print(f"Generating Daily Pulse for {guild.name}...")
             
-            # 1. Fetch Logs (Filtered by guild for isolation)
-            messages = get_messages_last_24h(guild_id=guild.id)
+            # 1. Fetch Logs (Prioritize the learning channel if configured)
+            learning_channel_id = get_learning_channel(guild.id)
+            
+            if learning_channel_id:
+                print(f"Using configured learning channel {learning_channel_id} for {guild.name}")
+                messages = get_messages_from_channel(learning_channel_id, limit=200)
+            else:
+                print(f"No learning channel configured for {guild.name}. Falling back to 24h history.")
+                messages = get_messages_last_24h(guild_id=guild.id)
             
             if not messages:
                 await target_channel.send("The Daily Pulse: No messages recorded in the last 24 hours.")
@@ -43,7 +50,18 @@ class Summary(commands.Cog):
             # 2. Generate Summary
             summary = generate_summary(text_block)
 
-            # 3. Post
+            # 3. Generate and Store AI Suggestions (Automated Learning)
+            suggestions = generate_suggestions_from_logs(text_block)
+            if suggestions:
+                for sug in suggestions:
+                    add_ai_suggestion(
+                        guild_id=str(guild.id),
+                        content=sug['content'],
+                        source_channel="batch_learning",
+                        suggestion_type=sug['type']
+                    )
+
+            # 4. Post
             msg = f"""
             📊 **The Daily Pulse: Executive Summary**
             

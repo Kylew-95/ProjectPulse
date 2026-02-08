@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { StyleSheet, View, Text, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Modal, Alert, RefreshControl } from 'react-native';
+import { PremiumGate } from '@/components/ui/PremiumGate';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { supabase } from '@/lib/supabase';
@@ -15,7 +16,7 @@ interface KBEntry {
 }
 
 export default function KnowledgeBase() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const colorScheme = useColorScheme() ?? 'dark';
   const colors = Colors[colorScheme];
 
@@ -29,6 +30,9 @@ export default function KnowledgeBase() {
   const [editingEntry, setEditingEntry] = useState<KBEntry | null>(null);
   const [formData, setFormData] = useState({ question: '', answer: '' });
   const [submitting, setSubmitting] = useState(false);
+
+  // Access Control
+  const isAuthorized = ['pro', 'enterprise', 'super_admin'].includes(profile?.subscription_tier?.toLowerCase() || '');
 
   const fetchEntries = useCallback(async () => {
     if (!user) return;
@@ -51,6 +55,17 @@ export default function KnowledgeBase() {
   useEffect(() => {
     fetchEntries();
   }, [fetchEntries]);
+
+
+  if (!isAuthorized) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <PremiumGate isAuthorized={false} featureName="Knowledge Base" requiredTier="Pro">
+          <></>
+        </PremiumGate>
+      </View>
+    );
+  }
 
   const onRefresh = () => {
     setRefreshing(true);

@@ -1,4 +1,4 @@
-import { Lock, Crown, Check, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
+import { Crown, Check, Sparkles, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -10,31 +10,29 @@ interface PremiumGateProps {
 }
 
 const PremiumGate = ({ title, description, features }: PremiumGateProps) => {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+
+    const isEnterprise = ['enterprise', 'super_admin'].includes(profile?.subscription_tier || '');
+
+    if (isEnterprise) {
+        return null; // Return null because the parent usually renders children if enterprise
+    }
 
     const handleUpgrade = async () => {
         setLoading(true);
         try {
-            // First find the enterprise price ID
             const productsRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/products`);
             const products = await productsRes.json();
-            console.log(products);
-            interface Product {
-                name: string;
-                price_id: string;
-                metadata?: { plan_tier_id?: string };
-            }
-            const enterprisePlan = products.find((p: Product) => p.metadata?.plan_tier_id === 'enterprise' || p.name === 'Enterprise');
+            
+            const enterprisePlan = products.find((p: { metadata?: { plan_tier_id?: string }, name: string, price_id: string }) => p.metadata?.plan_tier_id === 'enterprise' || p.name === 'Enterprise');
             
             if (!enterprisePlan) {
-                console.error('Enterprise plan not found');
                 navigate('/pricing');
                 return;
             }
 
-            // Create checkout session
             const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/create-checkout-session`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -58,87 +56,65 @@ const PremiumGate = ({ title, description, features }: PremiumGateProps) => {
     };
 
     return (
-        <div className="relative p-8 max-w-5xl mx-auto min-h-[70vh] flex flex-col items-center justify-center animate-in fade-in zoom-in duration-700">
-            {/* Background Decorative Elements */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -z-10 animate-pulse"></div>
-            <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[80px] -z-10"></div>
-            
-            <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                {/* Left Side: Visual & Message */}
-                <div className="text-left space-y-8">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-bold uppercase tracking-widest animate-bounce">
-                        <Crown size={14} />
-                        Enterprise Feature
-                    </div>
-                    
-                    <div className="space-y-4">
-                        <h1 className="text-5xl font-black text-white leading-tight tracking-tight">
-                            {title}
-                        </h1>
-                        <p className="text-xl text-slate-400 leading-relaxed max-w-lg">
-                            {description}
-                        </p>
-                    </div>
+        <div className="w-full py-6">
+            <div className="relative w-full overflow-hidden group">
+                {/* Subtle background glow */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-[2.5rem] blur-xl opacity-50 transition-opacity duration-500 group-hover:opacity-100" />
+                
+                <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2.5rem] p-8 md:p-12 shadow-2xl">
+                    <div className="flex flex-col md:flex-row items-center md:items-start gap-10">
+                        {/* Left Side: Branding & CTA */}
+                        <div className="flex-1 text-center md:text-left space-y-6">
+                            <div className="w-16 h-16 bg-amber-50 dark:bg-amber-500/10 rounded-2xl flex items-center justify-center border border-amber-100 dark:border-amber-500/20 mx-auto md:mx-0">
+                                <Crown className="text-amber-500" size={32} />
+                            </div>
+                            
+                            <div className="space-y-3">
+                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
+                                    {title}
+                                </h2>
+                                <p className="text-slate-500 dark:text-slate-400 text-lg leading-relaxed">
+                                    {description}
+                                </p>
+                            </div>
 
-                    <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                        <button 
-                            onClick={handleUpgrade} // Actually this is line 79
-                            disabled={loading}
-                            className="group relative px-6 py-3 bg-white text-slate-900 rounded-xl font-bold transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 overflow-hidden shadow-lg shadow-white/10"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                            {loading ? <Loader2 className="animate-spin" size={18} /> : <Sparkles size={18} className="text-primary" />}
-                            <span>Upgrade to Enterprise</span>
-                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                        </button>
-                        <button 
-                            onClick={() => navigate('/dashboard/overview')}
-                            className="px-6 py-3 bg-slate-900/50 hover:bg-slate-800 text-white rounded-xl font-medium transition-all border border-white/5 backdrop-blur-md active:scale-95"
-                        >
-                            Maybe Later
-                        </button>
-                    </div>
-                    
-                    <p className="text-sm text-slate-500 italic">
-                        No credit card required to explore our other features.
-                    </p>
-                </div>
-
-                {/* Right Side: Features List & Locked Card */}
-                <div className="relative flex flex-col items-center">
-                    <div className="w-full bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/30 transition-colors"></div>
-                        
-                        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                            <Lock size={18} className="text-primary" />
-                            Premium Benefits
-                        </h3>
-                        
-                        <ul className="space-y-5">
-                            {features.map((feature, i) => (
-                                <li key={i} className="flex items-start gap-3 group/item">
-                                    <div className="mt-1 p-0.5 rounded-full bg-emerald-500/20 text-emerald-500 group-hover/item:scale-110 transition-transform">
-                                        <Check size={14} />
-                                    </div>
-                                    <span className="text-slate-300 group-hover/item:text-white transition-colors">{feature}</span>
-                                </li>
-                            ))}
-                        </ul>
-
-                        <div className="mt-8 pt-6 border-t border-white/5 text-center">
                             <button 
-                                onClick={() => navigate('/pricing')}
-                                className="text-xs font-bold text-slate-500 hover:text-primary transition-colors uppercase tracking-widest"
+                                onClick={handleUpgrade}
+                                disabled={loading}
+                                className="w-full md:w-auto inline-flex items-center justify-center px-10 py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-amber-500/20 hover:scale-[1.02] active:scale-95 disabled:opacity-50 gap-2"
                             >
-                                View all plans and pricing
+                                {loading ? (
+                                    <Loader2 className="animate-spin" size={20} />
+                                ) : (
+                                    <Sparkles size={20} />
+                                )}
+                                <span>Upgrade to Enterprise</span>
                             </button>
                         </div>
+
+                        {/* Right Side: Features List */}
+                        <div className="flex-1 w-full">
+                            <div className="bg-slate-50 dark:bg-white/5 rounded-3xl p-6 border border-slate-100 dark:border-white/10">
+                                <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Included Features</h4>
+                                <div className="space-y-4">
+                                    {features.map((feature, i) => (
+                                        <div key={i} className="flex items-start gap-3">
+                                            <div className="mt-1 flex-shrink-0 w-5 h-5 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                                                <Check size={12} className="text-emerald-500 font-bold" />
+                                            </div>
+                                            <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                                                {feature}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    
-                    {/* Floating elements */}
-                    <div className="absolute -top-6 -right-6 w-16 h-16 bg-slate-800 rounded-2xl border border-white/10 shadow-2xl flex items-center justify-center animate-pulse rotate-12">
-                         <Crown size={32} className="text-amber-500" />
-                    </div>
+
+                    <p className="text-center text-slate-400 dark:text-slate-500 text-[10px] mt-10 font-bold uppercase tracking-[0.3em]">
+                        Scale your operations with pulse intelligence
+                    </p>
                 </div>
             </div>
         </div>

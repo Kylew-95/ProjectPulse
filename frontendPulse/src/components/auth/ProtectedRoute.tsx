@@ -12,7 +12,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { session, loading, profile, refreshProfile } = useAuth();
   const location = useLocation();
   const query = new URLSearchParams(location.search);
-  const isSuccess = query.get('success') === 'true';
+  const isSuccess = query.get('success') === 'true' || !!query.get('session_id');
   const [minLoading, setMinLoading] = React.useState(true);
 
   // Enforce minimum loading time of 2 seconds for better UX
@@ -24,8 +24,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }, []);
 
   // Safety Timeout: If loading for > 10s (e.g. user deleted in DB but session active), force logout
+  // BUT: Don't trigger this if returning from successful payment (isSuccess=true)
   React.useEffect(() => {
-      if (session && !profile && !loading) {
+      if (session && !profile && !loading && !isSuccess) {
           const timeout = setTimeout(async () => {
               console.warn("Profile load timeout - assume stale session. Logging out.");
               // Force logout
@@ -36,7 +37,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           }, 10000); // 10 seconds
           return () => clearTimeout(timeout);
       }
-  }, [session, profile, loading]);
+  }, [session, profile, loading, isSuccess]);
 
   // If returning from Stripe successfully, poll for status update
   React.useEffect(() => {

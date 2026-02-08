@@ -1,31 +1,32 @@
 import type { ReactNode } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Check, Sparkles, Loader2, Zap } from 'lucide-react';
+import { Check, Sparkles, Loader2, Zap, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-interface ProGateProps {
-  children: ReactNode;
-  featureName?: string;
-  description?: string;
-  features?: string[];
+interface SubscriptionGateProps {
+  children?: ReactNode;
+  tier: 'pro' | 'enterprise';
+  featureName: string;
+  description: string;
+  features: string[];
 }
 
-const ProGate = ({ 
+const SubscriptionGate = ({ 
   children, 
-  featureName = "Pro Feature", 
-  description = "This feature is available exclusively for Pro users. Upgrade now to unlock this functionality.",
-  features = [
-    "Priority Analytics & Trends",
-    "Custom Team Roles",
-    "Multi-Team Management",
-    "Enhanced API Access"
-  ]
-}: ProGateProps) => {
-  const { profile } = useAuth();
+  tier,
+  featureName, 
+  description,
+  features
+}: SubscriptionGateProps) => {
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const isPro = ['pro', 'enterprise', 'super_admin'].includes(profile?.subscription_tier || '');
+
+  const currentTier = profile?.subscription_tier || 'starter';
+  const hasAccess = 
+    (tier === 'pro' && ['pro', 'enterprise', 'super_admin'].includes(currentTier)) ||
+    (tier === 'enterprise' && ['enterprise', 'super_admin'].includes(currentTier));
 
   const handleUpgrade = async () => {
     setLoading(true);
@@ -33,11 +34,11 @@ const ProGate = ({
       const productsRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/products`);
       const products = await productsRes.json();
       
-      const proPlan = products.find((p: { metadata?: { plan_tier_id?: string }, name: string, price_id: string }) => 
-        p.metadata?.plan_tier_id === 'pro' || p.name === 'Pro'
+      const targetPlan = products.find((p: { metadata?: { plan_tier_id?: string }, name: string, price_id: string }) => 
+        p.metadata?.plan_tier_id === tier || p.name.toLowerCase() === tier.toLowerCase()
       );
       
-      if (!proPlan) {
+      if (!targetPlan) {
         navigate('/pricing');
         return;
       }
@@ -46,9 +47,9 @@ const ProGate = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          price_id: proPlan.price_id,
-          user_id: profile?.id,
-          success_url: `${window.location.origin}/dashboard/overview?session_id={CHECKOUT_SESSION_ID}`,
+          price_id: targetPlan.price_id,
+          user_id: user?.id,
+          success_url: `${window.location.origin}/dashboard/overview?session_id={CHECKOUT_SESSION_ID}&success=true`,
           cancel_url: window.location.href
         }),
       });
@@ -64,27 +65,37 @@ const ProGate = ({
     }
   };
 
-  if (isPro) {
+  if (hasAccess) {
     return <>{children}</>;
   }
+
+  const isEnterprise = tier === 'enterprise';
+  const Icon = isEnterprise ? Crown : Zap;
+  const accentColor = isEnterprise ? 'amber' : 'indigo';
+  const gradientFrom = isEnterprise ? 'from-amber-500/10' : 'from-indigo-500/10';
+  const gradientTo = isEnterprise ? 'to-orange-500/10' : 'to-blue-500/10';
+  const buttonBg = isEnterprise 
+    ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700' 
+    : 'bg-primary hover:bg-blue-600';
+  const shadowColor = isEnterprise ? 'shadow-amber-500/20' : 'shadow-primary/20';
 
   return (
     <div className="w-full py-6">
       <div className="relative w-full overflow-hidden group">
         {/* Subtle background glow */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-primary/10 to-indigo-500/10 rounded-[2.5rem] blur-xl opacity-50 transition-opacity duration-500 group-hover:opacity-100" />
+        <div className={`absolute -inset-1 bg-gradient-to-r ${gradientFrom} ${gradientTo} rounded-[2.5rem] blur-xl opacity-50 transition-opacity duration-500 group-hover:opacity-100`} />
         
         <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-[2.5rem] p-8 md:p-12 shadow-2xl">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-10">
             {/* Left Side: Branding & CTA */}
             <div className="flex-1 text-center md:text-left space-y-6">
-              <div className="w-16 h-16 bg-primary/5 dark:bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/10 mx-auto md:mx-0">
-                <Zap className="text-primary" size={32} />
+              <div className={`w-16 h-16 bg-${accentColor}-50 dark:bg-${accentColor}-500/10 rounded-2xl flex items-center justify-center border border-${accentColor}-100 dark:border-${accentColor}-500/20 mx-auto md:mx-0`}>
+                <Icon className={`text-${isEnterprise ? 'amber-500' : 'primary'}`} size={32} />
               </div>
               
               <div className="space-y-3">
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
-                  {featureName}
+                  {tier === 'enterprise' ? 'Enterprise ' : 'Pro '}{featureName}
                 </h2>
                 <p className="text-slate-500 dark:text-slate-400 text-lg leading-relaxed">
                   {description}
@@ -94,21 +105,21 @@ const ProGate = ({
               <button 
                 onClick={handleUpgrade}
                 disabled={loading}
-                className="w-full md:w-auto inline-flex items-center justify-center px-10 py-4 bg-primary hover:bg-blue-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 disabled:opacity-50 gap-2"
+                className={`w-full md:w-auto inline-flex items-center justify-center px-10 py-4 ${buttonBg} text-white font-bold rounded-2xl transition-all shadow-lg ${shadowColor} hover:scale-[1.02] active:scale-95 disabled:opacity-50 gap-2`}
               >
                 {loading ? (
                   <Loader2 className="animate-spin" size={20} />
                 ) : (
                   <Sparkles size={20} />
                 )}
-                <span>Upgrade to Pro</span>
+                <span>Upgrade to {isEnterprise ? 'Enterprise' : 'Pro'}</span>
               </button>
             </div>
 
             {/* Right Side: Features List */}
             <div className="flex-1 w-full">
               <div className="bg-slate-50 dark:bg-white/5 rounded-3xl p-6 border border-slate-100 dark:border-white/10">
-                <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Pro Benefits</h4>
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Included Features</h4>
                 <div className="space-y-4">
                   {features.map((feature, i) => (
                     <div key={i} className="flex items-start gap-3">
@@ -126,7 +137,7 @@ const ProGate = ({
           </div>
 
           <p className="text-center text-slate-400 dark:text-slate-500 text-[10px] mt-10 font-bold uppercase tracking-[0.3em]">
-            Unlock specialized tools & performance
+            Unlock specialized tools & intelligence
           </p>
         </div>
       </div>
@@ -134,4 +145,4 @@ const ProGate = ({
   );
 };
 
-export default ProGate;
+export default SubscriptionGate;

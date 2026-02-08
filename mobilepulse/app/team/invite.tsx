@@ -11,11 +11,20 @@ import { Modal, FlatList } from 'react-native';
 import { TEAM_ROLES } from '@/constants/roles';
 import { Search, X } from 'lucide-react-native';
 
-const ROLES = TEAM_ROLES.map(r => ({ label: r, value: r }));
+const ROLES = TEAM_ROLES.filter(r => r !== 'Admin').map(r => ({ label: r, value: r }));
+
+const SUBSCRIPTION_LIMITS = {
+  starter: { teams: 1, membersPerTeam: 3 },
+  pro: { teams: 5, membersPerTeam: 10 },
+  enterprise: { teams: Infinity, membersPerTeam: Infinity },
+  super_admin: { teams: Infinity, membersPerTeam: Infinity },
+};
+
+type SubscriptionTier = keyof typeof SUBSCRIPTION_LIMITS;
 
 export default function InviteMemberScreen() {
   const { teamId } = useLocalSearchParams();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   
@@ -47,6 +56,24 @@ export default function InviteMemberScreen() {
 
         if (adminExists) {
           throw new Error('This team already has an Admin. Only one Admin is allowed.');
+        }
+      }
+
+      // 0.5 Check Member Limits
+      const tier = (profile?.subscription_tier?.toLowerCase() || 'starter') as SubscriptionTier;
+      const limits = SUBSCRIPTION_LIMITS[tier] || SUBSCRIPTION_LIMITS.starter;
+      const maxMembers = limits.membersPerTeam;
+
+      if (maxMembers !== Infinity) {
+        const { count, error: countError } = await supabase
+          .from('team_members')
+          .select('*', { count: 'exact', head: true })
+          .eq('team_id', teamId);
+
+        if (countError) throw countError;
+
+        if ((count || 0) >= maxMembers) {
+          throw new Error(`Team member limit reached (${count}/${maxMembers}). Upgrade to add more members.`);
         }
       }
 

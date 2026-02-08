@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, ChevronRight, ChevronLeft, Plus } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import PrioritySelector, { type Priority } from '../common/PrioritySelector';
@@ -14,6 +14,7 @@ interface CreateTicketModalProps {
 
 const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: CreateTicketModalProps) => {
   const { session } = useAuth();
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<string>(teamId || '');
   const [autoAssign, setAutoAssign] = useState(true);
@@ -22,7 +23,7 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    priority: 'medium',
+    priority: 'medium' as Priority,
     status: 'open',
     urgency_score: 5,
     assignee_id: ''
@@ -78,7 +79,6 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
     if (!tId) return;
     setLoading(true);
     try {
-      // 1. Fetch team members
       const { data: members, error: membersError } = await supabase
         .from('team_members')
         .select('user_id')
@@ -87,7 +87,6 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
       if (membersError) throw membersError;
       if (!members || members.length === 0) return;
 
-      // 2. Fetch active ticket counts for each member
       const { data: tickets, error: ticketsError } = await supabase
         .from('tickets')
         .select('assignee_id')
@@ -96,7 +95,6 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
       
       if (ticketsError) throw ticketsError;
 
-      // 3. Calculate workload
       const workload: Record<string, number> = {};
       members.forEach(m => workload[m.user_id] = 0);
       tickets?.forEach(t => {
@@ -105,7 +103,6 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
         }
       });
 
-      // 4. Find least busy member
       let leastBusyId = members[0].user_id;
       let minTickets = workload[leastBusyId];
 
@@ -124,16 +121,11 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setLoading(true);
-
     try {
-      if (!selectedTeamId) {
-        throw new Error('Please select a team.');
-      }
+      if (!selectedTeamId) throw new Error('Please select a team.');
 
-      // Create the ticket
       const { data: newTicket, error } = await supabase.from('tickets').insert([
         {
           title: formData.title,
@@ -149,7 +141,6 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
 
       if (error) throw error;
 
-      // Add tag associations if any tags are selected
       if (newTicket && selectedTags.length > 0) {
         const tagAssociations = selectedTags.map(tag => ({
           ticket_id: newTicket.id,
@@ -174,119 +165,153 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
     }
   };
 
+  const isStep1Valid = formData.title.trim() !== '' && formData.description.trim() !== '';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-surface border border-slate-800 rounded-xl w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200">
-        <div className="flex items-center justify-between p-6 border-b border-slate-800">
-          <h2 className="text-xl font-semibold text-white">Create New Ticket</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create New Ticket</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-widest mt-1">
+              Step {step} of 2
+            </p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-white/5 rounded-xl transition-all text-slate-500 hover:text-slate-900 dark:hover:text-white">
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Title</label>
-            <input
-              required
-              type="text"
-              value={formData.title}
-              onChange={e => setFormData({ ...formData, title: e.target.value })}
-              className="w-full bg-black/50 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-1 focus:ring-primary outline-none"
-              placeholder="e.g., Update Landing Page"
-            />
-          </div>
+        {/* Form Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {step === 1 ? (
+            <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] pl-1">Ticket Title</label>
+                <input
+                  required
+                  type="text"
+                  value={formData.title}
+                  onChange={e => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400"
+                  placeholder="e.g., Fix Navigation Bug"
+                />
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
-            <textarea
-              required
-              rows={4}
-              value={formData.description}
-              onChange={e => setFormData({ ...formData, description: e.target.value })}
-              className="w-full bg-black/50 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-1 focus:ring-primary outline-none"
-              placeholder="Describe the task..."
-            />
-          </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] pl-1">Description</label>
+                <textarea
+                  required
+                  rows={4}
+                  value={formData.description}
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-3.5 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-slate-400 resize-none"
+                  placeholder="What needs to be done?"
+                />
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Priority</label>
-            <PrioritySelector 
-              value={formData.priority}
-              onChange={(priority: Priority) => setFormData({ ...formData, priority })}
-              size="sm"
-            />
-          </div>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] pl-1">Baseline Priority</label>
+                <PrioritySelector 
+                  value={formData.priority}
+                  onChange={(priority: Priority) => setFormData({ ...formData, priority })}
+                  size="sm"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6 animate-in slide-in-from-left-4 duration-300">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] pl-1">Initial Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={e => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+                  >
+                    <option value="open">Open</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="done">Done</option>
+                  </select>
+                </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Status</label>
-            <select
-              value={formData.status}
-              onChange={e => setFormData({ ...formData, status: e.target.value })}
-              className="w-full bg-black/50 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-1 focus:ring-primary outline-none"
-            >
-              <option value="open">Open</option>
-              <option value="in_progress">In Progress</option>
-              <option value="done">Done</option>
-            </select>
-          </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] pl-1">Assign to Team</label>
+                  <select
+                    value={selectedTeamId}
+                    onChange={e => setSelectedTeamId(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+                  >
+                    <option value="">Select a team</option>
+                    {userTeams.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Team</label>
-            <select
-              value={selectedTeamId}
-              onChange={e => setSelectedTeamId(e.target.value)}
-              className="w-full bg-black/50 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-1 focus:ring-primary outline-none"
-            >
-              <option value="">Select a team</option>
-              {userTeams.map(t => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] pl-1">Categorical Tags</label>
+                <TagSelector
+                  availableTags={availableTags}
+                  selectedTags={selectedTags}
+                  onTagsChange={setSelectedTags}
+                  onCreateTag={handleCreateTag}
+                />
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Tags</label>
-            <TagSelector
-              availableTags={availableTags}
-              selectedTags={selectedTags}
-              onTagsChange={setSelectedTags}
-              onCreateTag={handleCreateTag}
-            />
-          </div>
+              <div className="bg-primary/5 dark:bg-primary/10 border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-bold text-slate-900 dark:text-white">Auto-Assignment</div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">Match with least busy member</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAutoAssign(!autoAssign)}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${autoAssign ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoAssign ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
-          <div className="flex items-center gap-2">
-            <input 
-              type="checkbox" 
-              id="autoAssign"
-              checked={autoAssign}
-              onChange={(e) => setAutoAssign(e.target.checked)}
-              className="w-4 h-4 rounded border-slate-700 bg-black/50 text-primary focus:ring-primary"
-            />
-            <label htmlFor="autoAssign" className="text-sm font-medium text-slate-300 cursor-pointer">
-              Auto-assign to least busy member
-            </label>
-          </div>
-
-          <div className="flex justify-end gap-3 mt-6">
+        {/* Footer Actions */}
+        <div className="p-6 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5 flex items-center justify-between">
+          {step === 2 ? (
             <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-slate-300 hover:text-white transition-colors"
+              onClick={() => setStep(1)}
+              className="flex items-center gap-2 px-5 py-3 text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all hover:bg-slate-100 dark:hover:bg-white/5 rounded-2xl"
             >
-              Cancel
+              <ChevronLeft size={18} />
+              Back
             </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading && <Loader2 size={16} className="animate-spin" />}
-              {loading ? 'Creating...' : 'Create Ticket'}
-            </button>
-          </div>
-        </form>
+          ) : (
+            <div />
+          )}
+
+          <button
+            onClick={step === 1 ? () => setStep(2) : handleSubmit}
+            disabled={loading || (step === 1 && !isStep1Valid) || (step === 2 && !selectedTeamId)}
+            className="flex items-center justify-center gap-2 px-8 py-3 bg-primary hover:bg-blue-600 text-white text-sm font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100"
+          >
+            {loading ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : step === 1 ? (
+              <>
+                Next
+                <ChevronRight size={18} />
+              </>
+            ) : (
+              <>
+                <Plus size={18} />
+                Create Ticket
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

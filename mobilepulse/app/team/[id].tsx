@@ -10,10 +10,19 @@ import { Users, Mail, Shield, UserPlus, MoreVertical, Trash2, Search, X } from '
 import { TEAM_ROLES } from '@/constants/roles';
 import { getCleanAvatarUrl } from '@/utils/image';
 
-const ROLES = TEAM_ROLES.map(r => ({ label: r, value: r }));
+const ROLES = TEAM_ROLES.filter(r => r !== 'Admin').map(r => ({ label: r, value: r }));
+
+const SUBSCRIPTION_LIMITS = {
+  starter: { teams: 1, membersPerTeam: 3 },
+  pro: { teams: 5, membersPerTeam: 10 },
+  enterprise: { teams: Infinity, membersPerTeam: Infinity },
+  super_admin: { teams: Infinity, membersPerTeam: Infinity },
+};
+
+type SubscriptionTier = keyof typeof SUBSCRIPTION_LIMITS;
 
 export default function TeamDetailScreen() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { id } = useLocalSearchParams();
   const colorScheme = useColorScheme() ?? 'dark';
   const colors = Colors[colorScheme];
@@ -218,17 +227,26 @@ export default function TeamDetailScreen() {
     );
   };
 
-  const ListHeader = () => (
-    <>
-      <View style={[styles.headerCard, { backgroundColor: colors.surface }]}>
-         <View style={[styles.iconContainer, { backgroundColor: colors.tint + '20' }]}>
-            <Users size={32} color={colors.tint} />
-         </View>
-         <Text style={[styles.teamName, { color: colors.text }]}>{team.name}</Text>
-      </View>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>Team Members ({members.length})</Text>
-    </>
-  );
+  const ListHeader = () => {
+    // Determine member limits
+    const tier = (profile?.subscription_tier?.toLowerCase() || 'starter') as SubscriptionTier;
+    const limits = SUBSCRIPTION_LIMITS[tier] || SUBSCRIPTION_LIMITS.starter;
+    const maxMembers = limits.membersPerTeam;
+
+    return (
+      <>
+        <View style={[styles.headerCard, { backgroundColor: colors.surface }]}>
+           <View style={[styles.iconContainer, { backgroundColor: colors.tint + '20' }]}>
+              <Users size={32} color={colors.tint} />
+           </View>
+           <Text style={[styles.teamName, { color: colors.text }]}>{team.name}</Text>
+        </View>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          Team Members ({members.length}/{maxMembers === Infinity ? '∞' : maxMembers})
+        </Text>
+      </>
+    );
+  };
 
   const ListFooter = () => (
     (currentUserRole === 'owner' || currentUserRole === 'admin') ? (
@@ -285,16 +303,27 @@ export default function TeamDetailScreen() {
         title: team.name, 
         headerTintColor: colors.text, 
         headerStyle: { backgroundColor: colors.surface },
-        headerRight: () => (
-          (currentUserRole === 'owner' || currentUserRole === 'admin') && (
-            <TouchableOpacity 
-              onPress={() => router.push({ pathname: '/team/invite', params: { teamId: id } })}
-              style={{ marginRight: 10 }}
-            >
-              <UserPlus size={22} color={colors.tint} />
-            </TouchableOpacity>
-          )
-        )
+        headerRight: () => {
+          const tier = (profile?.subscription_tier?.toLowerCase() || 'starter') as SubscriptionTier;
+          const limits = SUBSCRIPTION_LIMITS[tier] || SUBSCRIPTION_LIMITS.starter;
+          const maxMembers = limits.membersPerTeam;
+          const canInvite = members.length < maxMembers;
+
+          return (currentUserRole === 'owner' || currentUserRole === 'admin') && (
+            canInvite ? (
+              <TouchableOpacity
+                onPress={() => router.push({ pathname: '/team/invite', params: { teamId: id } })}
+                style={{ marginRight: 10 }}
+              >
+                <UserPlus size={22} color={colors.tint} />
+              </TouchableOpacity>
+            ) : (
+              <View style={{ marginRight: 10, opacity: 0.5 }}>
+                 <UserPlus size={22} color={colors.icon} />
+              </View>
+            )
+          );
+        }
       }} />
       
       <FlatList

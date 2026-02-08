@@ -4,6 +4,7 @@ import { supabase } from '../../supabaseClient';
 import { Ticket, Activity, ShieldCheck, TrendingUp } from 'lucide-react';
 import CommandHeader from './components/Overview/CommandHeader';
 import PremiumStatCard from './components/Overview/PremiumStatCard';
+import AISuggestions from './components/Overview/AISuggestions';
 import { motion, type Variants } from 'framer-motion';
 
 const containerVariants: Variants = {
@@ -68,12 +69,15 @@ const Overview = () => {
   const resolutionRate = stats.total > 0 ? (stats.closed / stats.total) * 100 : 0;
   const globalLoad = Math.min(stats.avgUrgency * 10, 100);
 
+  const successRateColor = resolutionRate >= 70 ? "#10b981" : resolutionRate >= 40 ? "#f59e0b" : "#ef4444";
+  const successRateTrend = resolutionRate >= 70 ? "High" : resolutionRate >= 40 ? "Mid" : "Low";
+
   return (
     <motion.div 
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="relative max-w-[1400px] mx-auto p-6 md:p-10 min-h-screen overflow-hidden"
+      className="relative max-w-[1400px] mx-auto p-4 md:p-10 min-h-screen overflow-hidden"
     >
       {/* Dynamic Background Glow */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
@@ -127,8 +131,8 @@ const Overview = () => {
             title="Success Rate" 
             value={`${resolutionRate.toFixed(0)}%`} 
             icon={ShieldCheck} 
-            color="#10b981" 
-            trend="Optimal"
+            color={successRateColor}
+            trend={successRateTrend}
           />
         </motion.div>
       </div>
@@ -177,6 +181,10 @@ const Overview = () => {
               </div>
            </div>
         </div>
+      </motion.div>
+
+      <motion.div variants={itemVariants}>
+        <AISuggestions guildId={profile?.discord_guild_id ?? undefined} />
       </motion.div>
     </motion.div>
   );

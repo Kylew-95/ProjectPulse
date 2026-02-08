@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, User, LayoutDashboard, Bot, Settings, ZoomIn } from 'lucide-react';
+import { ArrowLeft, User, LayoutDashboard, Bot, Settings, Users, Menu, X } from 'lucide-react';
 import ImageModal from './components/ImageModal';
 import DemoSection from './components/DemoSection';
 import { useTheme } from '../../context/ThemeContext';
@@ -10,6 +10,7 @@ const Demo = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <div className={`${theme} min-h-screen bg-background text-main selection:bg-blue-500/30 transition-colors duration-300`}>
@@ -22,16 +23,44 @@ const Demo = () => {
             <img src="/logo.png" alt="Pulse Logo" className="w-10 h-10 object-contain" />
             <span className="text-xl font-bold tracking-tight">Pulse</span>
           </Link>
-          <div className="flex items-center gap-6">
-            <ThemeToggle />
+          
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center gap-8">
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              <button 
+                onClick={() => navigate('/')} 
+                className="px-5 py-2 text-sm font-semibold border border-white/10 text-white rounded-full hover:bg-white/5 transition-all"
+              >
+                Back to Site
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Toggle */}
+          <button 
+            className="md:hidden p-2 text-muted hover:text-white"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="md:hidden border-t border-white/5 bg-background p-4 space-y-4 animate-in slide-in-from-top duration-300">
+            <div className="pt-4 flex items-center justify-between">
+              <span className="text-sm text-muted">Theme</span>
+              <ThemeToggle />
+            </div>
             <button 
-              onClick={() => navigate('/')} 
-              className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+              onClick={() => navigate('/')}
+              className="w-full py-3 border border-white/10 text-white rounded-xl font-bold"
             >
-              Back to Home
+              Back to Site
             </button>
           </div>
-        </div>
+        )}
       </nav>
 
       <main className="max-w-4xl mx-auto px-4 py-12 sm:py-20">
@@ -105,60 +134,79 @@ const Demo = () => {
 
         <DemoSection
             stepNumber={4}
-            title="Using the Automation Machine"
+            title="Automation & Intelligence"
             icon={Bot}
             iconColor="emerald"
+            screenshotSrc="/Screenshots/Discord Bot notifications.png"
+            screenshotAlt="Discord Bot Notifications"
             onImageClick={setSelectedImage}
         >
              <p>
-              ProjectPulse's core "Machine" is our intelligent ticket automation. 
-              The system automatically routes tickets, assigns urgency scores, and notifies the right team members via Discord.
+              Pulse provides deep <strong>company insights</strong>, allowing you to stay perfectly in tune with community needs and desires. 
+              Our intelligence engine constantly monitors feedback and automates ticket routing, ensuring your operations are always aligned with what your users want.
             </p>
-            <ul className="list-disc pl-5 space-y-2 mt-4 text-muted mb-8">
-                <li>Create a ticket via the Dashboard or Discord Bot.</li>
-                <li>Watch as the system automatically assigns an <strong>Urgency Score</strong>.</li>
-                <li>Team updates are synced in real-time.</li>
-            </ul>
+        </DemoSection>
 
-            {/* Detail Screenshots Grid moved inside Step 4 */}
-            <div className="grid md:grid-cols-2 gap-6 mt-12">
-                {/* Ticket Management */}
-                <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-4 shadow-xl hover:border-emerald-500/30 transition-all">
-                    <div 
-                        className="aspect-square bg-slate-800/50 rounded-xl flex items-center justify-center relative overflow-hidden p-4 cursor-pointer group"
-                        onClick={() => setSelectedImage("/Screenshots/Ticket management .png")}
-                    >
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center z-10 rounded-xl">
-                            <ZoomIn size={24} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                        <img 
-                            src="/Screenshots/Ticket management .png" 
-                            alt="Ticket Management Interface" 
-                            className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
-                        />
+        <DemoSection
+            stepNumber={5}
+            title="Insights & Data"
+            icon={LayoutDashboard}
+            iconColor="purple"
+            onImageClick={setSelectedImage}
+        >
+             <p>
+              Unlock the full potential of your community data with <strong>Intelligence Analytics</strong> and our vectorized <strong>Knowledge Base</strong>.
+            </p>
+            
+            <div className="grid sm:grid-cols-2 gap-4 mt-8">
+                <div 
+                    className="group/img relative rounded-xl overflow-hidden cursor-pointer"
+                    onClick={() => setSelectedImage('/Screenshots/Real_Analytics.png')}
+                >
+                    <img 
+                        src="/Screenshots/Real_Analytics.png" 
+                        alt="Analytics Dashboard Preview" 
+                        className="w-full h-auto object-cover border border-white/10 group-hover:scale-105 transition-transform duration-500 rounded-lg"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                        <h4 className="text-purple-400 font-semibold text-sm">Pro Analytics</h4>
                     </div>
-                    <p className="text-center text-sm text-muted mt-3 font-medium">Ticket Management Interface</p>
                 </div>
-
-                {/* Discord Bot Notifications */}
-                <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-4 shadow-xl hover:border-emerald-500/30 transition-all">
-                    <div 
-                        className="aspect-square bg-slate-800/50 rounded-xl flex items-center justify-center relative overflow-hidden cursor-pointer group"
-                        onClick={() => setSelectedImage("/Screenshots/Discord Bot notifications.png")}
-                    >
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center z-10 rounded-xl">
-                            <ZoomIn size={24} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                        <img 
-                            src="/Screenshots/Discord Bot notifications.png" 
-                            alt="Discord Bot Notifications" 
-                            className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-105"
-                        />
+                <div 
+                    className="group/img relative rounded-xl overflow-hidden cursor-pointer"
+                    onClick={() => setSelectedImage('/Screenshots/Real_KnowledgeBase.png')}
+                >
+                    <img 
+                        src="/Screenshots/Real_KnowledgeBase.png" 
+                        alt="Knowledge Base Preview" 
+                        className="w-full h-auto object-cover border border-white/10 group-hover:scale-105 transition-transform duration-500 rounded-lg"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                        <h4 className="text-blue-400 font-semibold text-sm">Enterprise Knowledge</h4>
                     </div>
-                    <p className="text-center text-sm text-muted mt-3 font-medium">Discord Bot Notifications</p>
                 </div>
             </div>
         </DemoSection>
+
+        <DemoSection
+            stepNumber={6}
+            title="Team & Collaboration"
+            icon={Users}
+            iconColor="blue"
+            screenshotSrc="/Screenshots/TeamManagement.png"
+            screenshotAlt="Team Management Dashboard"
+            onImageClick={setSelectedImage}
+        >
+             <p>
+              Scale your operations by organizing members into specialized <strong>Teams</strong>.
+            </p>
+            <ul className="list-disc pl-5 space-y-2 mt-4 text-muted">
+                <li>Manage team availability and workloads in real-time.</li>
+                <li>Delegate tickets to specific departments (Technical, Billing, General).</li>
+                <li>Monitor individual performance metrics via the Team dashboard.</li>
+            </ul>
+        </DemoSection>
+
 
 
         {/* CTA */}

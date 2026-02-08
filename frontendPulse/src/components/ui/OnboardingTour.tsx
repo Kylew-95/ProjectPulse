@@ -41,6 +41,7 @@ const OnboardingTour = () => {
 
   useEffect(() => {
     const hasCompletedTour = localStorage.getItem('pulse_onboarding_completed');
+
     if (!hasCompletedTour) {
       // Small delay to ensure layout is ready
       const timer = setTimeout(() => setIsVisible(true), 1500);

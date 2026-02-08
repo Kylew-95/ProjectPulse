@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Ticket, BarChart2, Settings, Users, LogOut, Book, Lock } from 'lucide-react';
+import { LayoutDashboard, Ticket, BarChart2, Settings, Users, LogOut, Book, Lock, Menu, X as CloseIcon } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import SidebarProfile from './SidebarProfile';
 import ThemeToggle from '../ui/ThemeToggle';
@@ -15,7 +16,16 @@ const Layout = () => {
     const location = useLocation();
     const { profile } = useAuth();
     const { showHelp, setShowHelp } = useGlobalShortcuts();
-    
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // Close mobile menu on route change without triggering useEffect cascading render lint
+    const [prevPath, setPrevPath] = useState(location.pathname);
+    if (location.pathname !== prevPath) {
+        setPrevPath(location.pathname);
+        if (isMobileMenuOpen) {
+            setIsMobileMenuOpen(false);
+        }
+    }
   
     const handleLogout = async () => {
       await supabase.auth.signOut();
@@ -31,26 +41,43 @@ const Layout = () => {
     ];
 
     const isEnterprise = ['enterprise', 'super_admin'].includes(profile?.subscription_tier || '');
+    const isPro = ['pro', 'enterprise', 'super_admin'].includes(profile?.subscription_tier || '');
   
     return (
-      <div className="flex min-h-screen bg-background transition-colors duration-300">
+      <div className="flex min-h-screen bg-background transition-colors duration-300 relative">
         <OnboardingTour />
         <CommandPalette />
         <DiscordChat />
         <ShortcutHelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
         
+        {/* Mobile Overlay */}
+        {isMobileMenuOpen && (
+            <div 
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden"
+                onClick={() => setIsMobileMenuOpen(false)}
+            />
+        )}
+
         {/* Sidebar */}
         <aside 
-            className="w-[260px] flex-shrink-0 fixed h-full z-20 flex flex-col border-r transition-all duration-300 bg-surface border-border-main"
+            className={`w-[260px] flex-shrink-0 fixed h-full z-40 flex flex-col border-r transition-all duration-300 bg-surface border-border-main lg:translate-x-0 ${
+                isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
         >
             {/* Logo Area */}
-            <div className="p-5 flex items-center gap-3">
+            <div className="p-5 flex items-center justify-between">
                 <Link to="/" className="flex items-center gap-3 group" title="Return to home">
                     <img src="/logo.png" alt="Pulse Loop" className="w-10 h-10 object-contain group-hover:scale-105 transition-transform" />
                     <span className="text-xl font-bold tracking-tight text-main">
                          Pulse
                     </span>
                 </Link>
+                <button 
+                    className="lg:hidden p-2 text-muted hover:text-main"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                >
+                    <CloseIcon size={20} />
+                </button>
             </div>
   
             {/* Navigation */}
@@ -83,7 +110,9 @@ const Layout = () => {
                                         }`} 
                                     />
                                     <span>{item.label}</span>
-                                    {item.isEnterprise && !isEnterprise && (
+                                    {item.label === 'Analytics' ? (
+                                        !isPro && <Lock size={12} className="ml-auto text-slate-400 opacity-60" />
+                                    ) : item.isEnterprise && !isEnterprise && (
                                         <Lock size={12} className="ml-auto text-slate-400 opacity-60" />
                                     )}
                                 </Link>
@@ -107,14 +136,22 @@ const Layout = () => {
         </aside>
   
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col ml-[260px] min-w-0">
+        <div className="flex-1 flex flex-col lg:ml-[260px] min-w-0">
             {/* Header / Topbar */}
-            <header className="sticky top-0 z-10 w-full h-16 flex items-center justify-end px-8 bg-surface/80 backdrop-blur-md border-b border-border-main gap-4">
-                <NotificationDropdown />
-                <ThemeToggle />
+            <header className="sticky top-0 z-10 w-full h-16 flex items-center justify-between lg:justify-end px-4 md:px-8 bg-surface/80 backdrop-blur-md border-b border-border-main gap-4">
+                <button 
+                    className="lg:hidden p-2 -ml-2 text-muted hover:text-main"
+                    onClick={() => setIsMobileMenuOpen(true)}
+                >
+                    <Menu size={24} />
+                </button>
+                <div className="flex items-center gap-2 md:gap-4">
+                    <NotificationDropdown />
+                    <ThemeToggle />
+                </div>
             </header>
   
-            <main className="flex-1 p-8 pt-6">
+            <main className="flex-1 p-4 md:p-8 pt-6">
                 <div className="max-w-7xl mx-auto">
                     <Outlet />
                 </div>

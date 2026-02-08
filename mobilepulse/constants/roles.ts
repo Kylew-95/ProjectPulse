@@ -42,7 +42,7 @@ export const TEAM_ROLES = [
     "Database Administrator",
     "IT Operations Engineer",
     "Server Engineer",
-    "Software Developer",
+
     "Software Tester",
     "QA Analyst",
     "QA Engineer",

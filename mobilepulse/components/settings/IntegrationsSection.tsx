@@ -5,6 +5,7 @@ import { MessageCircle, Lock } from 'lucide-react-native';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/context/AuthContext';
+import AIChannelConfig from './AIChannelConfig';
 
 const INTEGRATIONS = [
   {
@@ -73,7 +74,7 @@ export default function IntegrationsSection() {
           presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
           controlsColor: '#5865F2',
         });
-      } catch (error) {
+      } catch {
         Alert.alert('Error', 'Unable to open Discord authorization');
       }
     }
@@ -83,6 +84,8 @@ export default function IntegrationsSection() {
     <View style={[styles.section, { backgroundColor: colors.surface, borderTopColor: colors.tabIconDefault + '20', borderBottomColor: colors.tabIconDefault + '20' }]}>
       <Text style={[styles.sectionTitle, { color: colors.icon }]}>INTEGRATIONS</Text>
       
+      <AIChannelConfig />
+
       {INTEGRATIONS.map((integration) => {
         const Icon = integration.icon;
         const isLocked = integration.proOnly && !isPro;

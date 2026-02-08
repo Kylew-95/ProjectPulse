@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import billing, analytics, knowledge_base, intelligence, general, tags
+from routers import billing, analytics, knowledge_base, intelligence, general, tags, discord
 from dotenv import load_dotenv
 import os
 from rate_limiter import limiter, _rate_limit_exceeded_handler, RateLimitExceeded
@@ -26,6 +26,7 @@ app.include_router(knowledge_base.router, tags=["Knowledge Base"])
 app.include_router(intelligence.router, tags=["Intelligence"])
 app.include_router(general.router, tags=["General"])
 app.include_router(tags.router, tags=["Tags"])
+app.include_router(discord.router, prefix="/discord", tags=["Discord"])
 
 @app.get("/")
 def read_root():

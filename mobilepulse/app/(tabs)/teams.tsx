@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { PremiumGate } from '@/components/ui/PremiumGate';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import Avatar from '@/components/ui/Avatar';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ChevronRight, Users, Plus } from 'lucide-react-native';
@@ -10,27 +12,49 @@ import { router } from 'expo-router';
 interface Team {
   id: string;
   name: string;
+  member_count?: number;
+  members?: {
+    avatar_url: string | null;
+    full_name: string | null;
+  }[];
 }
 
+const SUBSCRIPTION_LIMITS = {
+  starter: { teams: 1, membersPerTeam: 3 },
+  pro: { teams: 5, membersPerTeam: 10 },
+  enterprise: { teams: Infinity, membersPerTeam: Infinity },
+  super_admin: { teams: Infinity, membersPerTeam: Infinity }, // Fallback for super_admin
+};
+
+type SubscriptionTier = keyof typeof SUBSCRIPTION_LIMITS;
+
 export default function TeamsScreen() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const colorScheme = useColorScheme() ?? 'light';
   const colors = Colors[colorScheme];
   
   const [teams, setTeams] = useState<Team[]>([]);
+
   const [loading, setLoading] = useState(true);
+
+  // Access Control
+  const isAuthorized = ['pro', 'enterprise', 'super_admin'].includes(profile?.subscription_tier?.toLowerCase() || '');
 
   useEffect(() => {
     const fetchTeams = async () => {
       if (!user) return;
       try {
+        // Step 1: Fetch teams and their members (user_ids only)
         const { data, error } = await supabase
           .from('team_members')
           .select(`
             team_id,
             teams (
               id,
-              name
+              name,
+              team_members:team_members(
+                user_id
+              )
             )
           `)
           .eq('user_id', user.id);
@@ -38,10 +62,52 @@ export default function TeamsScreen() {
         if (error) throw error;
         
         if (data) {
-          const formattedTeams = data
+          const rawTeams = data
             .map(item => item.teams)
             .filter(Boolean)
-            .map(t => Array.isArray(t) ? t[0] : t) as unknown as Team[];
+            .map(t => Array.isArray(t) ? t[0] : t);
+
+          // Step 2: Extract all unique user IDs across all teams
+          const allUserIds = Array.from(new Set(
+            rawTeams.flatMap(t => t.team_members?.map((tm: any) => tm.user_id) || [])
+          ));
+
+          // Step 3: Fetch profiles for these users
+          let profilesMap: Record<string, { avatar_url: string | null, full_name: string | null }> = {};
+          
+          if (allUserIds.length > 0) {
+            const { data: profilesData, error: profilesError } = await supabase
+              .from('profiles')
+              .select('id, full_name, avatar_url')
+              .in('id', allUserIds);
+              
+            if (profilesError) throw profilesError;
+
+            if (profilesData) {
+              profilesMap = profilesData.reduce((acc, profile) => {
+                acc[profile.id] = profile;
+                return acc;
+              }, {} as Record<string, typeof profilesData[0]>);
+            }
+          }
+
+          // Step 4: Map profiles back to teams
+          const formattedTeams = rawTeams.map(team => {
+            const members = team.team_members?.map((tm: any) => {
+              const profile = profilesMap[tm.user_id];
+              // console.log(`Mapping user ${tm.user_id} to profile:`, profile);
+              return {
+                ...profile,
+                user_id: tm.user_id
+              };
+            }).filter((m: any) => m.full_name || m.avatar_url) || [];
+
+            return { 
+              ...team, 
+              member_count: members.length,
+              members: members
+            };
+          }) as unknown as Team[];
           
           setTeams(formattedTeams);
         }
@@ -53,7 +119,18 @@ export default function TeamsScreen() {
     };
 
     fetchTeams();
+
   }, [user]);
+
+  if (!isAuthorized) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <PremiumGate isAuthorized={false} featureName="Teams & Collaboration">
+          <></>
+        </PremiumGate>
+      </View>
+    );
+  }
 
   if (loading) {
     return (
@@ -63,6 +140,12 @@ export default function TeamsScreen() {
     );
   }
 
+  // Determine limits
+  const tier = (profile?.subscription_tier?.toLowerCase() || 'starter') as SubscriptionTier;
+  const limits = SUBSCRIPTION_LIMITS[tier] || SUBSCRIPTION_LIMITS.starter;
+  const maxTeams = limits.teams;
+  const canCreateTeam = teams.length < maxTeams;
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
@@ -71,14 +154,25 @@ export default function TeamsScreen() {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={[styles.heading, { color: colors.text }]}>Teams</Text>
-            <TouchableOpacity 
-              style={[styles.createButton, { backgroundColor: colors.tint }]}
-              onPress={() => router.push('/team/create')}
-            >
-              <Plus size={20} color="#FFFFFF" />
-              <Text style={styles.createButtonText}>New Team</Text>
-            </TouchableOpacity>
+            <View>
+              <Text style={[styles.heading, { color: colors.text }]}>Teams</Text>
+              <Text style={{ color: colors.icon, fontSize: 14, marginTop: 4 }}>
+                {teams.length} / {maxTeams === Infinity ? '∞' : maxTeams} Active {teams.length === 1 ? 'Team' : 'Teams'}
+              </Text>
+            </View>
+            {canCreateTeam ? (
+              <TouchableOpacity
+                style={[styles.createButton, { backgroundColor: colors.tint }]}
+                onPress={() => router.push('/team/create')}
+              >
+                <Plus size={20} color="#FFFFFF" />
+                <Text style={styles.createButtonText}>New Team</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={[styles.createButton, { backgroundColor: colors.tabIconDefault + '40' }]}>
+                <Text style={[styles.createButtonText, { color: colors.icon }]}>Limit Reached</Text>
+              </View>
+            )}
           </View>
         }
         renderItem={({ item }) => (
@@ -86,15 +180,60 @@ export default function TeamsScreen() {
             style={[styles.teamCard, { backgroundColor: colors.surface, borderColor: colors.tabIconDefault + '20' }]}
             onPress={() => router.push({ pathname: '/team/[id]', params: { id: item.id } })}
           >
-            <View style={styles.teamInfo}>
-              <View style={[styles.iconContainer, { backgroundColor: colors.tint + '10' }]}>
-                <Users size={20} color={colors.tint} />
-              </View>
-              <View>
-                <Text style={[styles.teamName, { color: colors.text }]}>{item.name}</Text>
-              </View>
+            <View style={styles.teamHeaderRow}>
+               <View style={styles.teamTitleRow}>
+                  <View style={[styles.iconContainer, { backgroundColor: colors.tint + '10' }]}>
+                    <Users size={18} color={colors.tint} />
+                  </View>
+                  <Text style={[styles.teamName, { color: colors.text }]}>{item.name}</Text>
+               </View>
+               <ChevronRight size={18} color={colors.icon} />
             </View>
-            <ChevronRight size={20} color={colors.icon} />
+
+            <View style={styles.membersRow}>
+              <View style={styles.avatarStack}>
+                {item.members?.slice(0, 4).map((member, index) => (
+                  <View 
+                    key={index} 
+                    style={[
+                      styles.avatarBorder, 
+                      { 
+                        borderColor: colors.surface,
+                        zIndex: 4 - index,
+                        marginLeft: index === 0 ? 0 : -10 
+                      }
+                    ]}
+                  >
+                    <Avatar 
+                      url={member.avatar_url} 
+                      name={member.full_name} 
+                      size={28} 
+                    />
+                  </View>
+                ))}
+                {(item.members?.length || 0) > 4 && (
+                  <View 
+                    style={[
+                      styles.avatarBorder, 
+                      { 
+                        borderColor: colors.surface,
+                        zIndex: 0,
+                        marginLeft: -10 
+                      }
+                    ]}
+                  >
+                    <View style={[styles.overflowBadge, { backgroundColor: colors.background }]}>
+                      <Text style={[styles.overflowText, { color: colors.icon }]}>
+                        +{item.members!.length - 4}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+              <Text style={[styles.memberCountLabel, { color: colors.icon }]}>
+                {item.member_count} members
+              </Text>
+            </View>
           </TouchableOpacity>
         )}
         ListEmptyComponent={
@@ -142,34 +281,76 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   teamCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     marginBottom: 12,
     borderWidth: 1,
   },
-  teamInfo: {
+  teamHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  teamTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   teamName: {
     fontSize: 16,
     fontWeight: '600',
   },
-  teamDesc: {
-    fontSize: 14,
-    marginTop: 2,
+  membersRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  avatarStack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarBorder: {
+    borderWidth: 2,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  avatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+  },
+  avatarPlaceholder: {
+    width: 28,
+    height: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarInitial: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  overflowBadge: {
+    width: 28,
+    height: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overflowText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  memberCountLabel: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   emptyText: {
     textAlign: 'center',

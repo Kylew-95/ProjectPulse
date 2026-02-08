@@ -61,6 +61,20 @@ def get_messages_last_24h(guild_id: int = None):
         print(f"Error fetching messages: {e}")
         return []
 
+def get_messages_from_channel(channel_id: int, limit: int = 100):
+    """Fetches the most recent messages from a specific channel."""
+    try:
+        response = supabase.table("messages")\
+            .select("*")\
+            .eq("channel_id", str(channel_id))\
+            .order("created_at", desc=True)\
+            .limit(limit)\
+            .execute()
+        return response.data or []
+    except Exception as e:
+        print(f"Error fetching channel messages: {e}")
+        return []
+
 def check_guild_subscription(guild_id: int):
     """Checks if a Discord guild (by its ID) has an active subscription."""
     try:
@@ -143,3 +157,56 @@ def search_knowledge_base(query: str):
     except Exception as e:
         print(f"Error searching KB: {e}")
         return []
+
+def add_ai_suggestion(guild_id: str, content: str, source_channel: str = None, suggestion_type: str = "suggestion"):
+    """Adds an AI-generated suggestion to the database."""
+    try:
+        data = {
+            "discord_guild_id": str(guild_id),
+            "content": content,
+            "source_channel": source_channel,
+            "type": suggestion_type
+        }
+        response = supabase.table("ai_suggestions").insert(data).execute()
+        return True if response.data else False
+    except Exception as e:
+        print(f"Error adding AI suggestion: {e}")
+        return False
+
+def get_recent_suggestions(guild_id: str, limit: int = 5):
+    """Fetches recent AI suggestions for a specific guild."""
+    try:
+        response = supabase.table("ai_suggestions")\
+            .select("*")\
+            .eq("discord_guild_id", str(guild_id))\
+            .order("created_at", desc=True)\
+            .limit(limit)\
+            .execute()
+        return response.data or []
+    except Exception as e:
+        print(f"Error fetching AI suggestions: {e}")
+        return []
+def get_learning_channel(guild_id: str):
+    """Fetches the configured learning channel ID for a guild."""
+    try:
+        response = supabase.table("teams")\
+            .select("learning_channel_id")\
+            .eq("discord_guild_id", str(guild_id))\
+            .execute()
+        return response.data[0].get("learning_channel_id") if response.data else None
+    except Exception as e:
+        print(f"Error fetching learning channel: {e}")
+        return None
+
+def set_learning_channel(guild_id: str, channel_id: str):
+    """Sets the learning channel ID for a guild's team."""
+    try:
+        # We assume one team per guild for now
+        response = supabase.table("teams")\
+            .update({"learning_channel_id": str(channel_id)})\
+            .eq("discord_guild_id", str(guild_id))\
+            .execute()
+        return True if response.data else False
+    except Exception as e:
+        print(f"Error setting learning channel: {e}")
+        return False

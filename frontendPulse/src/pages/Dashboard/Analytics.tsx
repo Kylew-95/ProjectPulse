@@ -2,8 +2,7 @@ import { Clock } from 'lucide-react';
 import { useState } from 'react';
 import Breadcrumbs from '../../components/ui/Breadcrumbs';
 import PageHeader from '../../components/common/PageHeader';
-import { useAuth } from '../../context/AuthContext';
-import PremiumGate from '../../components/ui/PremiumGate';
+import SubscriptionGate from '../../components/ui/SubscriptionGate';
 
 // Components
 import VolumeTrends from './components/Analytics/VolumeTrends';
@@ -20,7 +19,6 @@ import { useAnalyticsData, type TimeRange } from './hooks/useAnalyticsData';
 const COLORS = ['#6366f1', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6'];
 
 const Analytics = () => {
-  const { profile } = useAuth();
   const [timeRange, setTimeRange] = useState<TimeRange>('7d');
   const [activeWidgets, setActiveWidgets] = useState<Record<string, boolean>>({
     volume: true, priority: true, status: true, type: true, workload: true, heatmap: true
@@ -34,16 +32,6 @@ const Analytics = () => {
       <div className="p-8 flex items-center justify-center min-h-screen font-sans">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
-    );
-  }
-
-  if (profile && !['enterprise', 'super_admin'].includes(profile.subscription_tier || '')) {
-    return (
-      <PremiumGate 
-        title="Enterprise Intelligence"
-        description="Unlock advanced analytics, growth trends, and priority distribution insights to scale your operations."
-        features={["Real-time Growth Analytics", "Priority Distribution Mapping", "Urgency Score Correlation", "Custom Trend Reports", "Team Efficiency Metrics"]}
-      />
     );
   }
 
@@ -79,14 +67,27 @@ const Analytics = () => {
 
       <AnalyticsOverview data={data} timeRange={timeRange} />
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        {activeWidgets.volume && <VolumeTrends data={data?.daily_trends || []} />}
-        {activeWidgets.priority && <DistributionPieChart title="Priority Distribution" data={data ? Object.entries(data.by_priority).map(([name, value]) => ({ name, value })) : []} colors={COLORS} />}
-        {activeWidgets.type && <DistributionPieChart title="Ticket Type Breakdown" data={data ? Object.entries(data.by_type).map(([name, value]) => ({ name, value })) : []} colors={COLORS} innerRadius={70} paddingAngle={8} colorOffset={3} />}
-        {activeWidgets.status && <StatusDistribution data={data ? Object.entries(data.by_status).map(([name, value]) => ({ name, value })) : []} />}
-        {activeWidgets.workload && <TeamWorkload data={data?.workload || []} />}
-        {activeWidgets.heatmap && data && <ActivityHeatmap data={data.heatmap} />}
-      </div>
+      <SubscriptionGate 
+        tier="pro"
+        featureName="Intelligence Analytics"
+        description="Unlock advanced analytics, growth trends, and priority distribution insights to scale your operations."
+        features={[
+          "Priority Analytics & Trends",
+          "Custom Team Roles",
+          "Multi-Team Management",
+          "Growth & Velocity Tracking",
+          "Enhanced API Access"
+        ]}
+      >
+        <div className="grid lg:grid-cols-2 gap-8">
+          {activeWidgets.volume && <VolumeTrends data={data?.daily_trends || []} />}
+          {activeWidgets.priority && <DistributionPieChart title="Priority Distribution" data={data ? Object.entries(data.by_priority).map(([name, value]) => ({ name, value })) : []} colors={COLORS} />}
+          {activeWidgets.type && <DistributionPieChart title="Ticket Type Breakdown" data={data ? Object.entries(data.by_type).map(([name, value]) => ({ name, value })) : []} colors={COLORS} innerRadius={70} paddingAngle={8} colorOffset={3} />}
+          {activeWidgets.status && <StatusDistribution data={data ? Object.entries(data.by_status).map(([name, value]) => ({ name, value })) : []} />}
+          {activeWidgets.workload && <TeamWorkload data={data?.workload || []} />}
+          {activeWidgets.heatmap && data && <ActivityHeatmap data={data.heatmap} />}
+        </div>
+      </SubscriptionGate>
     </div>
   );
 };

@@ -46,7 +46,7 @@ const ShortcutHelpModal = ({ isOpen, onClose }: ShortcutHelpModalProps) => {
           </button>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
           {shortcuts.map((section) => (
             <div key={section.category}>
               <h3 className="text-sm font-bold text-muted uppercase tracking-wider mb-3">

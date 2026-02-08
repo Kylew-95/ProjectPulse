@@ -1,0 +1,1768 @@
+[1A[2K[2m[WebServer] [22m
+[2m[WebServer] [22m> frontend-pulse@0.0.0 dev
+[2m[WebServer] [22m> vite
+[2m[WebServer] [22m
+
+[1A[2K[2m[WebServer] [22m
+[2m[WebServer] [22m  [32m[1mVITE[22m v7.3.1[39m  [2mready in [0m[1m301[22m[2m[0m ms[22m
+[2m[WebServer] [22m
+
+[1A[2K[2m[WebServer] [22m  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m3000[22m/[39m
+[2m[WebServer] [22m[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+
+
+Running 3 tests using 3 workers
+
+[1A[2K[1/3] [chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+[1A[2K[2/3] [chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+[1A[2K[3/3] [chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/dashboard/team
+
+[1A[2K>> GET http://localhost:3000/@vite/client
+
+[1A[2K>> GET https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap
+
+[1A[2K>> GET http://localhost:3000/src/main.tsx
+
+[1A[2K>> GET http://localhost:3000/@react-refresh
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/index.css
+
+[1A[2K>> GET http://localhost:3000/src/App.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/providers/GraphqlProvider.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-TMM3WI36.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-V4OQ3NZ2.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/dashboard/team
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/vite/dist/client/env.mjs
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/@vite/client
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client_react.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/lib/apolloClient.ts
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/main.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react-hot-toast.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/context/AuthProvider.tsx
+
+[1A[2K>> GET http://localhost:3000/src/context/ThemeContext.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/layout/Layout.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/auth/ProtectedRoute.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Demo.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Home.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/auth/Auth.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Pricing.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Overview.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/@react-refresh
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/pages/Dashboard/Settings.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Tickets.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Analytics.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/KnowledgeBase.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Team.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-E77T7Q56.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/vite/dist/client/env.mjs
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/dashboard/team
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-EM5OP3E5.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/react.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-MSVMG4PT.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-FS6LTFKN.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/index.css
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/App.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/providers/GraphqlProvider.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client_link_context.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/supabaseClient.ts
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-TMM3WI36.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-V4OQ3NZ2.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-FH25YY5Q.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/utils/apiConfig.ts
+
+[1A[2K>> GET http://localhost:3000/src/context/AuthContext.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/lucide-react.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/ThemeToggle.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/components/ImageModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/components/DemoSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/HeartbeatLoader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/layout/SidebarProfile.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/CommandPalette.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/OnboardingTour.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/DiscordChat.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/notifications/NotificationDropdown.tsx
+
+[1A[2K>> GET http://localhost:3000/src/hooks/useKeyboardShortcuts.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/common/ShortcutHelpModal.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/@vite/client
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/react-hot-toast.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/main.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/context/AuthProvider.tsx
+
+[1A[2K>> GET http://localhost:3000/src/context/ThemeContext.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/@react-refresh
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/CommandHeader.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/components/layout/Layout.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/PremiumStatCard.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/components/auth/ProtectedRoute.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/AISuggestions.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/pages/landing/Demo.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Home.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/auth/Auth.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Pricing.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Overview.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/framer-motion.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/common/PageHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/SubscriptionSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/IntegrationsSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/AccountSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/SubscriptionModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/AuditLogViewer.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/Breadcrumbs.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/ProGate.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/VolumeTrends.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/DistributionPieChart.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/StatusDistribution.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/TeamWorkload.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/AnalyticsCustomizer.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/ActivityHeatmap.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/AnalyticsOverview.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/hooks/useAnalyticsData.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/PremiumGate.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@hello-pangea_dnd.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/StrictModeDroppable.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CreateTicketModal.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/vite/dist/client/env.mjs
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/pages/Dashboard/Settings.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Tickets.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Analytics.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/KnowledgeBase.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/components/tickets/EditTicketModal.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/components/tickets/TicketHeader.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/react.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/components/tickets/TicketTable.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/KanbanBoard.tsx
+
+[1A[2K>> GET http://localhost:3000/src/utils/exportUtils.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/DeleteConfirmationModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/common/QuickFilters.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/pages/Dashboard/Team.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client_react.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/index.css
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/lib/apolloClient.ts
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/App.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/providers/GraphqlProvider.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/components/tickets/BulkActionToolbar.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/CreateTeamModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/InviteModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/PermissionsModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/TeamHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/TeamList.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@supabase_supabase-js.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-E77T7Q56.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/@widgetbot_react-embed.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/notifications/NotificationItem.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-BY5XKTJS.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-5EPD7TB4.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/use-react-router-breadcrumbs.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-FH25YY5Q.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/supabaseClient.ts
+
+[1A[2K>> GET http://localhost:3000/src/utils/apiConfig.ts
+
+[1A[2K>> GET http://localhost:3000/src/context/AuthContext.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/lucide-react.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/layout/SidebarProfile.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/ThemeToggle.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/CommandPalette.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/OnboardingTour.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/DiscordChat.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/notifications/NotificationDropdown.tsx
+
+[1A[2K>> GET http://localhost:3000/src/hooks/useKeyboardShortcuts.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/common/ShortcutHelpModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/HeartbeatLoader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/components/ImageModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/components/DemoSection.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/recharts.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/CommandHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/PremiumStatCard.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/AISuggestions.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/framer-motion.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/common/PageHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/SubscriptionSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/IntegrationsSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/AccountSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/SubscriptionModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/AuditLogViewer.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/Breadcrumbs.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/ProGate.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/VolumeTrends.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/DistributionPieChart.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/StatusDistribution.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/TeamWorkload.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/AnalyticsCustomizer.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/ActivityHeatmap.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/AnalyticsOverview.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/hooks/useAnalyticsData.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/PremiumGate.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@hello-pangea_dnd.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/StrictModeDroppable.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CreateTicketModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/EditTicketModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/TicketHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/TicketTable.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/KanbanBoard.tsx
+
+[1A[2K>> GET http://localhost:3000/src/utils/exportUtils.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/DeleteConfirmationModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/common/QuickFilters.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/BulkActionToolbar.tsx
+
+[1A[2K[2m[WebServer] [22m[2m18:32:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-TMM3WI36.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-V4OQ3NZ2.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/components/teams/CreateTeamModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/InviteModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/PermissionsModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/TeamHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/TeamList.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-EM5OP3E5.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-MSVMG4PT.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-FS6LTFKN.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react-hot-toast.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/context/AuthProvider.tsx
+
+[1A[2K>> GET http://localhost:3000/src/context/ThemeContext.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/layout/Layout.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/auth/ProtectedRoute.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client_link_context.js?v=d8a2ad59
+
+[1A[2K[2m[WebServer] [22m[2m18:32:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/pages/landing/Demo.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Home.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/auth/Auth.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Pricing.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Overview.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Settings.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Tickets.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-7TU6ZXJX.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/pages/Dashboard/Analytics.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-EQCCHGRT.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/pages/Dashboard/KnowledgeBase.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Team.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client_react.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/lib/apolloClient.ts
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-E77T7Q56.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/@supabase_supabase-js.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/components/common/PrioritySelector.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/common/TagComponents.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/SearchableSelect.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CommentList.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@tanstack_react-table.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/KanbanColumn.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-FH25YY5Q.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/supabaseClient.ts
+
+[1A[2K>> GET http://localhost:3000/src/utils/apiConfig.ts
+
+[1A[2K>> GET http://localhost:3000/src/context/AuthContext.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/@widgetbot_react-embed.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/lucide-react.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/layout/SidebarProfile.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/ThemeToggle.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/CommandPalette.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/OnboardingTour.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/DiscordChat.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/notifications/NotificationDropdown.tsx
+
+[1A[2K>> GET http://localhost:3000/src/hooks/useKeyboardShortcuts.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/common/ShortcutHelpModal.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/constants/roles.ts
+
+[1A[2K[2m[WebServer] [22m[2m18:32:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/components/ui/HeartbeatLoader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/components/ImageModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/components/DemoSection.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/components/notifications/NotificationItem.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/components/common/ResourceCard.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/CommandHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/PremiumStatCard.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/AISuggestions.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/framer-motion.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/common/PageHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/SubscriptionSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/IntegrationsSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/AccountSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/SubscriptionModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/AuditLogViewer.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@hello-pangea_dnd.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/StrictModeDroppable.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CreateTicketModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/EditTicketModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/Breadcrumbs.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/TicketHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/TicketTable.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/KanbanBoard.tsx
+
+[1A[2K>> GET http://localhost:3000/src/utils/exportUtils.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/DeleteConfirmationModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/common/QuickFilters.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/BulkActionToolbar.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/ProGate.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/VolumeTrends.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/react-select.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/DistributionPieChart.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/StatusDistribution.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/TeamWorkload.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/AnalyticsCustomizer.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/ActivityHeatmap.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/AnalyticsOverview.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/hooks/useAnalyticsData.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/PremiumGate.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-BY5XKTJS.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-5EPD7TB4.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/components/teams/CreateTeamModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/InviteModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/PermissionsModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/TeamHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/TeamList.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client_link_context.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-EM5OP3E5.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-MSVMG4PT.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-FS6LTFKN.js?v=d8a2ad59
+
+[1A[2K[2m[WebServer] [22m[2m18:32:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/use-react-router-breadcrumbs.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/recharts.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/components/tickets/CommentItem.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/AddComment.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/@supabase_supabase-js.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/components/tickets/TicketCard.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-BOE3TIEU.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/common/PriorityBadge.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/@widgetbot_react-embed.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-7TU6ZXJX.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-EQCCHGRT.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/components/notifications/NotificationItem.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/components/common/PrioritySelector.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/common/TagComponents.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/SearchableSelect.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CommentList.tsx
+
+[1A[2K[2m[WebServer] [22m[2m18:32:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@tanstack_react-table.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/KanbanColumn.tsx
+
+[1A[2K>> GET http://localhost:3000/src/constants/roles.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/common/ResourceCard.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-BY5XKTJS.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-5EPD7TB4.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/common/PrioritySelector.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/common/TagComponents.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-7TU6ZXJX.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-EQCCHGRT.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/SearchableSelect.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CommentList.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/use-react-router-breadcrumbs.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@tanstack_react-table.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/KanbanColumn.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/recharts.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/react-select.js?v=d8a2ad59
+
+[1A[2K[2m[WebServer] [22m[2m18:32:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CommentItem.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/AddComment.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/TicketCard.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/constants/roles.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/common/ResourceCard.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/components/common/PriorityBadge.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-BOE3TIEU.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/react-select.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CommentItem.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/AddComment.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/TicketCard.tsx
+
+[1A[2K[2m[WebServer] [22m[2m18:32:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K>> GET http://localhost:3000/src/components/common/PriorityBadge.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-BOE3TIEU.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/index.css?t=1770575520436
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/index.css?t=1770575520583
+
+[1A[2K[2m[WebServer] [22m[2m18:32:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/index.css?t=1770575520513
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/index.css?t=1770575520749
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/index.css?t=1770575520749
+
+[1A[2K[2m[WebServer] [22m[2m18:32:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/index.css?t=1770575520583
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/index.css?t=1770575520865
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/index.css?t=1770575520865
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/index.css?t=1770575520749
+
+[1A[2K>> GET http://localhost:3000/src/index.css?t=1770575520865
+
+[1A[2K[2m[WebServer] [22m[2m18:32:01[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K>> GET http://localhost:3000/src/index.css?t=1770575521267
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/index.css?t=1770575521267
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/index.css?t=1770575521267
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/dashboard/team/team-1
+
+[1A[2K>> GET http://localhost:3000/@vite/client
+
+[1A[2K>> GET https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap
+
+[1A[2K>> GET http://localhost:3000/src/main.tsx?t=1770575521267
+
+[1A[2K>> GET http://localhost:3000/@react-refresh
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/index.css?t=1770575521267
+
+[1A[2K>> GET http://localhost:3000/src/App.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/providers/GraphqlProvider.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/vite/dist/client/env.mjs
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-TMM3WI36.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-V4OQ3NZ2.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react-hot-toast.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/context/AuthProvider.tsx
+
+[1A[2K>> GET http://localhost:3000/src/context/ThemeContext.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/layout/Layout.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/auth/ProtectedRoute.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Demo.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Home.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/auth/Auth.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Pricing.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Overview.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Settings.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Tickets.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Analytics.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/KnowledgeBase.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Team.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client_react.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/lib/apolloClient.ts
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-FH25YY5Q.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-E77T7Q56.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/supabaseClient.ts
+
+[1A[2K>> GET http://localhost:3000/src/utils/apiConfig.ts
+
+[1A[2K>> GET http://localhost:3000/src/context/AuthContext.tsx
+
+[1A[2K[2m[WebServer] [22m[2m18:32:01[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/index.css?t=1770575521675
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/index.css?t=1770575521675
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/lucide-react.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/layout/SidebarProfile.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/ThemeToggle.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/CommandPalette.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/OnboardingTour.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/DiscordChat.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/notifications/NotificationDropdown.tsx
+
+[1A[2K>> GET http://localhost:3000/src/hooks/useKeyboardShortcuts.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/common/ShortcutHelpModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/HeartbeatLoader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/components/ImageModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/components/DemoSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/Breadcrumbs.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/common/PageHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/ProGate.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/VolumeTrends.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/DistributionPieChart.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/StatusDistribution.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/TeamWorkload.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/AnalyticsCustomizer.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/ActivityHeatmap.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/AnalyticsOverview.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/hooks/useAnalyticsData.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/SubscriptionSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/IntegrationsSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/AccountSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/SubscriptionModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/AuditLogViewer.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/CommandHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/PremiumStatCard.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/AISuggestions.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/framer-motion.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@hello-pangea_dnd.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/StrictModeDroppable.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CreateTicketModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/EditTicketModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/TicketHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/TicketTable.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/KanbanBoard.tsx
+
+[1A[2K>> GET http://localhost:3000/src/utils/exportUtils.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/DeleteConfirmationModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/common/QuickFilters.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/BulkActionToolbar.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/PremiumGate.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/CreateTeamModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/InviteModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/PermissionsModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/TeamHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/TeamList.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-EM5OP3E5.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-MSVMG4PT.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-FS6LTFKN.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client_link_context.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@supabase_supabase-js.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/dashboard/team
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/dashboard/team/team-1
+
+[1A[2K[2m[WebServer] [22m[2m18:32:01[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/@widgetbot_react-embed.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/notifications/NotificationItem.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/index.css?t=1770575521803
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/index.css?t=1770575521803
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/use-react-router-breadcrumbs.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/recharts.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/@vite/client
+
+[1A[2K>> GET https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap
+
+[1A[2K>> GET http://localhost:3000/src/main.tsx?t=1770575521803
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/@vite/client
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/@react-refresh
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap
+
+[1A[2K>> GET http://localhost:3000/src/main.tsx?t=1770575521803
+
+[1A[2K>> GET http://localhost:3000/@react-refresh
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/components/common/PrioritySelector.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/common/TagComponents.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/SearchableSelect.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CommentList.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-7TU6ZXJX.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-EQCCHGRT.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/index.css?t=1770575521803
+
+[1A[2K>> GET http://localhost:3000/src/App.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/providers/GraphqlProvider.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/vite/dist/client/env.mjs
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/vite/dist/client/env.mjs
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-BY5XKTJS.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-5EPD7TB4.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react-dom_client.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/index.css?t=1770575521803
+
+[1A[2K>> GET http://localhost:3000/src/App.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/providers/GraphqlProvider.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-TMM3WI36.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-V4OQ3NZ2.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/@tanstack_react-table.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/KanbanColumn.tsx
+
+[1A[2K[2m[WebServer] [22m[2m18:32:01[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-TMM3WI36.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-V4OQ3NZ2.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client_react.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/lib/apolloClient.ts
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react-hot-toast.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/context/AuthProvider.tsx
+
+[1A[2K>> GET http://localhost:3000/src/context/ThemeContext.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/layout/Layout.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/auth/ProtectedRoute.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Demo.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Home.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/auth/Auth.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/constants/roles.ts
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/pages/landing/Pricing.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Overview.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Settings.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Tickets.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Analytics.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/KnowledgeBase.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Team.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-E77T7Q56.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/components/common/ResourceCard.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client_react.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/lib/apolloClient.ts
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/react-hot-toast.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/context/AuthProvider.tsx
+
+[1A[2K>> GET http://localhost:3000/src/context/ThemeContext.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/layout/Layout.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/auth/ProtectedRoute.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Demo.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Home.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/auth/Auth.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/Pricing.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Overview.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Settings.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Tickets.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Analytics.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/KnowledgeBase.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/Team.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-E77T7Q56.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client_link_context.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/supabaseClient.ts
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-EM5OP3E5.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-MSVMG4PT.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-FS6LTFKN.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-FH25YY5Q.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@apollo_client_link_context.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/supabaseClient.ts
+
+[1A[2K[2m[WebServer] [22m[2m18:32:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-EM5OP3E5.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-MSVMG4PT.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-FS6LTFKN.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-FH25YY5Q.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/utils/apiConfig.ts
+
+[1A[2K>> GET http://localhost:3000/src/context/AuthContext.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/utils/apiConfig.ts
+
+[1A[2K>> GET http://localhost:3000/src/context/AuthContext.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/lucide-react.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/layout/SidebarProfile.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/ThemeToggle.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/CommandPalette.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/OnboardingTour.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/DiscordChat.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/notifications/NotificationDropdown.tsx
+
+[1A[2K>> GET http://localhost:3000/src/hooks/useKeyboardShortcuts.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/common/ShortcutHelpModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/HeartbeatLoader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/components/ImageModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/components/DemoSection.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/lucide-react.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/layout/SidebarProfile.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/ThemeToggle.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/CommandPalette.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/OnboardingTour.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/DiscordChat.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/notifications/NotificationDropdown.tsx
+
+[1A[2K>> GET http://localhost:3000/src/hooks/useKeyboardShortcuts.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/common/ShortcutHelpModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/HeartbeatLoader.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/react-select.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CommentItem.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/AddComment.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/pages/landing/components/ImageModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/landing/components/DemoSection.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/CommandHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/PremiumStatCard.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/AISuggestions.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/framer-motion.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/common/PageHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/SubscriptionSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/IntegrationsSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/AccountSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/SubscriptionModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/AuditLogViewer.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@hello-pangea_dnd.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/StrictModeDroppable.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CreateTicketModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/EditTicketModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/Breadcrumbs.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/TicketHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/TicketTable.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/KanbanBoard.tsx
+
+[1A[2K>> GET http://localhost:3000/src/utils/exportUtils.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/DeleteConfirmationModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/common/QuickFilters.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/BulkActionToolbar.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/ProGate.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/VolumeTrends.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/DistributionPieChart.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/StatusDistribution.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/TeamWorkload.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/AnalyticsCustomizer.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/ActivityHeatmap.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/AnalyticsOverview.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/hooks/useAnalyticsData.ts
+
+[1A[2K[2m[WebServer] [22m[2m18:32:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/CreateTeamModal.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/components/tickets/TicketCard.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/components/teams/InviteModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/PermissionsModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/TeamHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/TeamList.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/PremiumGate.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@supabase_supabase-js.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/CommandHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/PremiumStatCard.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Overview/AISuggestions.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/framer-motion.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/common/PageHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/SubscriptionSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/IntegrationsSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/AccountSection.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/SubscriptionModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/settings/AuditLogViewer.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@hello-pangea_dnd.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/StrictModeDroppable.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CreateTicketModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/EditTicketModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/Breadcrumbs.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/TicketHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/TicketTable.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/KanbanBoard.tsx
+
+[1A[2K>> GET http://localhost:3000/src/utils/exportUtils.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/DeleteConfirmationModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/common/QuickFilters.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/BulkActionToolbar.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/ProGate.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/VolumeTrends.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/DistributionPieChart.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/StatusDistribution.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/TeamWorkload.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/AnalyticsCustomizer.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/ActivityHeatmap.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/components/Analytics/AnalyticsOverview.tsx
+
+[1A[2K>> GET http://localhost:3000/src/pages/Dashboard/hooks/useAnalyticsData.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/PremiumGate.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-BOE3TIEU.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/components/teams/CreateTeamModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/InviteModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/PermissionsModal.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/TeamHeader.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/teams/TeamList.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@supabase_supabase-js.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/components/common/PriorityBadge.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/@widgetbot_react-embed.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/notifications/NotificationItem.tsx
+
+[1A[2K[2m[WebServer] [22m[2m18:32:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/@widgetbot_react-embed.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/index.css?t=1770575522294
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/components/notifications/NotificationItem.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-BY5XKTJS.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-5EPD7TB4.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/common/PrioritySelector.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/common/TagComponents.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/SearchableSelect.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CommentList.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-7TU6ZXJX.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-EQCCHGRT.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/use-react-router-breadcrumbs.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-BY5XKTJS.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/@tanstack_react-table.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-5EPD7TB4.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/components/tickets/KanbanColumn.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/components/common/PrioritySelector.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/recharts.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/components/common/TagComponents.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-7TU6ZXJX.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-EQCCHGRT.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/ui/SearchableSelect.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CommentList.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/use-react-router-breadcrumbs.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/@tanstack_react-table.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/KanbanColumn.tsx
+
+[1A[2K[2m[WebServer] [22m[2m18:32:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/recharts.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/constants/roles.ts
+
+[1A[2K>> GET http://localhost:3000/src/components/common/ResourceCard.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/constants/roles.ts
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/react-select.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/components/common/ResourceCard.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/components/tickets/CommentItem.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/AddComment.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/TicketCard.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/index.css?t=1770575522362
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/node_modules/.vite/deps/react-select.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/CommentItem.tsx
+
+[1A[2K>> GET http://localhost:3000/src/components/tickets/AddComment.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/node_modules/.vite/deps/chunk-BOE3TIEU.js?v=d8a2ad59
+
+[1A[2K>> GET http://localhost:3000/src/components/common/PriorityBadge.tsx
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/components/tickets/TicketCard.tsx
+
+[1A[2K[2m[WebServer] [22m[2m18:32:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K>> GET http://localhost:3000/src/components/common/PriorityBadge.tsx
+
+[1A[2K>> GET http://localhost:3000/node_modules/.vite/deps/chunk-BOE3TIEU.js?v=d8a2ad59
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/index.css?t=1770575522566
+
+[1A[2K[2m[WebServer] [22m[2m18:32:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/index.css?t=1770575522807
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/index.css?t=1770575522807
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/index.css?t=1770575522807
+
+[1A[2K>> GET http://localhost:3000/logo.png
+
+[1A[2K>> GET https://fonts.gstatic.com/s/inter/v20/UcCo3FwrK3iLTcviYwY.woff2
+
+[1A[2K[2m[WebServer] [22m[2m18:32:04[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K>> GET http://localhost:3000/src/index.css?t=1770575524981
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/index.css?t=1770575524981
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/index.css?t=1770575524981
+
+[1A[2K>> GET http://localhost:3000/logo.png
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/logo.png
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET https://fonts.gstatic.com/s/inter/v20/UcCo3FwrK3iLTcviYwY.woff2
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET https://fonts.gstatic.com/s/inter/v20/UcCo3FwrK3iLTcviYwY.woff2
+
+[1A[2K[2m[WebServer] [22m[2m18:32:05[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role
+>> GET http://localhost:3000/src/index.css?t=1770575525331
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options
+>> GET http://localhost:3000/src/index.css?t=1770575525331
+
+[1A[2K[chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan
+>> GET http://localhost:3000/src/index.css?t=1770575525331
+
+[1A[2K  1) [chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeEnabled[2m([22m[2m)[22m failed
+
+    Locator: getByRole('button', { name: 'Invite Member' })
+    Expected: enabled
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeEnabled" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('button', { name: 'Invite Member' })[22m
+
+
+      202 |         // Click Invite
+      203 |         const inviteBtn = page.getByRole('button', { name: 'Invite Member' });
+    > 204 |         await expect(inviteBtn).toBeEnabled();
+          |                                 ^
+      205 |         await inviteBtn.click();
+      206 |
+      207 |         // Open Role Selector
+        at E:\2nd drive files\School of code\SOC lessons\playground Apps\ProjectPulse\frontendPulse\tests\subscription_limits.spec.ts:204:33
+
+    Error Context: test-results\subscription_limits-Subscr-2a6c0-dmin-role-in-invite-options-chromium\error-context.md
+
+
+[1A[2K[2m[WebServer] [22m[2m18:32:07[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K>> GET http://localhost:3000/src/index.css?t=1770575527666
+
+[1A[2K  2) [chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('text=Team Members (3/3)')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('text=Team Members (3/3)')[22m
+
+
+      156 |
+      157 |         // Verify we are on the page
+    > 158 |         await expect(page.locator('text=Team Members (3/3)')).toBeVisible();
+          |                                                               ^
+      159 |
+      160 |         // Click Invite
+      161 |         await page.getByRole('button', { name: 'Invite Member' }).click();
+        at E:\2nd drive files\School of code\SOC lessons\playground Apps\ProjectPulse\frontendPulse\tests\subscription_limits.spec.ts:158:63
+
+    Error Context: test-results\subscription_limits-Subscr-bea51--is-reached-hide-Admin-role-chromium\error-context.md
+
+
+[1A[2K  3) [chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('text=Existing Team')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('text=Existing Team')[22m
+
+
+      101 |
+      102 |         await page.reload();
+    > 103 |         await expect(page.locator('text=Existing Team')).toBeVisible();
+          |                                                          ^
+      104 |
+      105 |         // Click New Team
+      106 |         await page.getByRole('button', { name: 'New Team' }).click();
+        at E:\2nd drive files\School of code\SOC lessons\playground Apps\ProjectPulse\frontendPulse\tests\subscription_limits.spec.ts:103:58
+
+    Error Context: test-results\subscription_limits-Subscr-1e26c-than-1-team-on-Starter-plan-chromium\error-context.md
+
+
+[1A[2K[2m[WebServer] [22m[2m18:32:07[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/index.css[22m
+
+[1A[2K  3 failed
+    [chromium] › tests\subscription_limits.spec.ts:61:5 › Subscription Limits & Role Restrictions › should prevent creating more than 1 team on Starter plan 
+    [chromium] › tests\subscription_limits.spec.ts:117:5 › Subscription Limits & Role Restrictions › should prevent inviting members if limit is reached & hide Admin role 
+    [chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options 
+
+[36m  Serving HTML report at http://localhost:52312. Press Ctrl+C to quit.[39m

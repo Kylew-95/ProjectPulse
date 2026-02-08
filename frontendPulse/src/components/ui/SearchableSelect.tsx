@@ -12,6 +12,7 @@ interface SearchableSelectProps {
   placeholder?: string;
   className?: string;
   isClearable?: boolean;
+  isDisabled?: boolean;
 }
 
 const customStyles: StylesConfig<Option, false, GroupBase<Option>> = {
@@ -86,7 +87,7 @@ const customStyles: StylesConfig<Option, false, GroupBase<Option>> = {
   })
 };
 
-const SearchableSelect = ({ options, value, onChange, placeholder = 'Select...', className = "", isClearable = false }: SearchableSelectProps) => {
+const SearchableSelect = ({ options, value, onChange, placeholder = 'Select...', className = "", isClearable = false, isDisabled = false }: SearchableSelectProps) => {
   const selectedOption = options.find(o => o.value === value) || null;
 
   return (
@@ -99,6 +100,7 @@ const SearchableSelect = ({ options, value, onChange, placeholder = 'Select...',
         styles={customStyles}
         isSearchable={true}
         isClearable={isClearable}
+        isDisabled={isDisabled}
         classNamePrefix="react-select"
       />
     </div>

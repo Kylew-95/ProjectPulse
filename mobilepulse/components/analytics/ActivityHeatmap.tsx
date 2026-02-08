@@ -18,9 +18,9 @@ export default function ActivityHeatmap({ data }: ActivityHeatmapProps) {
 
   const getColor = (count: number) => {
     if (count === 0) return 'rgba(150, 150, 150, 0.05)';
-    if (count < 2) return 'rgba(59, 130, 246, 0.3)';
-    if (count < 5) return 'rgba(59, 130, 246, 0.6)';
-    return 'rgba(59, 130, 246, 1)';
+    if (count < 2) return 'rgba(16, 185, 129, 0.3)'; // Emerald-500 with opacity
+    if (count < 5) return 'rgba(16, 185, 129, 0.6)';
+    return 'rgba(16, 185, 129, 1)';
   };
 
   return (
