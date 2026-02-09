@@ -64,7 +64,7 @@ def calculate_detailed_stats(tickets):
 
     return stats
 
-@router.get("/analytics")
+@router.get("")
 @limiter.limit("20/minute")
 async def get_analytics(request: Request, user_id: str = None):
     try:
@@ -108,7 +108,7 @@ async def get_analytics(request: Request, user_id: str = None):
         print(f"Analytics Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/analytics/export")
+@router.get("/export")
 @limiter.limit("5/minute")
 async def export_analytics(request: Request, user_id: str = None):
     try:

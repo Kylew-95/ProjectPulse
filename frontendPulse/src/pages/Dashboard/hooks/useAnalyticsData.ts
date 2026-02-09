@@ -11,7 +11,9 @@ export interface AnalyticsData {
     urgency_avg: number;
     daily_trends: { date: string; count: number }[];
     workload: { name: string; count: number }[];
+    recent_tickets: { id: string; title: string; status: string; priority: string; assignee: string }[];
     heatmap: { day: string; hour: number; count: number }[];
+    total_teams: number;
     trends: {
         total: number;
         urgency: number;
@@ -34,6 +36,7 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
                 .from('tickets')
                 .select(`
           id, 
+          title,
           status, 
           priority, 
           type, 
@@ -72,6 +75,13 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
                 });
             }
 
+            // Fetch team count separately for accuracy
+            const { count: teamCount, error: teamError } = await supabase
+                .from('teams')
+                .select('*', { count: 'exact', head: true });
+
+            if (teamError) throw teamError;
+
             const stats: AnalyticsData = {
                 total: currentPeriodTickets.length,
                 by_status: {},
@@ -80,7 +90,9 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
                 urgency_avg: 0,
                 daily_trends: [],
                 workload: [],
+                recent_tickets: [],
                 heatmap: [],
+                total_teams: teamCount || 0,
                 trends: { total: 0, urgency: 0, velocity: 0 }
             };
 
@@ -143,6 +155,17 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
             stats.workload = Object.entries(workloadMap)
                 .map(([name, count]) => ({ name, count }))
                 .sort((a, b) => b.count - a.count);
+
+            stats.recent_tickets = currentPeriodTickets
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .slice(0, 5)
+                .map(t => ({
+                    id: String(t.id),
+                    title: t.title,
+                    status: t.status,
+                    priority: t.priority,
+                    assignee: t.assignee_profile?.full_name || 'Unassigned'
+                }));
 
             stats.daily_trends = Object.entries(trendsMap)
                 .map(([date, count]) => ({ date, count }))

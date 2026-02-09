@@ -5,7 +5,7 @@ from rate_limiter import limiter
 
 router = APIRouter()
 
-@router.get("/knowledge-base")
+@router.get("")
 @limiter.limit("30/minute")
 async def get_knowledge_base(request: Request, user_id: str = Query(...)):
     try:
@@ -20,7 +20,7 @@ async def get_knowledge_base(request: Request, user_id: str = Query(...)):
         print(f"KB Fetch Error: {e}", flush=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/knowledge-base")
+@router.post("")
 @limiter.limit("10/minute")
 async def add_knowledge_base(request: Request, data: dict):
     try:
@@ -37,7 +37,7 @@ async def add_knowledge_base(request: Request, data: dict):
         print(f"KB Insert Error: {e}", flush=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.put("/knowledge-base/{kb_id}")
+@router.put("/{kb_id}")
 @limiter.limit("10/minute")
 async def update_knowledge_base(request: Request, kb_id: int, data: dict):
     try:
@@ -54,7 +54,7 @@ async def update_knowledge_base(request: Request, kb_id: int, data: dict):
         print(f"KB Update Error: {e}", flush=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.delete("/knowledge-base/{kb_id}")
+@router.delete("/{kb_id}")
 @limiter.limit("10/minute")
 async def delete_knowledge_base(request: Request, kb_id: int, user_id: str = Query(...)):
     try:

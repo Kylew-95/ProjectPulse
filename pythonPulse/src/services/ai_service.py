@@ -67,7 +67,7 @@ def analyze_urgency(message_content: str):
     try:
         response = co.chat(
             message=prompt,
-            model="command-a-03-2025"
+            model="command-r-08-2024"
         )
         return response.text.strip()
     except Exception as e:
@@ -98,7 +98,7 @@ def generate_followup_questions(message_content: str):
     try:
         response = co.chat(
             message=prompt,
-            model="command-a-03-2025"
+            model="command-r-08-2024"
         )
         return response.text.strip()
     except Exception as e:
@@ -123,7 +123,7 @@ def generate_issue_summary(original_issue: str, follow_up_response: str):
     try:
         response = co.chat(
             message=prompt,
-            model="command-a-03-2025"
+            model="command-r-08-2024"
         )
         return response.text.strip()
     except Exception as e:
@@ -187,7 +187,7 @@ def generate_detailed_ticket(original_issue: str, follow_up_response: str):
     try:
         response = co.chat(
             message=prompt,
-            model="command-a-03-2025"
+            model="command-r-08-2024"
         )
         # Handle potential markdown in response
         json_str = response.text.strip()
@@ -227,7 +227,7 @@ def generate_summary(messages_text: str):
     try:
         response = co.chat(
             message=prompt,
-            model="command-a-03-2025"
+            model="command-r-08-2024"
         )
         return response.text.strip()
     except Exception as e:
@@ -265,7 +265,7 @@ def generate_suggested_reply(ticket_content: str, kb_context: str):
             return "AI service is currently unavailable."
         response = co.chat(
             message=prompt,
-            model="command-a-03-2025"
+            model="command-r-08-2024"
         )
         return response.text.strip()
     except Exception as e:
@@ -297,7 +297,7 @@ def generate_kb_answer(user_query: str, kb_context: str):
     try:
         response = co.chat(
             message=prompt,
-            model="command-a-03-2025"
+            model="command-r-08-2024"
         )
         return response.text.strip()
     except Exception as e:
@@ -335,7 +335,7 @@ def generate_suggestions_from_logs(messages_text: str):
     try:
         response = co.chat(
             message=prompt,
-            model="command-a-03-2025"
+            model="command-r-08-2024"
         )
         json_str = response.text.strip()
         if json_str.startswith("```json"):
@@ -382,7 +382,7 @@ def generate_daily_insight(messages_text: str):
     try:
         response = co.chat(
             message=prompt,
-            model="command-a-03-2025"
+            model="command-r-08-2024"
         )
         json_str = response.text.strip()
         if json_str.startswith("```json"):
@@ -424,7 +424,7 @@ def process_company_info(info_text: str):
     try:
         response = co.chat(
             message=prompt,
-            model="command-a-03-2025"
+            model="command-r-08-2024"
         )
         json_str = response.text.strip()
         if json_str.startswith("```json"):
@@ -442,26 +442,32 @@ def chat_with_pulse(query: str, context: dict):
     Uses context (tickets, teams, etc.) to answer queries.
     """
     # Convert context to a readable string for the prompt
+    print(f"DEBUG: Received AI Chat Context: {json.dumps(context, indent=2)}")
     context_str = json.dumps(context, indent=2)
     
     prompt = f"""
     You are the Project Pulse AI Assistant, a premium AI built into a project management dashboard.
     Your goal is to help users understand their project data, teams, and tickets.
     
-    USER CONTEXT:
-    {context_str}
+    SYSTEM STATUS:
+    - Current Metrics: {context_str}
     
     USER QUERY:
     "{query}"
     
     INSTRUCTIONS:
-    1. Answer the query based on the provided context if possible.
-    2. If the context doesn't contain the answer, use your general knowledge but mention you don't see specific data for it.
-    3. Be professional, concise, and helpful. Use Discord-style markdown for formatting (bolding, lists).
-    4. If asked to "Summarize", provide a high-level overview.
-    5. If asked "Who is busy", look at the team workloads in context.
-    
-    Keep the response insightful and friendly.
+    1. If the user is just saying hello or greeting you, respond with a friendly, premium welcome message. Mention that you have access to their project data and are ready to help.
+    2. For data-related queries (e.g., summaries, workloads, counts), use the "SYSTEM STATUS" metrics PRIVILEGEDLY.
+    3. If asked for a summary, look at 'recent_tickets' and 'total_tickets'.
+    4. If asked about team counts, look at 'total_teams'. If asked about workload distributions, refer to 'team_workload'.
+    5. If the data for their query is not in the context, politely inform them based on what you *can* see.
+    6. Always mention specific numbers from the context when relevant (e.g., "You have X open tickets").
+    7. Be professional, concise, and helpful. Use Discord-style markdown.
+    8. DO NOT hallucinate metrics that are not in the provided JSON context.
+
+    RESPONSE FORMAT:
+    - Conversational but data-aware.
+    - Direct and concise.
     """
 
     if not co:
@@ -469,7 +475,7 @@ def chat_with_pulse(query: str, context: dict):
     try:
         response = co.chat(
             message=prompt,
-            model="command-a-03-2025"
+            model="command-a-03-2025" # Use a more robust modern model
         )
         return response.text.strip()
     except Exception as e:

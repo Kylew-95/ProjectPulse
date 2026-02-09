@@ -2,6 +2,7 @@ import { Crown, Check, Sparkles, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { getApiUrl } from '../../utils/apiConfig';
 
 interface PremiumGateProps {
     title: string;
@@ -23,7 +24,8 @@ const PremiumGate = ({ title, description, features }: PremiumGateProps) => {
     const handleUpgrade = async () => {
         setLoading(true);
         try {
-            const productsRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/products`);
+            const apiUrl = getApiUrl();
+            const productsRes = await fetch(`${apiUrl}/billing/products`);
             const products = await productsRes.json();
             
             const enterprisePlan = products.find((p: { metadata?: { plan_tier_id?: string }, name: string, price_id: string }) => p.metadata?.plan_tier_id === 'enterprise' || p.name === 'Enterprise');
@@ -33,7 +35,7 @@ const PremiumGate = ({ title, description, features }: PremiumGateProps) => {
                 return;
             }
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/create-checkout-session`, {
+            const response = await fetch(`${apiUrl}/billing/create-checkout-session`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 

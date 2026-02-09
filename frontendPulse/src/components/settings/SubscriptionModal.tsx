@@ -42,7 +42,7 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
         const fetchPlans = async () => {
         try {
             const apiUrl = getApiUrl();
-            const res = await fetch(`${apiUrl}/products`);
+            const res = await fetch(`${apiUrl}/billing/products`);
             if (res.ok) {
             const data: StripeProduct[] = await res.json();
             // Sort by price
@@ -77,7 +77,7 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
     setLoading(true);
     try {
       const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/create-checkout-session`, {
+      const response = await fetch(`${apiUrl}/billing/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -104,7 +104,7 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
     setLoading(true);
       try {
         const apiUrl = getApiUrl();
-        const response = await fetch(`${apiUrl}/create-portal-session`, {
+        const response = await fetch(`${apiUrl}/billing/create-portal-session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

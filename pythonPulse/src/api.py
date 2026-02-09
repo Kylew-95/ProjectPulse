@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import billing, analytics, knowledge_base, intelligence, general, tags, discord
+from routers import billing, analytics, knowledge_base, intelligence, ai_history, general, tags, discord
 from dotenv import load_dotenv
 import os
 from rate_limiter import limiter, _rate_limit_exceeded_handler, RateLimitExceeded
@@ -19,11 +19,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Routers
-app.include_router(billing.router, tags=["Billing"])
-app.include_router(analytics.router, tags=["Analytics"])
-app.include_router(knowledge_base.router, tags=["Knowledge Base"])
-app.include_router(intelligence.router, tags=["Intelligence"])
+# Include Routers with standardized prefixes
+app.include_router(billing.router, prefix="/billing", tags=["Billing"])
+app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
+app.include_router(knowledge_base.router, prefix="/knowledge", tags=["Knowledge Base"])
+app.include_router(intelligence.router, prefix="/intelligence", tags=["Intelligence"])
+app.include_router(ai_history.router, prefix="/intelligence/history", tags=["AI Chat History"])
 app.include_router(general.router, tags=["General"])
 app.include_router(tags.router, tags=["Tags"])
 app.include_router(discord.router, prefix="/discord", tags=["Discord"])

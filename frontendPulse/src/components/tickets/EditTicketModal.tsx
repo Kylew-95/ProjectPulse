@@ -6,6 +6,7 @@ import type { Ticket } from '../../types/ticket';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import CommentList from './CommentList';
+import { getApiUrl } from '../../utils/apiConfig';
 
 interface TicketProfile {
   id: string;
@@ -55,7 +56,7 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
     setSuggestionLoading(true);
     setSuggestion(null);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/suggest-reply`, {
+      const response = await fetch(`${getApiUrl()}/intelligence/suggest-reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ticket_id: ticket.id, user_id: user.id })
@@ -79,7 +80,7 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
     if (!user || !editableReply) return;
     setSendLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/send-reply`, {
+      const response = await fetch(`${getApiUrl()}/intelligence/send-reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

@@ -33,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const syncSubscription = async (email: string, userId: string) => {
     try {
         const apiUrl = getApiUrl();
-        await fetch(`${apiUrl}/sync-subscription`, {
+        await fetch(`${apiUrl}/billing/sync-subscription`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, user_id: userId })
