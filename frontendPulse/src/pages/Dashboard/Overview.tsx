@@ -5,6 +5,8 @@ import { Ticket, Activity, ShieldCheck, TrendingUp } from 'lucide-react';
 import CommandHeader from './components/Overview/CommandHeader';
 import PremiumStatCard from './components/Overview/PremiumStatCard';
 import AISuggestions from './components/Overview/AISuggestions';
+
+
 import { motion, type Variants } from 'framer-motion';
 
 const containerVariants: Variants = {
@@ -184,7 +186,7 @@ const Overview = () => {
       </motion.div>
 
       <motion.div variants={itemVariants}>
-        <AISuggestions guildId={profile?.discord_guild_id ?? undefined} />
+        <AISuggestions guildId={(profile?.discord_guild_id ?? null) as string | null} />
       </motion.div>
     </motion.div>
   );

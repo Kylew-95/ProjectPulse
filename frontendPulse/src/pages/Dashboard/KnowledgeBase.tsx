@@ -156,9 +156,7 @@ const KnowledgeBase = () => {
         features={[
             "Custom Knowledge Base Training",
             "AI Suggested Replies Integration",
-            "Automated Documentation Sync",
-            "Search Analytics for KB",
-            "Multi-language Support"
+            "Automated Documentation Sync"
         ]}
       >
         {loading ? (
