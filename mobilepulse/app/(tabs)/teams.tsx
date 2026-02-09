@@ -95,7 +95,7 @@ export default function TeamsScreen() {
           const formattedTeams = rawTeams.map(team => {
             const members = team.team_members?.map((tm: any) => {
               const profile = profilesMap[tm.user_id];
-              // console.log(`Mapping user ${tm.user_id} to profile:`, profile);
+
               return {
                 ...profile,
                 user_id: tm.user_id

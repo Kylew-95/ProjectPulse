@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { User, Bell, LifeBuoy, ChevronRight, LogOut, Moon } from 'lucide-react-native';
+import { User, LifeBuoy, ChevronRight, LogOut, Moon } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { getCleanAvatarUrl } from '@/utils/image';
 import SubscriptionModal from '@/components/settings/SubscriptionModal';
@@ -107,7 +107,7 @@ export default function SettingsScreen() {
             <Button 
               mode="outlined" 
               onPress={() => {
-                console.log('Opening subscription modal');
+
                 setShowSubscriptionModal(true);
               }}
               style={[styles.manageButton, { borderColor: '#3b82f6' }]}

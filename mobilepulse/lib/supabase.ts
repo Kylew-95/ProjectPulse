@@ -9,7 +9,7 @@ const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 if (!supabaseUrl || !supabaseAnonKey) {
     console.warn('Supabase configuration missing! Check your .env file and EXPO_PUBLIC_ prefixes.');
 } else {
-    console.log('Supabase initialized with URL:', supabaseUrl);
+
 }
 
 const isWeb = Platform.OS === 'web';

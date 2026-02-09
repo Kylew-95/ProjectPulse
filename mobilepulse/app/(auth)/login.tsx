@@ -23,7 +23,7 @@ export default function Login() {
       // Use dynamic URL generation to match the current Expo environment
       const redirectUrl = Linking.createURL('/');
       
-      console.log('Using redirect URL:', redirectUrl);
+
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
@@ -38,7 +38,7 @@ export default function Login() {
       if (data?.url) {
         // Open the auth session.
         const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-        console.log('WebBrowser Result:', JSON.stringify(result, null, 2));
+
 
         if (result.type === 'success' && result.url) {
             // Parse the URL to get the access_token and refresh_token

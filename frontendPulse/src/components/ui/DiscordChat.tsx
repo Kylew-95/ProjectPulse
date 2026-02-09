@@ -1,6 +1,6 @@
 import WidgetBot from '@widgetbot/react-embed';
 import type { Client } from '@widgetbot/embed-api';
-import type { IServer } from '@widgetbot/embed-api/dist/types';
+
 import { useAuth } from '../../context/AuthContext';
 import { useState } from 'react';
 import { X } from 'lucide-react';
@@ -8,7 +8,7 @@ import { X } from 'lucide-react';
 const DiscordChat = () => {
     const { profile } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
-    console.log(profile);
+
 
     // Only render if we have a guild ID
     if (!profile?.discord_guild_id) {
@@ -16,8 +16,8 @@ const DiscordChat = () => {
     }
 
     const onAPI = (api: Client) => {
-        api.on('signIn', (user: IServer.Events['signIn']) => {
-            console.log(`User signed in as ${user.username}`, user);
+        api.on('signIn', () => {
+
         });
     };
 

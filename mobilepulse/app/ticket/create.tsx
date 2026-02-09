@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { ChevronDown, Check, AlertCircle } from 'lucide-react-native';
+import { Check, AlertCircle } from 'lucide-react-native';
 
 const PRIORITIES = [
   { label: 'Low', value: 'low', color: '#10b981' },
@@ -31,34 +31,34 @@ export default function CreateTicketScreen() {
   });
 
   useEffect(() => {
-    fetchUserTeams();
-  }, []);
+    const fetchUserTeams = async () => {
+      if (!user) return;
+      try {
+        const { data, error } = await supabase
+          .from('team_members')
+          .select('team_id, teams(id, name)')
+          .eq('user_id', user.id);
 
-  const fetchUserTeams = async () => {
-    if (!user) return;
-    try {
-      const { data, error } = await supabase
-        .from('team_members')
-        .select('team_id, teams(id, name)')
-        .eq('user_id', user.id);
+        if (error) throw error;
 
-      if (error) throw error;
+        const teams = data?.map(m => {
+          const t = Array.isArray(m.teams) ? m.teams[0] : m.teams;
+          return { id: t.id, name: t.name };
+        }) || [];
 
-      const teams = data?.map(m => {
-        const t = Array.isArray(m.teams) ? m.teams[0] : m.teams;
-        return { id: t.id, name: t.name };
-      }) || [];
-
-      setUserTeams(teams);
-      if (teams.length > 0) {
-        setFormData(prev => ({ ...prev, team_id: teams[0].id }));
+        setUserTeams(teams);
+        if (teams.length > 0) {
+          setFormData(prev => ({ ...prev, team_id: teams[0].id }));
+        }
+      } catch (err) {
+        console.error('Error fetching teams:', err);
+      } finally {
+        setFetchingTeams(false);
       }
-    } catch (err) {
-      console.error('Error fetching teams:', err);
-    } finally {
-      setFetchingTeams(false);
-    }
-  };
+    };
+
+    fetchUserTeams();
+  }, [user]);
 
   const handleSubmit = async () => {
     if (!formData.title.trim() || !formData.team_id) {
@@ -112,7 +112,7 @@ export default function CreateTicketScreen() {
             return workload[currentId] < workload[minId] ? currentId : minId;
           }, memberIds[0]);
 
-          console.log('Auto-assigning to:', assignee_id, 'Workload:', workload);
+
         }
       } catch (err) {
         console.warn('Auto-assignment failed, proceeding with null assignee', err);
