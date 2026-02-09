@@ -5,6 +5,8 @@ import { Ticket, Activity, ShieldCheck, TrendingUp } from 'lucide-react';
 import CommandHeader from './components/Overview/CommandHeader';
 import PremiumStatCard from './components/Overview/PremiumStatCard';
 import AISuggestions from './components/Overview/AISuggestions';
+import CreateTicketModal from '../../components/tickets/CreateTicketModal';
+
 
 
 import { motion, type Variants } from 'framer-motion';
@@ -35,6 +37,10 @@ const itemVariants: Variants = {
 const Overview = () => {
   const { user, profile } = useAuth();
   const [stats, setStats] = useState({ total: 0, open: 0, closed: 0, avgUrgency: 0 });
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  const [initialTicketData, setInitialTicketData] = useState<{ title?: string; description?: string } | null>(null);
+  const [userTeams, setUserTeams] = useState<{ id: string; name: string }[]>([]);
+
 
   const fetchStats = useCallback(async () => {
     if (!user) return;
@@ -65,8 +71,44 @@ const Overview = () => {
       .channel('overview-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => fetchStats())
       .subscribe();
+
+    const fetchUserTeams = async () => {
+      if (!user?.id) return;
+      const { data, error } = await supabase
+        .from('team_members')
+        .select('team_id, teams(id, name)')
+        .eq('user_id', user.id);
+      
+      if (error) {
+        console.error('Error fetching user teams:', error);
+        return;
+      }
+
+      const teams = data?.map(m => {
+        const t = Array.isArray(m.teams) ? m.teams[0] : m.teams;
+        return { id: (t as any).id, name: (t as any).name };
+      }) || [];
+
+      setUserTeams(teams);
+    };
+
+    fetchUserTeams();
+
     return () => { supabase.removeChannel(channel); };
-  }, [fetchStats]);
+  }, [fetchStats, user?.id]);
+
+  const handleCreateTicketFromSuggestion = (suggestion: { content: string; type: string }) => {
+    let title = 'Strategic Insight Implementation';
+    if (suggestion.type === 'feature_request') title = 'Feature Request Implementation';
+    if (suggestion.type === 'user_need') title = 'User Pain Point Resolution';
+
+    setInitialTicketData({
+      title,
+      description: suggestion.content
+    });
+    setIsTicketModalOpen(true);
+  };
+
 
   const resolutionRate = stats.total > 0 ? (stats.closed / stats.total) * 100 : 0;
   const globalLoad = Math.min(stats.avgUrgency * 10, 100);
@@ -186,9 +228,30 @@ const Overview = () => {
       </motion.div>
 
       <motion.div variants={itemVariants}>
-        <AISuggestions guildId={(profile?.discord_guild_id ?? null) as string | null} />
+        <AISuggestions 
+          guildId={(profile?.discord_guild_id ?? null) as string | null} 
+          onCreateTicket={handleCreateTicketFromSuggestion}
+        />
       </motion.div>
+
+      {isTicketModalOpen && (
+        <CreateTicketModal
+          onClose={() => {
+            setIsTicketModalOpen(false);
+            setInitialTicketData(null);
+          }}
+          onTicketCreated={() => {
+            fetchStats();
+            setIsTicketModalOpen(false);
+            setInitialTicketData(null);
+          }}
+          teamId={userTeams[0]?.id || null}
+          userTeams={userTeams}
+          initialData={initialTicketData || undefined}
+        />
+      )}
     </motion.div>
+
   );
 };
 

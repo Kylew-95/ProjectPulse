@@ -21,18 +21,18 @@ const AnalyticsOverview: React.FC<AnalyticsOverviewProps> = ({ data, timeRange }
 
       <PremiumStatCard 
         title="Avg Urgency"
-        value={data?.urgency_avg.toFixed(1) || 0}
+        value={data?.urgency_avg.toFixed(2) || '0.00'}
         icon={AlertCircle}
         color="#f59e0b"
-        trend={data?.trends.urgency ? `${data.trends.urgency}%` : undefined}
+        trend={data?.trends.urgency ? `${data.trends.urgency.toFixed(2)}%` : undefined}
       />
 
       <PremiumStatCard 
         title="Daily Velocity"
-        value={data ? (data.total / (timeRange === '7d' ? 7 : 30)).toFixed(1) : 0}
+        value={data ? (data.total / (timeRange === '7d' ? 7 : 30)).toFixed(2) : 0}
         icon={CheckCircle2}
         color="#10b981"
-        trend={data?.trends.velocity ? `${data.trends.velocity} t/d` : undefined}
+        trend={data?.trends.velocity ? `${data.trends.velocity.toFixed(2)} t/d` : undefined}
       />
 
       <PremiumStatCard 

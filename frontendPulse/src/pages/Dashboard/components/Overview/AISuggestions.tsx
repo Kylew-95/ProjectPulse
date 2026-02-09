@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../../../supabaseClient';
 import { motion } from 'framer-motion';
 import { useRef } from 'react';
-import { Sparkles, RefreshCw, Lightbulb, Rocket, ShieldCheck, Trash2 } from 'lucide-react';
+import { Sparkles, RefreshCw, Lightbulb, Rocket, ShieldCheck, Trash2, Plus } from 'lucide-react';
 import SubscriptionGate from '../../../../components/ui/SubscriptionGate';
 
 interface Suggestion {
@@ -13,7 +13,7 @@ interface Suggestion {
   created_at: string;
 }
 
-const AISuggestions = ({ guildId }: { guildId: string | null }) => {
+const AISuggestions = ({ guildId, onCreateTicket }: { guildId: string | null, onCreateTicket?: (suggestion: Suggestion) => void }) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -142,13 +142,25 @@ const AISuggestions = ({ guildId }: { guildId: string | null }) => {
                       </span>
                     </div>
 
-                    <button 
-                      onClick={() => handleDelete(suggestion.id)}
-                      className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                      title="Delete Insight"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {onCreateTicket && (
+                        <button 
+                          onClick={() => onCreateTicket(suggestion)}
+                          className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center gap-1.5"
+                          title="Convert to Ticket"
+                        >
+                          <Plus size={14} />
+                          <span className="text-[10px] font-bold uppercase tracking-wider">Ticket</span>
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleDelete(suggestion.id)}
+                        className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        title="Delete Insight"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                   
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-relaxed mb-auto relative z-10 line-clamp-4">

@@ -10,9 +10,13 @@ interface CreateTicketModalProps {
   onTicketCreated: () => void;
   teamId: string | null;
   userTeams: { id: string; name: string }[];
+  initialData?: {
+    title?: string;
+    description?: string;
+  };
 }
 
-const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: CreateTicketModalProps) => {
+const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams, initialData }: CreateTicketModalProps) => {
   const { session } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -21,8 +25,8 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams }: Crea
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
+    title: initialData?.title || '',
+    description: initialData?.description || '',
     priority: 'medium' as Priority,
     status: 'open',
     urgency_score: 5,
