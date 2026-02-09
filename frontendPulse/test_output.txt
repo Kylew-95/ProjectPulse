@@ -1766,3 +1766,4 @@ Running 3 tests using 3 workers
     [chromium] › tests\subscription_limits.spec.ts:168:5 › Subscription Limits & Role Restrictions › should not show Admin role in invite options 
 
 [36m  Serving HTML report at http://localhost:52312. Press Ctrl+C to quit.[39m
+^C

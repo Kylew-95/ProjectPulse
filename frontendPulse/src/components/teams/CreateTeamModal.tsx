@@ -81,7 +81,14 @@ const CreateTeamModal = ({ onClose, onTeamCreated, currentTeamCount, subscriptio
              <div className="p-2.5 bg-primary/10 rounded-xl">
                 <Users size={20} className="text-primary" />
              </div>
-             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create New Team</h2>
+             <div>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create New Team</h2>
+                <div className="mt-1 flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-500 border border-slate-200 dark:border-white/5">
+                        {currentTeamCount} / {limit === Infinity ? '∞' : limit} TEAMS USED
+                    </span>
+                </div>
+             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-white/5 rounded-xl transition-all text-slate-500 hover:text-slate-900 dark:hover:text-white">
             <X size={20} />

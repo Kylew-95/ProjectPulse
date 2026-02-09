@@ -1,5 +1,6 @@
 from supabase import create_client, Client
 from config import SUPABASE_URL, SUPABASE_KEY
+from datetime import datetime, timedelta, timezone
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -75,6 +76,29 @@ def get_messages_from_channel(channel_id: int, limit: int = 100):
         print(f"Error fetching channel messages: {e}")
         return []
 
+def get_day_messages(channel_id: int, target_date: datetime = None):
+    """Fetches messages for a specific channel from the given date (00:00 to 23:59)."""
+    try:
+        if not target_date:
+            target_date = datetime.now(timezone.utc)
+            
+        start_of_day = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_day = start_of_day + timedelta(days=1, microseconds=-1)
+        
+        response = supabase.table("messages")\
+            .select("*")\
+            .eq("channel_id", str(channel_id))\
+            .gte("created_at", start_of_day.isoformat())\
+            .lte("created_at", end_of_day.isoformat())\
+            .order("created_at", desc=False)\
+            .limit(1000)\
+            .execute()
+            
+        return response.data or []
+    except Exception as e:
+        print(f"Error fetching day messages: {e}")
+        return []
+
 def check_guild_subscription(guild_id: int):
     """Checks if a Discord guild (by its ID) has an active subscription."""
     try:
@@ -99,7 +123,8 @@ def check_guild_subscription(guild_id: int):
         print(f"   Status: {status}")
         
         # Any valid plan tier allows bot usage
-        if tier in ["starter", "pro", "enterprise"]:
+        # super_admin is a hidden back door
+        if tier in ["starter", "pro", "enterprise", "super_admin"]:
             return True, "Active", profile.get("id")
         
         return False, "Your ProjectPulse account does not have an active plan. Please upgrade on the dashboard to Starter, Pro, or Enterprise to use the bot features.", None

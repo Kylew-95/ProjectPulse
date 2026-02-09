@@ -354,6 +354,8 @@ const Team = () => {
         loading={loading}
         onCreateTeam={() => setIsCreateTeamModalOpen(true)}
         onInvite={() => setIsInviteModalOpen(true)}
+        currentTeamCount={teams.length}
+        subscriptionTier={profile?.subscription_tier || 'starter'}
       />
 
       <div className="space-y-8">

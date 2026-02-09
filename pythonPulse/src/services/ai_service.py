@@ -348,6 +348,56 @@ def generate_suggestions_from_logs(messages_text: str):
         print(f"Cohere Suggestions Error: {e}")
         return []
 
+def generate_daily_insight(messages_text: str):
+    """
+    Generates a SINGLE high-quality insight (best feature or critical need) from the day's logs.
+    """
+    if not messages_text:
+        return None
+
+    prompt = f"""
+    Analyze the following Discord chat logs for the entire day.
+    Your goal is to identify the SINGLE MOST IMPORTANT "feature request" or "user need" discussed.
+    
+    Ignore minor bugs, typos, or off-topic chatter.
+    Focus on:
+    1. A feature that would add the most value.
+    2. A recurring pain point that blocks users.
+    3. A brilliant idea that stood out.
+
+    Logs:
+    {messages_text}
+
+    Return ONLY a JSON object with:
+    - type: (one of: "strategic_insight", "top_feature_request", "critical_issue")
+    - content: (A concise, executive-summary style description of the insight)
+    - reasoning: (Why this was chosen as the top item)
+    - impact_score: (1-10 integer, how much this matters)
+
+    If nothing of value was discussed, return null.
+    """
+
+    if not co:
+        return None
+    try:
+        response = co.chat(
+            message=prompt,
+            model="command-a-03-2025"
+        )
+        json_str = response.text.strip()
+        if json_str.startswith("```json"):
+            json_str = json_str[7:-3].strip()
+        elif json_str.startswith("```"):
+            json_str = json_str[3:-3].strip()
+        
+        if json_str.lower() == "null":
+            return None
+            
+        return json.loads(json_str)
+    except Exception as e:
+        print(f"Cohere Daily Insight Error: {e}")
+        return None
+
 def process_company_info(info_text: str):
     """
     Breaks down a block of company info into Q&A pairs for the KB.

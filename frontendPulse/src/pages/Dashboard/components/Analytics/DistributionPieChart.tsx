@@ -54,6 +54,7 @@ const DistributionPieChart: React.FC<DistributionPieChartProps> = ({
                   fontSize: '12px',
                   fontWeight: 600
                 }}
+                itemStyle={{ color: '#fff' }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -67,11 +68,11 @@ const DistributionPieChart: React.FC<DistributionPieChartProps> = ({
                   className="w-2 h-2 rounded-full" 
                   style={{ backgroundColor: colors[(index + colorOffset) % colors.length] }}
                 ></div>
-                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 capitalize whitespace-nowrap">
+                <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 capitalize whitespace-nowrap">
                   {entry.name}
                 </span>
               </div>
-              <span className="text-[11px] font-bold text-slate-900 dark:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-[11px] font-bold text-slate-900 dark:text-white">
                 {entry.value}
               </span>
             </div>

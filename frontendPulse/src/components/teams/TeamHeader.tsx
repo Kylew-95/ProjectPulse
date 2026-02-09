@@ -9,7 +9,16 @@ interface TeamHeaderProps {
   loading: boolean;
   onCreateTeam: () => void;
   onInvite: () => void;
+  currentTeamCount?: number;
+  subscriptionTier?: string;
 }
+
+const SUBSCRIPTION_LIMITS = {
+  starter: { teams: 1, members: 5 },
+  pro: { teams: 5, members: 20 },
+  enterprise: { teams: Infinity, members: Infinity },
+  super_admin: { teams: Infinity, members: Infinity },
+};
 
 const TeamHeader = ({
   viewMode,
@@ -18,8 +27,14 @@ const TeamHeader = ({
   onRefresh,
   loading,
   onCreateTeam,
-  onInvite
+  onInvite,
+  currentTeamCount = 0,
+  subscriptionTier = 'starter'
 }: TeamHeaderProps) => {
+  const tier = (subscriptionTier?.toLowerCase() || 'starter') as keyof typeof SUBSCRIPTION_LIMITS;
+  const limits = SUBSCRIPTION_LIMITS[tier];
+  const teamLimit = limits?.teams || 1;
+
   const getTitle = () => {
       if (viewMode === 'teams') return 'Teams';
       return selectedTeamName || 'Team Details';
@@ -58,6 +73,20 @@ const TeamHeader = ({
             <Users size={18} aria-hidden="true" /> 
             <span>Create Team</span>
         </button>
+        )}
+        
+        {viewMode === 'teams' && (
+             <div className="hidden md:flex flex-col items-end justify-center mr-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    {currentTeamCount} / {teamLimit === Infinity ? '∞' : teamLimit} TEAMS
+                </span>
+                <div className="w-24 h-1 bg-slate-100 dark:bg-white/10 rounded-full mt-1 overflow-hidden">
+                    <div 
+                        className={`h-full rounded-full ${currentTeamCount >= teamLimit ? 'bg-red-500' : 'bg-blue-500'}`} 
+                        style={{ width: `${Math.min((currentTeamCount / (teamLimit === Infinity ? 100 : teamLimit)) * 100, 100)}%` }}
+                    />
+                </div>
+             </div>
         )}
 
         {viewMode === 'members' && (

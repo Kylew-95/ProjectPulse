@@ -116,26 +116,19 @@ class Urgency(commands.Cog):
         if not message.guild:
             return
         
-        # Only respond in #report-issues-with-pulse channel
-        if message.channel.name.lower() != "report-issues-with-pulse":
-            return
-
         # ---------------------------------------------------------
-        # 3. PLAN TIER ENFORCEMENT
+        # 3. PLAN TIER ENFORCEMENT & LOGGING
         # ---------------------------------------------------------
         is_active, sub_msg, subscriber_id = check_guild_subscription(message.guild.id)
-        print(f"\nSUBSCRIPTION CHECK for Guild {message.guild.name} (ID: {message.guild.id})")
-        print(f"   Active: {is_active}")
-        print(f"   Message: {sub_msg}\n")
         
         if not is_active:
-            # Only notify once per bot session per guild to avoid spam
-            if message.guild.id not in self.notified_guilds:
+            # Only notify once per bot session per guild to avoid spam (Only if they try to use report channel)
+            if message.channel.name.lower() == "report-issues-with-pulse" and message.guild.id not in self.notified_guilds:
                 await message.channel.send(f"**Subscription Required**: {sub_msg}")
                 self.notified_guilds.add(message.guild.id)
             return
 
-        # Log every message (Only for subscribed guilds)
+        # Log every message (Only for subscribed guilds) - CRITICAL for AI Learning
         full_name = message.author.display_name
         avatar_url = str(message.author.display_avatar.url)
         message_id = insert_message(
@@ -147,6 +140,13 @@ class Urgency(commands.Cog):
             avatar_url,
             guild_id=message.guild.id
         )
+
+        # ---------------------------------------------------------
+        # 4. URGENCY DETECTION (Channel Restricted)
+        # ---------------------------------------------------------
+        # Only perform urgency detection in #report-issues-with-pulse channel
+        if message.channel.name.lower() != "report-issues-with-pulse":
+            return
 
         # Anti-Spam / Concurrent Report Check
         if message.author.id in self.active_reports:
@@ -252,7 +252,7 @@ class Urgency(commands.Cog):
         except ValueError:
             pass
 
-    @commands.command(name="report")
+    @commands.command(name="report", hidden=True)
     async def manual_report(self, ctx, *, issue_content: str = None):
         """Manually trigger the ticketing process."""
         if not issue_content:

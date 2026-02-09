@@ -16,7 +16,7 @@ intents.message_content = True
 intents.presences = True # Critical for status updates
 
 # Initialize Bot
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 @bot.event
 async def on_presence_update(before, after):
