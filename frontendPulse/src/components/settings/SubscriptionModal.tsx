@@ -30,6 +30,7 @@ interface StripeProduct {
   description: string | null;
   metadata?: {
     plan_tier_id?: string;
+    addon_key?: string;
   };
 }
 
@@ -45,8 +46,11 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
             const res = await fetch(`${apiUrl}/billing/products`);
             if (res.ok) {
             const data: StripeProduct[] = await res.json();
-            // Sort by price
-            const formatted: ModalPlan[] = data.sort((a, b) => a.price - b.price).map((p) => ({
+            // Sort by price and filter out add-ons
+            const formatted: ModalPlan[] = data
+                .filter((p: StripeProduct) => !p.metadata?.addon_key) // Hide Add-ons from plan list
+                .sort((a, b) => a.price - b.price)
+                .map((p) => ({
                 name: p.name,
                 price: `£${p.price}`,
                 period: '/mo',

@@ -41,6 +41,12 @@ async def create_checkout_session(data: dict):
         customer_email = data.get("email")
         user_id = data.get("user_id")
         
+        # 0. EARLY RETRIEVAL: specific for add-on check
+        # Retrieve the price to check for product metadata (trial_days, addon_key)
+        price = stripe.Price.retrieve(price_id, expand=['product'])
+        product = price.product
+        is_addon = product.metadata.get('addon_key') is not None
+        
         # 1. Try to find the existing Stripe Customer ID and last plan change from Supabase
         stripe_customer_id = None
         last_plan_change_at = None
@@ -55,8 +61,8 @@ async def create_checkout_session(data: dict):
                 stripe_customer_id = profile_res.data.get('stripe_customer_id')
                 last_plan_change_at_str = profile_res.data.get('last_plan_change_at')
                 
-                # Enforce 30-day Cooldown
-                if last_plan_change_at_str:
+                # Enforce 30-day Cooldown (SKIP FOR ADD-ONS)
+                if not is_addon and last_plan_change_at_str:
                     from datetime import datetime, timezone, timedelta
                     # Parse as UTC-aware datetime
                     last_change = datetime.fromisoformat(last_plan_change_at_str.replace('Z', '+00:00'))
@@ -70,10 +76,6 @@ async def create_checkout_session(data: dict):
             if isinstance(e, HTTPException): raise e
             print(f"DEBUG CHECKOUT: Error fetching customer_id/cooldown from DB: {e}")
 
-        # Retrieve the price to check for product metadata (trial_days)
-        price = stripe.Price.retrieve(price_id, expand=['product'])
-        product = price.product
-        
         # Extract trial days from product metadata (default to 0)
         trial_days = product.metadata.get('trial_days', 0)
         
@@ -91,12 +93,14 @@ async def create_checkout_session(data: dict):
             'cancel_url': data.get('cancel_url', default_cancel_url),
             'metadata': {
                 'plan_tier_id': product.metadata.get('plan_tier_id'),
-                'user_id': user_id
+                'user_id': user_id,
+                'addon_key': product.metadata.get('addon_key') # Explicitly pass addon_key
             },
             'subscription_data': {
                 'metadata': {
                     'plan_tier_id': product.metadata.get('plan_tier_id'),
-                    'user_id': user_id
+                    'user_id': user_id,
+                    'addon_key': product.metadata.get('addon_key')
                 }
             }
         }
@@ -107,42 +111,98 @@ async def create_checkout_session(data: dict):
         else:
             session_params['customer_email'] = customer_email
 
-        if trial_days and int(trial_days) > 0:
-            print(f"DEBUG CHECKOUT: Target product has {trial_days} trial days. Checking for prior subs for {customer_email}...")
-            
-            # Enforce One-Time Trial Logic (Robust Check)
-            # 1. Search ALL customers with this email to avoid duplicates hiding history
-            customers = stripe.Customer.list(email=customer_email, limit=100)
-            
-            has_prior_subscription = False
-            active_sub = None
+        # --- ADD-ON LOGIC: ALIGNED BILLING ---
+        if is_addon:
+             print(f"DEBUG CHECKOUT: Detected Add-on purchase: {product.name}. Attempting to align billing.")
+             
+             if stripe_customer_id:
+                 # Check for existing active or trialing main subscription
+                 existing_subs = stripe.Subscription.list(customer=stripe_customer_id, limit=20)
+                 main_sub = None
+                 for sub in existing_subs.data:
+                     # A "main" sub is one that isn't an addon itself and is active or trialing
+                     if not sub.metadata.get('addon_key') and sub.status in ['active', 'trialing']:
+                         main_sub = sub
+                         break
+                 
+                 if main_sub:
+                     print(f"DEBUG CHECKOUT: Found main subscription {main_sub.id}. Aligning add-on.")
+                     # Update Checkout Session to handle subscription update
+                     session_params['subscription'] = main_sub.id
+                     session_params['proration_behavior'] = 'always_invoice' # Charge immediately for remaining days
+                     
+                     # Retrieve existing items to preserve them
+                     sub_items = stripe.SubscriptionItem.list(subscription=main_sub.id)
+                     
+                     # Check if they already have THIS addon on this sub
+                     for item in sub_items.data:
+                         prod = stripe.Product.retrieve(item.price.product)
+                         if prod.metadata.get('addon_key') == product.metadata.get('addon_key'):
+                              raise HTTPException(status_code=400, detail=f"You already have {product.name} on your subscription.")
 
-            if customers.data:
-                for customer in customers.data:
-                    # Check for any subscriptions (active, canceled, past due, etc.)
-                    subscriptions = stripe.Subscription.list(customer=customer.id, status='all', limit=100)
-                    for sub in subscriptions.data:
-                        # If user has an ACTIVE or TRIALING subscription right now
-                        if sub.status in ['active', 'trialing']:
-                            active_sub = sub
+                     # Line items for update must include existing items if we want to KEEP them?
+                     # Actually, for subscription updates in Checkout, you can either:
+                     # 1. Update the entire list.
+                     # 2. Add new items.
+                     
+                     # The most robust way is to list all items we want to BE there.
+                     new_line_items = []
+                     for item in sub_items.data:
+                         new_line_items.append({
+                             'id': item.id, # Keep existing item
+                             'price': item.price.id,
+                             'quantity': item.quantity
+                         })
+                     
+                     # Add the new add-on
+                     new_line_items.append({
+                         'price': price_id,
+                         'quantity': 1
+                     })
+                     
+                     session_params['line_items'] = new_line_items
+                     # mode must be 'subscription' still
+                 else:
+                     print("DEBUG CHECKOUT: No main subscription found. Creating separate add-on subscription.")
+                     # Fallback to separate sub (billing won't be aligned until they move to a plan)
+        else:
+            # --- STANDARD PLAN LOGIC (Replacement) ---
+            if trial_days and int(trial_days) > 0:
+                print(f"DEBUG CHECKOUT: Target product has {trial_days} trial days. Checking for prior subs for {customer_email}...")
+                
+                # Enforce One-Time Trial Logic (Robust Check)
+                # 1. Search ALL customers with this email to avoid duplicates hiding history
+                customers = stripe.Customer.list(email=customer_email, limit=100)
+                
+                has_prior_subscription = False
+                active_sub = None
+    
+                if customers.data:
+                    for customer in customers.data:
+                        # Check for any subscriptions (active, canceled, past due, etc.)
+                        subscriptions = stripe.Subscription.list(customer=customer.id, status='all', limit=100)
+                        for sub in subscriptions.data:
+                            # If user has an ACTIVE or TRIALING subscription right now
+                            if sub.status in ['active', 'trialing']:
+                                active_sub = sub
+                            
+                            # Check for ANY history
+                            if sub.status in ['active', 'trialing', 'canceled', 'past_due', 'unpaid', 'incomplete_expired']:
+                                 has_prior_subscription = True
+                                 print(f"DEBUG: Found prior sub {sub.id} (status={sub.status}) for customer {customer.id}")
                         
-                        # Check for ANY history
-                        if sub.status in ['active', 'trialing', 'canceled', 'past_due', 'unpaid', 'incomplete_expired']:
-                             has_prior_subscription = True
-                             print(f"DEBUG: Found prior sub {sub.id} (status={sub.status}) for customer {customer.id}")
-                    
-                    if has_prior_subscription: 
-                        break
-
-            if active_sub:
-                print(f"DEBUG CHECKOUT: Active/Trialing subscription found for {customer_email}. Switch initiated.")
-                # We allow the user to proceed. The Webhook will handle canceling the OLD one.
-
-            if not has_prior_subscription:
-                print(f"DEBUG CHECKOUT: Applying {trial_days} days trial for {customer_email}.")
-                if 'subscription_data' not in session_params:
-                    session_params['subscription_data'] = {}
-                session_params['subscription_data']['trial_period_days'] = int(trial_days)
+                        if has_prior_subscription: 
+                            break
+    
+                if active_sub:
+                    print(f"DEBUG CHECKOUT: Active/Trialing subscription found for {customer_email}. Switch initiated.")
+                    # We allow the user to proceed. The Webhook will handle canceling the OLD one.
+    
+                if not has_prior_subscription:
+                    print(f"DEBUG CHECKOUT: Applying {trial_days} days trial for {customer_email}.")
+                    if 'subscription_data' not in session_params:
+                        session_params['subscription_data'] = {}
+                    session_params['subscription_data']['trial_period_days'] = int(trial_days)
             else:
                  print(f"User {customer_email} has a prior subscription. FORCE SKIPPING TRIAL.")
                  # To skip trial, ensure NO trial params are present
@@ -340,9 +400,26 @@ async def stripe_webhook(request: Request):
             stripe_customer_id = session.get('customer')
             new_subscription_id = session.get('subscription')
             
-            # --- AUTO-CANCEL OLD SUBSCRIPTIONS (Strict) ---
+            # --- AUTO-CANCEL OLD SUBSCRIPTIONS (Strict but Smart) ---
             if stripe_customer_id and new_subscription_id:
                 try:
+                    # Determine if the NEW subscription is an Add-on
+                    new_is_addon = False
+                    new_addon_key = metadata.get('addon_key')
+                    if not new_addon_key:
+                         # Try seeking via product
+                         try:
+                             line_items = stripe.checkout.Session.list_line_items(session.get('id'), limit=1)
+                             if line_items.data:
+                                 price = line_items.data[0].price
+                                 prod = stripe.Product.retrieve(price.product)
+                                 new_addon_key = prod.metadata.get('addon_key')
+                         except: pass
+                    
+                    if new_addon_key:
+                        new_is_addon = True
+                        print(f"SWITCHING: New subscription is ADD-ON ({new_addon_key}). NOT canceling main plans.", flush=True)
+
                     # List all active/trialing subs for this customer
                     existing_subs = stripe.Subscription.list(
                         customer=stripe_customer_id, 
@@ -353,13 +430,38 @@ async def stripe_webhook(request: Request):
                     for sub in existing_subs.data:
                         # If subscription is active/trialing AND it's NOT the one we just created
                         if sub.status in ['active', 'trialing'] and sub.id != new_subscription_id:
-                            print(f"SWITCHING: Found old subscription {sub.id} ({sub.status}). Canceling IMMEDIATELY...", flush=True)
-                            try:
-                                # Use cancel_at_period_end for 'phone bill' logic
-                                stripe.Subscription.modify(sub.id, cancel_at_period_end=True)
-                                print(f"SWITCHING: Old subscription {sub.id} scheduled for cancellation.", flush=True)
-                            except Exception as delete_err:
-                                print(f"Warning: SWITCHING: Failed to delete sub {sub.id}: {delete_err}", flush=True)
+                            
+                            # Check if the EXISTING sub is an Add-on
+                            existing_addon_key = sub.metadata.get('addon_key')
+                            if not existing_addon_key:
+                                try:
+                                    prod_id = sub.plan.product
+                                    if prod_id:
+                                        p = stripe.Product.retrieve(prod_id)
+                                        existing_addon_key = p.metadata.get('addon_key')
+                                except: pass
+                            
+                            should_cancel = False
+                            
+                            if new_is_addon:
+                                # If buying Add-on, ONLY cancel existing Add-ons of the SAME type (e.g. upgrading add-on tier?)
+                                # For now, we assume one add-on of a type allowed.
+                                if existing_addon_key == new_addon_key:
+                                     should_cancel = True
+                                     print(f"SWITCHING: Canceling duplicate Add-on {sub.id}", flush=True)
+                            else:
+                                # If buying Main Plan, ONLY cancel existing Main Plans. Leave Add-ons alone.
+                                if not existing_addon_key:
+                                     should_cancel = True
+                                     print(f"SWITCHING: Canceling old Main Plan {sub.id}", flush=True)
+
+                            if should_cancel:
+                                try:
+                                    # Use cancel_at_period_end for 'phone bill' logic
+                                    stripe.Subscription.modify(sub.id, cancel_at_period_end=True)
+                                    print(f"SWITCHING: Old subscription {sub.id} scheduled for cancellation.", flush=True)
+                                except Exception as delete_err:
+                                    print(f"Warning: SWITCHING: Failed to delete sub {sub.id}: {delete_err}", flush=True)
                             
                 except Exception as e:
                     print(f"Warning: SWITCHING ERROR: Failed to assistant cancel old subscriptions: {e}", flush=True)
@@ -416,6 +518,28 @@ async def stripe_webhook(request: Request):
 
             # Use upsert to create profile if it's missing (failsafe)
             try:
+                # --- ADD-ON LOGIC: SCAN ALL ITEMS ---
+                if subscription_id:
+                    try:
+                         active_addons = []
+                         # List all items in this subscription
+                         items = stripe.SubscriptionItem.list(subscription=subscription_id, limit=20)
+                         for item in items.data:
+                             item_addon_key = item.metadata.get('addon_key')
+                             if not item_addon_key:
+                                 prod = stripe.Product.retrieve(item.price.product)
+                                 item_addon_key = prod.metadata.get('addon_key')
+                             
+                             if item_addon_key:
+                                 active_addons.append(item_addon_key)
+                         
+                         if active_addons:
+                             update_data['addons'] = list(set(active_addons))
+                             print(f"WEBHOOK CHECKOUT: Found and syncing addons: {active_addons}", flush=True)
+                    except Exception as e:
+                         print(f"WEBHOOK CHECKOUT ERROR: Failed to scan subscription items: {e}", flush=True)
+                # ------------------------------------
+
                 response = supabase.table('profiles').upsert(update_data).execute()
                 print(f"WEBHOOK UPDATE SUCCESS: {response}", flush=True)
             except Exception as e:
@@ -473,6 +597,47 @@ async def stripe_webhook(request: Request):
                          update_data['last_plan_change_at'] = 'now()' # Update cooldown on tier change
              except Exception as e:
                  print(f"WEBHOOK ERROR: Failed to resolve tier on update: {e}", flush=True)
+
+             # --- ADD-ON LOGIC: SCAN ALL ITEMS ---
+             # We scan ALL items in the subscription to find any add-ons
+             try:
+                 active_addons = []
+                 main_tier = None
+                 
+                 # List all items in this subscription
+                 items = stripe.SubscriptionItem.list(subscription=sub.id, limit=20)
+                 for item in items.data:
+                     # Check item metadata first, then product metadata
+                     item_addon_key = item.metadata.get('addon_key')
+                     item_tier_id = item.metadata.get('plan_tier_id')
+                     
+                     if not item_addon_key or not item_tier_id:
+                         prod = stripe.Product.retrieve(item.price.product)
+                         if not item_addon_key: item_addon_key = prod.metadata.get('addon_key')
+                         if not item_tier_id: item_tier_id = prod.metadata.get('plan_tier_id')
+                     
+                     if item_addon_key:
+                         active_addons.append(item_addon_key)
+                     elif item_tier_id:
+                         # This is the main plan
+                         main_tier = item_tier_id
+                 
+                 print(f"WEBHOOK SYNC: Found Addons: {active_addons}, Main Tier: {main_tier}", flush=True)
+                 
+                 if new_status in ['active', 'trialing']:
+                     update_data['addons'] = list(set(active_addons))
+                     if main_tier and current_tier != 'super_admin':
+                         update_data['subscription_tier'] = main_tier
+                 else:
+                     # If sub is canceled/past_due, remove these specific addons?
+                     # Actually, if the WHOLE sub is canceled, we clear them.
+                     update_data['addons'] = []
+                     if current_tier != 'super_admin':
+                          update_data['subscription_tier'] = None
+
+             except Exception as e:
+                 print(f"WEBHOOK ERROR: Failed to scan subscription items: {e}", flush=True)
+             # ------------------------------------
 
              supabase.table('profiles').upsert(update_data).execute()
              print(f"WEBHOOK: Profile {user_id} updated via sync (Cancel={sub.get('cancel_at_period_end')}).", flush=True)
@@ -608,27 +773,49 @@ async def sync_subscription(data: dict):
              }
              
              # If NOT super_admin, we handle tier updates
-             if current_tier != 'super_admin':
-                 # Sync the tier if available in metadata
-                 plan_tier_id = target_sub.metadata.get('plan_tier_id') if target_sub else None
-                 
-                 # Fallback: If plan_tier_id is missing but we have a subscription, check the Product metadata
-                 if target_sub and not plan_tier_id:
-                     try:
-                         print(f"DEBUG SYNC: plan_tier_id missing on subscription {target_sub.id}. Fetching product...", flush=True)
-                         product_id = target_sub.plan.product
-                         if product_id:
-                             prod = stripe.Product.retrieve(product_id)
-                             plan_tier_id = prod.metadata.get('plan_tier_id')
-                     except Exception as e:
-                         print(f"Warning: SYNC PRODUCT LOOKUP FAILED: {e}", flush=True)
+             if current_tier != 'super_admin' and target_sub:
+                  # --- ADD-ON LOGIC: SCAN ALL ITEMS ---
+                  try:
+                      active_addons = []
+                      main_tier = None
+                      
+                      # List all items in this subscription
+                      items = stripe.SubscriptionItem.list(subscription=target_sub.id, limit=20)
+                      for item in items.data:
+                          # Check item metadata first, then product metadata
+                          item_addon_key = item.metadata.get('addon_key')
+                          item_tier_id = item.metadata.get('plan_tier_id')
+                          
+                          if not item_addon_key or not item_tier_id:
+                              prod = stripe.Product.retrieve(item.price.product)
+                              if not item_addon_key: item_addon_key = prod.metadata.get('addon_key')
+                              if not item_tier_id: item_tier_id = prod.metadata.get('plan_tier_id')
+                          
+                          if item_addon_key:
+                              active_addons.append(item_addon_key)
+                          elif item_tier_id:
+                              # This is the main plan
+                              main_tier = item_tier_id
+                      
+                      print(f"SYNC SCAN: Found Addons: {active_addons}, Main Tier: {main_tier}", flush=True)
+                      
+                      if status in ['active', 'trialing']:
+                          update_data['addons'] = list(set(active_addons))
+                          if main_tier:
+                              update_data['subscription_tier'] = main_tier
+                      else:
+                          # If sub is not active, clear addons
+                          update_data['addons'] = []
+                          update_data['subscription_tier'] = None
 
-                 if plan_tier_id:
-                     update_data['subscription_tier'] = plan_tier_id
-                 elif status == 'none':
-                      update_data['subscription_tier'] = None # Explicitly reset tier
+                  except Exception as e:
+                      print(f"SYNC ERROR: Failed to scan subscription items: {e}", flush=True)
+                  # ------------------------------------
+             elif status == 'none' and current_tier != 'super_admin':
+                 update_data['subscription_tier'] = None
+                 update_data['addons'] = []
              else:
-                 print(f"SYNC: User {user_id} is 'super_admin'. Skipping tier overwrite.", flush=True)
+                 print(f"SYNC: User {user_id} is 'super_admin' or no sub found. Skipping tier overwrite.", flush=True)
 
              if trial_end:
                  update_data['trial_end'] = trial_end

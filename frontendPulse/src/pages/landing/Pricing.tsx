@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Check, Rocket, Shield, Zap } from 'lucide-react';
 import { getApiUrl } from '../../utils/apiConfig';
-import Navbar from '../../components/layout/Navbar';
+
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Container from '../../components/ui/Container';
@@ -25,28 +25,29 @@ interface StripeProduct {
   price: number;
   price_id: string;
   description: string | null;
+  metadata?: {
+    addon_key?: string;
+  };
 }
 
 const Pricing = () => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const { theme } = useTheme();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+
 
   useEffect(() => {
-    const isTrialActive = profile?.trial_end ? new Date(profile.trial_end) > new Date() : false;
-    if (['active', 'trialing'].includes(profile?.status || '') || isTrialActive || profile?.subscription_tier === 'super_admin') {
-       navigate('/dashboard/overview');
-    }
-
     const fetchPlans = async () => {
       try {
         const apiUrl = getApiUrl();
         const res = await fetch(`${apiUrl}/billing/products`);
         if (res.ok) {
           const data: StripeProduct[] = await res.json();
-          const formatted = data.sort((a, b) => a.price - b.price).map((p) => ({
+          const formatted = data
+            .filter((p: StripeProduct) => !p.metadata?.addon_key) // Hide AI Add-ons from public pricing
+            .sort((a, b) => a.price - b.price)
+            .map((p) => ({
              id: p.id,
              name: p.name,
              price: `£${Math.floor(p.price)}`,
@@ -62,7 +63,7 @@ const Pricing = () => {
       }
     };
     fetchPlans();
-  }, [profile, navigate]);
+  }, []);
 
   const getFeatures = (name: string) => {
       if (name === 'Starter') return ['2,000 Tickets/mo', 'Basic analytics', 'Community support', 'Email notifications'];
@@ -97,7 +98,7 @@ const Pricing = () => {
 
   return (
     <div className={`${theme} min-h-screen bg-background text-main flex flex-col items-center relative overflow-hidden transition-colors duration-300`}>
-      <Navbar />
+
 
       <Container className="flex-1 w-full flex flex-col items-center justify-center py-20">
         {/* Background Gradients */}

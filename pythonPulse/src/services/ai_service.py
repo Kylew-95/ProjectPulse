@@ -314,6 +314,12 @@ def generate_suggestions_from_logs(messages_text: str):
     prompt = f"""
     Analyze the following Discord chat logs to extract "user needs", "wants", and "feature requests" for the company.
     
+    CRITICAL GROUNDING RULES:
+    1. DO NOT HALLUCINATE: Only identify requests explicitly mentioned by users. Do not "invent" needs that aren't there.
+    2. COMMUNITY SPACE: The logs are from a general community channel. Ignore social chatter, greetings, and off-topic talk.
+    3. BE SKEPTICAL: If someone says "I like cake", that is NOT a feature request. Only extract meaningful business or product feedback.
+    4. EMPTY STATE: If no clear needs or requests are found, you MUST return exactly: []
+
     Logs:
     {messages_text}
     
@@ -321,13 +327,7 @@ def generate_suggestions_from_logs(messages_text: str):
     - type: (one of: "suggestion", "feature_request", "user_need")
     - content: (a concise, actionable summary of the request/need)
     
-    Example Output:
-    [
-      {{"type": "feature_request", "content": "Users are asking for a dark mode option in the dashboard."}},
-      {{"type": "user_need", "content": "Multiple users reported difficulty finding the password reset link."}}
-    ]
-    
-    If no suggestions are found, return an empty list [].
+    If no meaningful suggestions are found based on the rules above, return an empty list [].
     """
 
     if not co:
@@ -357,13 +357,13 @@ def generate_daily_insight(messages_text: str):
 
     prompt = f"""
     Analyze the following Discord chat logs for the entire day.
-    Your goal is to identify the SINGLE MOST IMPORTANT "feature request" or "user need" discussed.
+    Identify the SINGLE MOST IMPORTANT "feature request" or "user need" discussed.
     
-    Ignore minor bugs, typos, or off-topic chatter.
-    Focus on:
-    1. A feature that would add the most value.
-    2. A recurring pain point that blocks users.
-    3. A brilliant idea that stood out.
+    STRICT GROUNDING RULES:
+    1. EVIDENCE-BASED: The insight MUST be based on specific user messages in the logs.
+    2. DO NOT INVENT: Do not suggest "revolutionary" ideas that haven't been discussed. 
+    3. IGNORE CHATTER: Ignore 99% of the logs if they are just social talk.
+    4. QUALITY OVER QUANTITY: If nothing truly significant was discussed, return null. 
 
     Logs:
     {messages_text}
@@ -371,10 +371,10 @@ def generate_daily_insight(messages_text: str):
     Return ONLY a JSON object with:
     - type: (one of: "strategic_insight", "top_feature_request", "critical_issue")
     - content: (A concise, executive-summary style description of the insight)
-    - reasoning: (Why this was chosen as the top item)
-    - impact_score: (1-10 integer, how much this matters)
+    - reasoning: (Why this was chosen based on the logs)
+    - impact_score: (1-10 integer)
 
-    If nothing of value was discussed, return null.
+    If nothing of value was discussed, return exactly: null
     """
 
     if not co:
@@ -459,7 +459,7 @@ def chat_with_pulse(query: str, context: dict):
     1. If the user is just saying hello or greeting you, respond with a friendly, premium welcome message. Mention that you have access to their project data and are ready to help.
     2. For data-related queries (e.g., summaries, workloads, counts), use the "SYSTEM STATUS" metrics PRIVILEGEDLY.
     3. If asked for a summary, look at 'recent_tickets' and 'total_tickets'.
-    4. If asked about team counts, look at 'total_teams'. If asked about workload distributions, refer to 'team_workload'.
+    4. If asked about teams or members, consult 'total_teams' and 'team_structure' (which contains team names and their members). Refer to 'team_workload' for distribution and 'recent_tickets' for specific ticket titles.
     5. If the data for their query is not in the context, politely inform them based on what you *can* see.
     6. Always mention specific numbers from the context when relevant (e.g., "You have X open tickets").
     7. Be professional, concise, and helpful. Use Discord-style markdown.

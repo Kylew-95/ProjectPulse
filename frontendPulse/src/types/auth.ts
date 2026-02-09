@@ -11,6 +11,7 @@ export interface Profile {
     discord_guild_id?: string | null;
     discord_channel_id?: string | null;
     discord_status?: string | null;
+    addons?: string[] | null;
 }
 
 export interface AuthContextType {

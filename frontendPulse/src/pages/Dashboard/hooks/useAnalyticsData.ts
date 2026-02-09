@@ -5,23 +5,28 @@ import type { Ticket } from '../../../types/ticket';
 
 export interface AnalyticsData {
     total: number;
+    active_issues: number;
     by_status: Record<string, number>;
     by_priority: Record<string, number>;
     by_type: Record<string, number>;
     urgency_avg: number;
     daily_trends: { date: string; count: number }[];
     workload: { name: string; count: number }[];
-    recent_tickets: { id: string; title: string; status: string; priority: string; assignee: string }[];
+    recent_tickets: { title: string; status: string; priority: string; assignee: string }[];
     heatmap: { day: string; hour: number; count: number }[];
     total_teams: number;
+    team_structure: { name: string; members: string[] }[];
     trends: {
-        total: number;
-        urgency: number;
-        velocity: number;
+        total: number | null;
+        active: number | null;
+        urgency: number | null;
+        velocity: number | null;
     };
 }
 
+
 export type TimeRange = '7d' | '30d' | 'all';
+
 
 export const useAnalyticsData = (timeRange: TimeRange) => {
     const { user } = useAuth();
@@ -75,15 +80,38 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
                 });
             }
 
-            // Fetch team count separately for accuracy
-            const { count: teamCount, error: teamError } = await supabase
+            // Fetch team structure (names and member names) robustly
+            const { data: teamsRaw, error: teamError } = await supabase
                 .from('teams')
-                .select('*', { count: 'exact', head: true });
+                .select('id, name');
 
             if (teamError) throw teamError;
 
+            const { data: membersRaw, error: membersError } = await supabase
+                .from('team_members')
+                .select('team_id, user_id');
+
+            if (membersError) throw membersError;
+
+            const allUserIds = [...new Set((membersRaw || []).map(m => m.user_id))];
+            const profilesMap: Record<string, string> = {};
+
+            if (allUserIds.length > 0) {
+                const { data: profilesRaw, error: profilesError } = await supabase
+                    .from('profiles')
+                    .select('id, full_name')
+                    .in('id', allUserIds);
+
+                if (!profilesError && profilesRaw) {
+                    profilesRaw.forEach(p => {
+                        profilesMap[p.id] = p.full_name || 'Unknown';
+                    });
+                }
+            }
+
             const stats: AnalyticsData = {
                 total: currentPeriodTickets.length,
+                active_issues: currentPeriodTickets.filter(t => !['done', 'closed'].includes((t.status || 'open').toLowerCase())).length,
                 by_status: {},
                 by_priority: {},
                 by_type: {},
@@ -92,8 +120,15 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
                 workload: [],
                 recent_tickets: [],
                 heatmap: [],
-                total_teams: teamCount || 0,
-                trends: { total: 0, urgency: 0, velocity: 0 }
+                total_teams: teamsRaw?.length || 0,
+                team_structure: (teamsRaw || []).map(t => ({
+                    name: t.name,
+                    members: (membersRaw || [])
+                        .filter(m => m.team_id === t.id)
+                        .map(m => profilesMap[m.user_id])
+                        .filter(Boolean) as string[]
+                })),
+                trends: { total: null, active: null, urgency: null, velocity: null }
             };
 
             if (currentPeriodTickets.length === 0) {
@@ -142,10 +177,21 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
             });
 
             if (previousPeriodTickets.length > 0) {
-                stats.trends.total = ((currentPeriodTickets.length - previousPeriodTickets.length) / previousPeriodTickets.length) * 100;
+                // Total tickets trend
+                stats.trends.total = ((currentPeriodTickets.length - previousPeriodTickets.length) / (previousPeriodTickets.length || 1)) * 100;
+
+                // Active issues trend
+                const currentActive = stats.active_issues;
+                const previousActive = previousPeriodTickets.filter(t => !['done', 'closed'].includes((t.status || 'open').toLowerCase())).length;
+                stats.trends.active = previousActive > 0
+                    ? ((currentActive - previousActive) / previousActive) * 100
+                    : (currentActive > 0 ? 100 : 0);
+
+                // Urgency trend
                 const prevUrgencyAvg = previousPeriodTickets.reduce((acc, t) => acc + (t.urgency_score || 0), 0) / previousPeriodTickets.length;
                 stats.trends.urgency = stats.urgency_avg - prevUrgencyAvg;
 
+                // Velocity trend
                 const daysInPeriod = timeRange === '7d' ? 7 : 30;
                 const currentVelocity = currentPeriodTickets.length / daysInPeriod;
                 const prevVelocity = previousPeriodTickets.length / daysInPeriod;
@@ -160,7 +206,6 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
                 .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                 .slice(0, 5)
                 .map(t => ({
-                    id: String(t.id),
                     title: t.title,
                     status: t.status,
                     priority: t.priority,

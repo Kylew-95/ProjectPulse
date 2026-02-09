@@ -38,6 +38,7 @@ const Layout = () => {
       { icon: BarChart2, label: 'Analytics', path: '/dashboard/analytics', isEnterprise: true },
       { icon: Sparkles, label: 'AI Workspace', path: '/dashboard/ai-workspace', isEnterprise: true },
       { icon: Book, label: 'Knowledge Base', path: '/dashboard/knowledge-base', isEnterprise: true },
+
       { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
     ];
 
@@ -113,6 +114,8 @@ const Layout = () => {
                                     <span>{item.label}</span>
                                     {item.label === 'Analytics' ? (
                                         !isPro && <Lock size={12} className="ml-auto text-slate-400 opacity-60" />
+                                    ) : item.label === 'AI Workspace' ? (
+                                        !(isEnterprise || profile?.addons?.includes('ai_workspace')) && <Lock size={12} className="ml-auto text-slate-400 opacity-60" />
                                     ) : item.isEnterprise && !isEnterprise && (
                                         <Lock size={12} className="ml-auto text-slate-400 opacity-60" />
                                     )}

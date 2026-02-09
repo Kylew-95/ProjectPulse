@@ -171,13 +171,6 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
     fetchProfiles();
   }, []);
 
-// ...
-
-                {profiles.map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.full_name || p.discord_id || p.email?.split('@')[0] || 'User'}
-                  </option>
-                ))}
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -259,7 +252,9 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
                     ) : (
                         <>
                             <Lock size={10} className="text-slate-500" />
-                            <span className="text-slate-500">Suggest Reply</span>
+                            <span className="text-slate-500">
+                                <a href="/pricing" className="text-blue-600 hover:underline">Upgrade to Pro</a> to get AI Suggestion
+                            </span>
                         </>
                     )}
                 </button>
@@ -336,22 +331,49 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
               <SearchableSelect
                 options={userTeams.map(t => ({ value: t.id, label: t.name }))}
                 value={selectedTeamId}
-                onChange={val => setSelectedTeamId(val)}
+                onChange={val => {
+                    setSelectedTeamId(val);
+                    if (autoAssign) handleAutoAssign(val);
+                }}
                 placeholder="Select team..."
               />
             </div>
-            <div className="flex items-end">
+            <div className="flex items-end gap-4">
               <label className="flex items-center gap-2 mb-2 cursor-pointer group">
                 <input 
                   type="checkbox" 
                   checked={autoAssign}
-                  onChange={(e) => setAutoAssign(e.target.checked)}
+                  onChange={(e) => {
+                    const newValue = e.target.checked;
+                    setAutoAssign(newValue);
+                    if (newValue && selectedTeamId) {
+                        handleAutoAssign(selectedTeamId);
+                    }
+                  }}
                   className="w-4 h-4 rounded border-white/10 bg-slate-950/50 text-primary focus:ring-primary"
                 />
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider group-hover:text-slate-300 transition-colors">Auto-assign</span>
               </label>
             </div>
           </div>
+
+          {!autoAssign && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Assignee</label>
+               <SearchableSelect
+                 options={[
+                   { value: '', label: 'Unassigned' },
+                   ...profiles.map(p => ({
+                     value: p.id,
+                     label: p.full_name || p.email?.split('@')[0] || 'Unknown User'
+                   }))
+                 ]}
+                 value={formData.assignee_id}
+                 onChange={val => setFormData({ ...formData, assignee_id: val })}
+                 placeholder="Select assignee..."
+               />
+            </div>
+          )}
 
 
           <div className="flex justify-end gap-3 mt-8">

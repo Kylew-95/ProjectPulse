@@ -5,6 +5,14 @@ import { useAuth } from '../../context/AuthContext';
 import PrioritySelector, { type Priority } from '../common/PrioritySelector';
 import { TagSelector, type Tag } from '../common/TagComponents';
 
+interface TicketProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  email: string | null;
+  discord_id: string | null;
+}
+
 interface CreateTicketModalProps {
   onClose: () => void;
   onTicketCreated: () => void;
@@ -24,6 +32,7 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams, initia
   const [autoAssign, setAutoAssign] = useState(true);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [profiles, setProfiles] = useState<TicketProfile[]>([]);
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     description: initialData?.description || '',
@@ -32,6 +41,14 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams, initia
     urgency_score: 5,
     assignee_id: ''
   });
+
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      const { data } = await supabase.from('profiles').select('id, full_name, avatar_url, email, discord_id');
+      if (data) setProfiles(data);
+    };
+    fetchProfiles();
+  }, []);
 
   useEffect(() => {
     if (autoAssign && selectedTeamId) {
@@ -272,12 +289,38 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams, initia
                 </div>
                 <button
                   type="button"
-                  onClick={() => setAutoAssign(!autoAssign)}
+                  onClick={() => {
+                    const newValue = !autoAssign;
+                    setAutoAssign(newValue);
+                    if (!newValue) {
+                      setFormData(prev => ({ ...prev, assignee_id: '' }));
+                    } else if (selectedTeamId) {
+                      handleAutoAssign(selectedTeamId);
+                    }
+                  }}
                   className={`w-12 h-6 rounded-full transition-colors relative ${autoAssign ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'}`}
                 >
                   <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${autoAssign ? 'left-7' : 'left-1'}`} />
                 </button>
               </div>
+
+              {!autoAssign && (
+                <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] pl-1">Manual Assignee</label>
+                  <select
+                    value={formData.assignee_id}
+                    onChange={e => setFormData({ ...formData, assignee_id: e.target.value })}
+                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
+                  >
+                    <option value="">Unassigned</option>
+                    {profiles.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.full_name || p.email?.split('@')[0] || 'Unknown User'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           )}
         </div>

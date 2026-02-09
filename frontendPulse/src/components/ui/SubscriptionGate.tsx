@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Check, Sparkles, Loader2, Zap, Crown } from 'lucide-react';
+import { Check, Sparkles, Loader2, Zap, Crown, Bot } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { getApiUrl } from '../../utils/apiConfig';
@@ -11,6 +11,7 @@ interface SubscriptionGateProps {
   featureName: string;
   description: string;
   features: string[];
+  showAddonOption?: boolean;
 }
 
 const SubscriptionGate = ({ 
@@ -18,16 +19,21 @@ const SubscriptionGate = ({
   tier,
   featureName, 
   description,
-  features
+  features,
+  showAddonOption = false
 }: SubscriptionGateProps) => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [addonLoading, setAddonLoading] = useState(false);
 
   const currentTier = profile?.subscription_tier || 'starter';
+  const addons = profile?.addons || [];
+  
   const hasAccess = 
     (tier === 'pro' && ['pro', 'enterprise', 'super_admin'].includes(currentTier)) ||
-    (tier === 'enterprise' && ['enterprise', 'super_admin'].includes(currentTier));
+    (tier === 'enterprise' && ['enterprise', 'super_admin'].includes(currentTier)) ||
+    (showAddonOption && addons.includes('ai_workspace'));
 
   const handleUpgrade = async () => {
     setLoading(true);
@@ -45,11 +51,48 @@ const SubscriptionGate = ({
         return;
       }
 
+      await initiateCheckout(targetPlan.price_id);
+    } catch (error) {
+      console.error('Upgrade failed:', error);
+      navigate('/pricing');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddonPurchase = async () => {
+    setAddonLoading(true);
+    try {
+      const apiUrl = getApiUrl();
+      const productsRes = await fetch(`${apiUrl}/billing/products`);
+      const products = await productsRes.json();
+      
+      // Find AI Workspace Add-on
+      const addonProduct = products.find((p: { metadata?: { addon_key?: string }, name: string }) => 
+          p.metadata?.addon_key === 'ai_workspace'
+      );
+      
+      if (!addonProduct) {
+        alert("AI Workspace Add-on not found. Please contact support.");
+        return;
+      }
+
+      await initiateCheckout(addonProduct.price_id);
+
+    } catch (error) {
+      console.error('Add-on purchase failed:', error);
+    } finally {
+      setAddonLoading(false);
+    }
+  };
+
+  const initiateCheckout = async (priceId: string) => {
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/billing/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          price_id: targetPlan.price_id,
+          price_id: priceId,
           user_id: user?.id,
           success_url: `${window.location.origin}/dashboard/overview?session_id={CHECKOUT_SESSION_ID}&success=true`,
           cancel_url: window.location.href
@@ -59,12 +102,6 @@ const SubscriptionGate = ({
       if (url) {
         window.location.href = url;
       }
-    } catch (error) {
-      console.error('Upgrade failed:', error);
-      navigate('/pricing');
-    } finally {
-      setLoading(false);
-    }
   };
 
   if (hasAccess) {
@@ -104,18 +141,37 @@ const SubscriptionGate = ({
                 </p>
               </div>
 
-              <button 
-                onClick={handleUpgrade}
-                disabled={loading}
-                className={`w-full md:w-auto inline-flex items-center justify-center px-10 py-4 ${buttonBg} text-white font-bold rounded-2xl transition-all shadow-lg ${shadowColor} hover:scale-[1.02] active:scale-95 disabled:opacity-50 gap-2`}
-              >
-                {loading ? (
-                  <Loader2 className="animate-spin" size={20} />
-                ) : (
-                  <Sparkles size={20} />
-                )}
-                <span>Upgrade to {isEnterprise ? 'Enterprise' : 'Pro'}</span>
-              </button>
+              <div className="flex flex-col gap-4 w-full md:w-auto">
+                  <button 
+                    onClick={handleUpgrade}
+                    disabled={loading || addonLoading}
+                    className={`w-full inline-flex items-center justify-center px-10 py-4 ${buttonBg} text-white font-bold rounded-2xl transition-all shadow-lg ${shadowColor} hover:scale-[1.02] active:scale-95 disabled:opacity-50 gap-2`}
+                  >
+                    {loading ? (
+                      <Loader2 className="animate-spin" size={20} />
+                    ) : (
+                      <Sparkles size={20} />
+                    )}
+                    <span>Upgrade to {isEnterprise ? 'Enterprise' : 'Pro'}</span>
+                  </button>
+
+                  {/* Add-on Option */}
+                  {showAddonOption && (
+                      <div className="w-full pt-4 border-t border-slate-100 dark:border-white/5">
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 text-center md:text-left">
+                              Or get it as an add-on
+                          </p>
+                          <button
+                            onClick={handleAddonPurchase}
+                            disabled={loading || addonLoading}
+                            className="w-full inline-flex items-center justify-center px-6 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 gap-2"
+                          >
+                             {addonLoading ? <Loader2 className="animate-spin" size={16} /> : <Bot size={16} className="text-indigo-500" />}
+                             <span>Enable AI Workspace (£30/mo)</span>
+                          </button>
+                      </div>
+                  )}
+              </div>
             </div>
 
             {/* Right Side: Features List */}

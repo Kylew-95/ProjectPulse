@@ -1,0 +1,16 @@
+--- STARTING STRIPE PRORATION SIMULATION ---
+Creating Test Clock starting at: 2026-02-01 10:00:00
+Created Customer: cus_TwvgMiS1lWOmEn
+Subscribed to Pro Plan. Subscription: sub_1Sz1pBK4HSIkuH8OCX7eGnQ9
+Advancing Test Clock to: 2026-02-15 10:00:00 (Approx halfway)...
+Waiting for Stripe to process time shift...... Done.
+Adding AI Workspace Add-on (£30/mo) with proration_behavior='always_invoice'...
+
+--- RESULTS ---
+Invoice ID: in_1Sz1pMK4HSIkuH8OKd1XdDJT
+Total Amount Charged: £15.00
+
+Line Items:
+- Remaining time on AI Workspace Add-on after 15 Feb 2026: £15.00
+
+Check the 'Proration' lines above. You should see a charge for the remaining ~14 days of the AI Workspace.

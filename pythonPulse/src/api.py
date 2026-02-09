@@ -1,6 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from routers import billing, analytics, knowledge_base, intelligence, ai_history, general, tags, discord
+from routers import billing, analytics, knowledge_base, intelligence, ai_history, general, tags, discord_router
 from dotenv import load_dotenv
 import os
 from rate_limiter import limiter, _rate_limit_exceeded_handler, RateLimitExceeded
@@ -27,8 +27,16 @@ app.include_router(intelligence.router, prefix="/intelligence", tags=["Intellige
 app.include_router(ai_history.router, prefix="/intelligence/history", tags=["AI Chat History"])
 app.include_router(general.router, tags=["General"])
 app.include_router(tags.router, tags=["Tags"])
-app.include_router(discord.router, prefix="/discord", tags=["Discord"])
+app.include_router(discord_router.router, prefix="/discord", tags=["Discord"])
+
+@app.post("/webhook")
+async def root_webhook(request: Request):
+    return await billing.stripe_webhook(request)
 
 @app.get("/")
 def read_root():
-    return {"status": "ok", "service": "ProjectPulse API"}
+    return {
+        "status": "ok", 
+        "service": "ProjectPulse API",
+        "registered_prefixes": ["/billing", "/analytics", "/knowledge", "/intelligence", "/discord"]
+    }

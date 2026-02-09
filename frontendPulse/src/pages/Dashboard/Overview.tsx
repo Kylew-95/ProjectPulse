@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
 import { Ticket, Activity, ShieldCheck, TrendingUp } from 'lucide-react';
@@ -9,6 +9,8 @@ import CreateTicketModal from '../../components/tickets/CreateTicketModal';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Container from '../../components/ui/Container';
+import { useAnalyticsData } from './hooks/useAnalyticsData';
+
 
 import { motion, type Variants } from 'framer-motion';
 
@@ -37,40 +39,17 @@ const itemVariants: Variants = {
 
 const Overview = () => {
   const { user, profile } = useAuth();
-  const [stats, setStats] = useState({ total: 0, open: 0, closed: 0, avgUrgency: 0 });
+  const { data: analytics, refresh: refreshAnalytics } = useAnalyticsData('7d');
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [initialTicketData, setInitialTicketData] = useState<{ title?: string; description?: string } | null>(null);
   const [userTeams, setUserTeams] = useState<{ id: string; name: string }[]>([]);
 
-
-  const fetchStats = useCallback(async () => {
-    if (!user) return;
-    try {
-      const { data } = await supabase.from('tickets').select('status, urgency_score');
-      if (data) {
-        const total = data.length;
-        const closed = data.filter(t => t.status === 'done' || t.status === 'closed').length;
-        const open = total - closed;
-        const avgUrgency = total > 0 
-          ? data.reduce((acc, t) => acc + (t.urgency_score || 0), 0) / total 
-          : 0;
-        
-        setStats({ total, open, closed, avgUrgency });
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  }, [user]);
-
   useEffect(() => {
-    const initFetch = async () => {
-      await fetchStats();
-    };
-    initFetch();
+    // Analytics is already fetched by the hook
 
     const channel = supabase
       .channel('overview-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => fetchStats())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => refreshAnalytics())
       .subscribe();
 
     const fetchUserTeams = async () => {
@@ -96,7 +75,7 @@ const Overview = () => {
     fetchUserTeams();
 
     return () => { supabase.removeChannel(channel); };
-  }, [fetchStats, user?.id]);
+  }, [refreshAnalytics, user?.id]);
 
   const handleCreateTicketFromSuggestion = (suggestion: { content: string; type: string }) => {
     let title = 'Strategic Insight Implementation';
@@ -111,11 +90,23 @@ const Overview = () => {
   };
 
 
-  const resolutionRate = stats.total > 0 ? (stats.closed / stats.total) * 100 : 0;
-  const globalLoad = Math.min(stats.avgUrgency * 10, 100);
+  const totalOps = analytics?.total || 0;
+  const activeIssues = analytics?.active_issues || 0;
+  const closedIssues = totalOps - activeIssues;
+  const avgUrgency = analytics?.urgency_avg || 0;
+
+  const resolutionRate = totalOps > 0 ? (closedIssues / totalOps) * 100 : 0;
+  const globalLoad = Math.min(avgUrgency * 10, 100);
 
   const successRateColor = resolutionRate >= 70 ? "#10b981" : resolutionRate >= 40 ? "#f59e0b" : "#ef4444";
   const successRateTrend = resolutionRate >= 70 ? "High" : resolutionRate >= 40 ? "Mid" : "Low";
+
+  // Trend formatting
+  const formatTrend = (val: number | null | undefined) => {
+    if (val === null || val === undefined) return undefined;
+    const prefix = val >= 0 ? '↑' : '↓';
+    return `${prefix} ${Math.abs(val).toFixed(0)}%`;
+  };
 
   return (
     <Container size="full" className="relative p-4 md:p-10 min-h-screen overflow-hidden">
@@ -155,20 +146,20 @@ const Overview = () => {
           <motion.div variants={itemVariants}>
             <PremiumStatCard 
               title="Total Operations" 
-              value={stats.total} 
+              value={totalOps} 
               icon={Ticket} 
               color="#3b82f6" 
-              trend="↑ 12%"
+              trend={formatTrend(analytics?.trends.total)}
             />
           </motion.div>
           <motion.div variants={itemVariants}>
             <PremiumStatCard 
               title="Active Issues" 
-              value={stats.open} 
+              value={activeIssues} 
               icon={Activity} 
               color="#f59e0b" 
-              trend="↓ 5%"
-              trendIsPositive={false}
+              trend={formatTrend(analytics?.trends.active)}
+              trendIsPositive={false} // Active issues going up is generally NOT positive in this context
             />
           </motion.div>
           <motion.div variants={itemVariants}>
@@ -242,7 +233,7 @@ const Overview = () => {
               setInitialTicketData(null);
             }}
             onTicketCreated={() => {
-              fetchStats();
+              refreshAnalytics();
               setIsTicketModalOpen(false);
               setInitialTicketData(null);
             }}

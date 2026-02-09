@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Request
 import os
 import traceback
 from supabase import create_client
-from dependencies import check_enterprise_tier
+from dependencies import check_ai_access
 from services.ai_service import generate_suggested_reply, chat_with_pulse
 from rate_limiter import limiter
 
@@ -13,7 +13,7 @@ router = APIRouter()
 async def send_reply(data: dict, request: Request):
     try:
         user_id = data.get("user_id") # Admin's Supabase ID
-        await check_enterprise_tier(user_id)
+        await check_ai_access(user_id)
         
         ticket_id = data.get("ticket_id")
         message_content = data.get("message")
@@ -74,7 +74,7 @@ async def send_reply(data: dict, request: Request):
 async def suggest_reply(data: dict, request: Request):
     try:
         user_id = data.get("user_id")
-        await check_enterprise_tier(user_id)
+        await check_ai_access(user_id)
         
         ticket_id = data.get("ticket_id")
         if not ticket_id:
@@ -126,7 +126,7 @@ async def suggest_reply(data: dict, request: Request):
 async def ai_chat(data: dict, request: Request):
     try:
         user_id = data.get("user_id")
-        await check_enterprise_tier(user_id)
+        await check_ai_access(user_id)
         
         query = data.get("query")
         context = data.get("context", {})

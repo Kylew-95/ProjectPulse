@@ -1,4 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom';
+import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../context/AuthContext';
 import ThemeToggle from '../ui/ThemeToggle';
 import Button from '../ui/Button';
@@ -21,13 +22,22 @@ const Navbar = () => {
           <ThemeToggle />
           <div className="flex items-center gap-4">
             {user ? (
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                onClick={() => navigate('/dashboard')}
-              >
-                Dashboard
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => supabase.auth.signOut()}
+                >
+                  Sign Out
+                </Button>
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={() => navigate('/dashboard')}
+                >
+                  Dashboard
+                </Button>
+              </div>
             ) : (
               <>
                 <Button 

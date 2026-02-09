@@ -9,6 +9,12 @@ interface AnalyticsOverviewProps {
 }
 
 const AnalyticsOverview: React.FC<AnalyticsOverviewProps> = ({ data, timeRange }) => {
+  const formatTrend = (val: number | null | undefined, suffix: string = '%') => {
+    if (val === null || val === undefined) return undefined;
+    const prefix = val >= 0 ? '+' : '';
+    return `${prefix}${val.toFixed(0)}${suffix}`;
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
       <PremiumStatCard 
@@ -16,7 +22,7 @@ const AnalyticsOverview: React.FC<AnalyticsOverviewProps> = ({ data, timeRange }
         value={data?.total || 0}
         icon={TicketIcon}
         color="#3b82f6"
-        trend={`+${data?.trends.total || 0}%`}
+        trend={formatTrend(data?.trends.total)}
       />
 
       <PremiumStatCard 
@@ -24,7 +30,7 @@ const AnalyticsOverview: React.FC<AnalyticsOverviewProps> = ({ data, timeRange }
         value={data?.urgency_avg.toFixed(2) || '0.00'}
         icon={AlertCircle}
         color="#f59e0b"
-        trend={data?.trends.urgency ? `${data.trends.urgency.toFixed(2)}%` : undefined}
+        trend={formatTrend(data?.trends.urgency)}
       />
 
       <PremiumStatCard 
@@ -32,12 +38,12 @@ const AnalyticsOverview: React.FC<AnalyticsOverviewProps> = ({ data, timeRange }
         value={data ? (data.total / (timeRange === '7d' ? 7 : 30)).toFixed(2) : 0}
         icon={CheckCircle2}
         color="#10b981"
-        trend={data?.trends.velocity ? `${data.trends.velocity.toFixed(2)} t/d` : undefined}
+        trend={formatTrend(data?.trends.velocity, ' t/d')}
       />
 
       <PremiumStatCard 
         title="Pulse Activity"
-        value={`+${data?.daily_trends[data.daily_trends.length - 1]?.count || 0}`}
+        value={`+${data?.daily_trends && data.daily_trends.length > 0 ? data.daily_trends[data.daily_trends.length - 1]?.count : 0}`}
         icon={TrendingUp}
         color="#6366f1"
         trend="Today"
@@ -45,5 +51,6 @@ const AnalyticsOverview: React.FC<AnalyticsOverviewProps> = ({ data, timeRange }
     </div>
   );
 };
+
 
 export default AnalyticsOverview;

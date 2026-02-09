@@ -12,6 +12,7 @@ interface PremiumGateProps {
 
 const PremiumGate = ({ title, description, features }: PremiumGateProps) => {
     const { user, profile } = useAuth();
+
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 

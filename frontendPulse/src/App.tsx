@@ -28,14 +28,9 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/demo" element={<Demo />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            
-            <Route path="/pricing" element={
-              <ProtectedRoute>
-                <Pricing />
-              </ProtectedRoute>
-            } />
             
             {/* Dashboard Routes protected by Layout and ProtectedRoute */}
             <Route path="/dashboard" element={
@@ -52,6 +47,7 @@ function App() {
                <Route path="team/:teamId" element={<Team />} />
                <Route path="ai-workspace" element={<AIWorkspace />} />
                <Route path="settings" element={<Settings />} />
+
             </Route>
             
             <Route path="*" element={<Navigate to="/" replace />} />

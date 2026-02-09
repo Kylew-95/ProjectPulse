@@ -1,33 +1,23 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Sparkles, 
-  Send, 
-  Bot, 
-  User, 
-  Database, 
-  Users,
-  Ticket as TicketIcon,
-  ChevronRight,
-  Info,
-  History,
   Plus,
-  Trash2,
-  Clock,
-  Edit2,
-  Check,
-  X
+  Bot
 } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { useAuth } from '../../context/AuthContext';
 import { useAnalyticsData } from './hooks/useAnalyticsData';
 import { getApiUrl } from '../../utils/apiConfig';
 import PageHeader from '../../components/common/PageHeader';
 import Breadcrumbs from '../../components/ui/Breadcrumbs';
+import SubscriptionGate from '../../components/ui/SubscriptionGate';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import Badge from '../../components/ui/Badge';
-import { motion, AnimatePresence } from 'framer-motion';
+
+// Internal Components
+import AISidebar from './components/AI/AISidebar';
+import AIMessageList from './components/AI/AIMessageList';
+import AIChatInput from './components/AI/AIChatInput';
+import AILanding from './components/AI/AILanding';
 
 interface Message {
   id: string;
@@ -152,7 +142,7 @@ const AIWorkspace = () => {
         method: 'DELETE'
       });
       if (res.ok) {
-        setHistory(prev => prev.filter(c => c.id !== id));
+        setHistory((prev: ChatSession[]) => prev.filter(c => c.id !== id));
         if (currentChatId === id) startNewChat();
       }
     } catch (error) {
@@ -171,7 +161,7 @@ const AIWorkspace = () => {
       });
       
       if (res.ok) {
-        setHistory(prev => prev.map(c => c.id === id ? { ...c, title: newTitle } : c));
+        setHistory((prev: ChatSession[]) => prev.map(c => c.id === id ? { ...c, title: newTitle } : c));
         setEditingChatId(null);
       }
     } catch (error) {
@@ -243,6 +233,7 @@ const AIWorkspace = () => {
             team_workload: analyticsData?.workload.slice(0, 5),
             recent_tickets: analyticsData?.recent_tickets,
             total_teams: analyticsData?.total_teams,
+            team_structure: analyticsData?.team_structure,
             urgency_avg: analyticsData?.urgency_avg
           }
         })
@@ -270,14 +261,27 @@ const AIWorkspace = () => {
         content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
         timestamp: new Date().toISOString()
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev: Message[]) => [...prev, errorMessage]);
     } finally {
       setIsWaitingForAI(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950/50">
+    <SubscriptionGate
+      tier="enterprise"
+      showAddonOption={true}
+      featureName="AI Workspace"
+      description="Unlock powerful AI-driven insights, automated summaries, and intelligent project coaching."
+      features={[
+        "Persistent Chat History",
+        "Deep Project Context Access",
+        "Smart Ticket Summarization",
+        "Automated Performance Insights",
+        "Custom Knowledge Base Training"
+      ]}
+    >
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950/50">
       <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8">
         <Breadcrumbs />
         <PageHeader 
@@ -300,326 +304,70 @@ const AIWorkspace = () => {
           </div>
         </PageHeader>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar Area (Left for desktop, but ordered as context in previous grid) */}
-          {/* We'll follow the user's request: History on the right or integrated into the layout. 
-              Let's put History in the sidebar area on the right as it provides a Gemini/GPT feel. */}
-          
+        <div className="flex flex-col xl:grid xl:grid-cols-4 gap-6 xl:gap-8">
           {/* Main Chat Area */}
-          <div className="lg:col-span-3 flex flex-col h-[700px]">
+          <div className="xl:col-span-3 flex flex-col h-[600px] sm:h-[700px] xl:h-[800px]">
             <Card className="flex-1 flex flex-col overflow-hidden border-slate-200 dark:border-white/5 shadow-xl shadow-blue-500/5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
               {/* Chat Header */}
-              <div className="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-white/50 dark:bg-slate-900/50">
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-white/50 dark:bg-slate-900/50">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-                    <Bot size={20} className="text-blue-500" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                    <Bot size={18} className="text-blue-500" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">Pulse AI Assistant</h3>
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Pulse AI Assistant</h3>
                     <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active System</span>
+                      <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active System</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Messages Container */}
-              <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-white/10">
-                {!currentChatId && messages.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center p-12 text-center space-y-8">
-                     <motion.div 
-                       initial={{ scale: 0.8, opacity: 0 }}
-                       animate={{ scale: 1, opacity: 1 }}
-                       className="relative"
-                     >
-                        <div className="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full" />
-                        <div className="relative w-24 h-24 rounded-[2rem] bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-2xl shadow-blue-500/40 border border-white/20">
-                          <Sparkles size={48} className="text-white" />
-                        </div>
-                     </motion.div>
-                     
-                     <div className="max-w-md space-y-3">
-                       <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">
-                         How can I assist you?
-                       </h2>
-                       <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed font-medium">
-                         Start a fresh conversation to analyze your project data, track performance, or get team insights in real-time.
-                       </p>
-                     </div>
-
-                     <Button 
-                       onClick={startNewChat}
-                       className="gap-2 px-10 py-7 rounded-2xl text-lg font-bold shadow-2xl shadow-blue-500/20 group hover:scale-105 transition-all"
-                     >
-                       <Plus size={22} className="group-hover:rotate-90 transition-transform duration-300" /> 
-                       Start New Chat
-                     </Button>
-
-                     <div className="flex items-center gap-8 pt-6 opacity-40">
-                        <div className="flex flex-col items-center gap-1">
-                           <TicketIcon size={20} className="text-slate-400" />
-                           <span className="text-[10px] font-bold uppercase tracking-widest">Tickets</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1">
-                           <Users size={20} className="text-slate-400" />
-                           <span className="text-[10px] font-bold uppercase tracking-widest">Team</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1">
-                           <Database size={20} className="text-slate-400" />
-                           <span className="text-[10px] font-bold uppercase tracking-widest">Metrics</span>
-                        </div>
-                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <AnimatePresence initial={false}>
-                      {messages.map((message) => (
-                    <motion.div
-                      key={message.id}
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ duration: 0.2 }}
-                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div className={`flex gap-3 max-w-[90%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                        <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center border ${
-                          message.role === 'user' 
-                            ? 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10' 
-                            : 'bg-blue-500/10 border-blue-500/20'
-                        }`}>
-                          {message.role === 'user' ? <User size={16} className="text-slate-500" /> : <Bot size={16} className="text-blue-500" />}
-                        </div>
-                        <div className={`flex flex-col gap-1 ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
-                          <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm prose prose-slate dark:prose-invert max-w-none ${
-                            message.role === 'user'
-                              ? 'bg-blue-600 text-white rounded-tr-none'
-                              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-white/5 rounded-tl-none'
-                          }`}>
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                              {message.content}
-                            </ReactMarkdown>
-                          </div>
-                          <span className="text-[10px] font-medium text-slate-400 px-1">
-                            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-                      ))}
-                    </AnimatePresence>
-                  </div>
-                )}
-                {isWaitingForAI && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex justify-start"
-                  >
-                    <div className="flex gap-3 max-w-[85%] items-start">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center border bg-blue-500/10 border-blue-500/20">
-                        <Bot size={16} className="text-blue-500" />
-                      </div>
-                      <div className="bg-white dark:bg-slate-800 px-4 py-3 rounded-2xl rounded-tl-none border border-slate-100 dark:border-white/5 shadow-sm">
-                        <div className="flex gap-1">
-                          <motion.div
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ repeat: Infinity, duration: 1 }}
-                            className="w-1.5 h-1.5 rounded-full bg-blue-500"
-                          />
-                          <motion.div
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
-                            className="w-1.5 h-1.5 rounded-full bg-blue-500"
-                          />
-                          <motion.div
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
-                            className="w-1.5 h-1.5 rounded-full bg-blue-500"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
+              {/* Messages Area */}
+              {!currentChatId && messages.length === 0 ? (
+                <AILanding onStartNewChat={startNewChat} />
+              ) : (
+                <AIMessageList 
+                  messages={messages}
+                  isWaitingForAI={isWaitingForAI}
+                  messagesEndRef={messagesEndRef}
+                />
+              )}
 
               {/* Input Area */}
-              <div className="p-6 bg-slate-50/50 dark:bg-white/5 border-t border-slate-100 dark:border-white/5">
-                <form onSubmit={handleSendMessage} className="relative flex items-center gap-2">
-                  <div className="relative flex-1 group">
-                    <input
-                      type="text"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      placeholder="Ask anything about your tickets, team activity, or trends..."
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl px-6 py-4 pr-16 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-inner"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                      <Button
-                        type="submit"
-                        disabled={!input.trim() || isLoading}
-                        loading={isLoading}
-                        className="p-2.5 min-w-0 rounded-xl"
-                      >
-                       <Send size={18} />
-                      </Button>
-                    </div>
-                  </div>
-                </form>
-                <div className="mt-4 flex items-center justify-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1 rounded bg-blue-500/10">
-                      <Info size={12} className="text-blue-500" />
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Project Aware</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="p-1 rounded bg-emerald-500/10">
-                      <Database size={12} className="text-emerald-500" />
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Live Metrics</span>
-                  </div>
-                </div>
-              </div>
+              <AIChatInput 
+                input={input}
+                setInput={setInput}
+                onSendMessage={handleSendMessage}
+                isLoading={isLoading}
+              />
             </Card>
           </div>
 
-          {/* Context & History Sidebar (Right Side) */}
-          <div className="lg:col-span-1 flex flex-col gap-6">
-            {/* History List */}
-            <Card className="flex-1 p-6 flex flex-col overflow-hidden border-slate-200 dark:border-white/5 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm shadow-xl">
-              <div className="flex items-center justify-between mb-6">
-                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">
-                      <History size={18} className="text-slate-500" />
-                    </div>
-                    <h3 className="font-bold text-slate-900 dark:text-white">Recent Chats</h3>
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto space-y-2 scrollbar-none">
-                 {isHistoryLoading ? (
-                   <div className="flex items-center justify-center py-8">
-                      <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                   </div>
-                 ) : history.length === 0 ? (
-                    <div className="text-center py-8">
-                       <Clock size={24} className="mx-auto text-slate-300 mb-2 opacity-50" />
-                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-normal px-4">
-                          No history yet.<br/>Start a conversation!
-                       </p>
-                    </div>
-                 ) : (
-                    history.map((chat) => (
-                      <button
-                        key={chat.id}
-                        onClick={() => loadChat(chat.id)}
-                        className={`w-full group text-left p-3 rounded-xl border transition-all flex items-start gap-3 relative ${
-                          currentChatId === chat.id 
-                            ? 'bg-blue-500/5 border-blue-500/20 ring-1 ring-blue-500/20' 
-                            : 'bg-white dark:bg-slate-800/50 border-slate-100 dark:border-white/5 hover:border-blue-500/30 hover:bg-slate-50 dark:hover:bg-slate-800'
-                        }`}
-                      >
-                        <div className={`mt-1 flex-shrink-0 w-2 h-2 rounded-full ${currentChatId === chat.id ? 'bg-blue-500' : 'bg-slate-400 opacity-20'}`} />
-                        <div className="flex-1 min-w-0">
-                           {editingChatId === chat.id ? (
-                             <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                               <input
-                                 autoFocus
-                                 className="flex-1 bg-white dark:bg-slate-900 border border-blue-500 rounded px-2 py-1 text-xs font-bold outline-none"
-                                 value={editTitle}
-                                 onChange={e => setEditTitle(e.target.value)}
-                                 onKeyDown={e => {
-                                   if (e.key === 'Enter') renameChat(chat.id, editTitle);
-                                   if (e.key === 'Escape') setEditingChatId(null);
-                                 }}
-                               />
-                               <button onClick={() => renameChat(chat.id, editTitle)} className="p-1 text-emerald-500 hover:bg-emerald-50 rounded">
-                                 <Check size={12} />
-                               </button>
-                               <button onClick={() => setEditingChatId(null)} className="p-1 text-red-500 hover:bg-red-50 rounded">
-                                 <X size={12} />
-                               </button>
-                             </div>
-                           ) : (
-                             <>
-                               <p className={`text-xs font-bold leading-tight line-clamp-2 truncate ${currentChatId === chat.id ? 'text-blue-500' : 'text-slate-700 dark:text-slate-300'}`}>
-                                 {chat.title}
-                               </p>
-                               <span className="text-[9px] font-medium text-slate-400">
-                                 {new Date(chat.created_at).toLocaleDateString()}
-                               </span>
-                             </>
-                           )}
-                        </div>
-                        <div className="absolute right-2 top-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingChatId(chat.id);
-                              setEditTitle(chat.title);
-                            }}
-                            className="p-1.5 hover:bg-blue-500/10 hover:text-blue-500 rounded-lg text-slate-400"
-                          >
-                             <Edit2 size={12} />
-                          </button>
-                          <button 
-                            onClick={(e) => deleteChat(e, chat.id)}
-                            className="p-1.5 hover:bg-red-500/10 hover:text-red-500 rounded-lg text-slate-400"
-                          >
-                             <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </button>
-                    ))
-                 )}
-              </div>
-            </Card>
-
-            <Card className="p-6 border-slate-200 dark:border-white/5 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                  <Database size={20} className="text-blue-500" />
-                </div>
-                <h3 className="font-bold text-slate-900 dark:text-white">Active Context</h3>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                  <div className="flex items-center gap-3">
-                    <TicketIcon size={16} className="text-blue-500" />
-                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Tickets</span>
-                  </div>
-                  <Badge variant="blue" size="sm">{analyticsData?.total || 0}</Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                  <div className="flex items-center gap-3">
-                    <Users size={16} className="text-emerald-500" />
-                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Team</span>
-                  </div>
-                  <Badge variant="emerald" size="sm">{analyticsData?.total_teams || 0}</Badge>
-                </div>
-              </div>
-
-              <div className="mt-8">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4">Core Knowledge</p>
-                <div className="space-y-3">
-                  {['Ticket Priorities', 'Team Workloads', 'Urgency Scores', 'Daily Velocity'].map((item) => (
-                    <div key={item} className="flex items-center gap-2 group cursor-default">
-                      <ChevronRight size={12} className="text-blue-500" />
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Card>
+          {/* Sidebar Area */}
+          <div className="order-last xl:order-none xl:col-span-1">
+            <AISidebar 
+              history={history}
+              currentChatId={currentChatId}
+              isHistoryLoading={isHistoryLoading}
+              onLoadChat={loadChat}
+              onDeleteChat={deleteChat}
+              onRenameChat={renameChat}
+              analyticsData={analyticsData}
+              editingChatId={editingChatId}
+              setEditingChatId={setEditingChatId}
+              editTitle={editTitle}
+              setEditTitle={setEditTitle}
+            />
           </div>
         </div>
+
+
       </div>
     </div>
-  );
+  </SubscriptionGate>
+);
 };
 
 export default AIWorkspace;

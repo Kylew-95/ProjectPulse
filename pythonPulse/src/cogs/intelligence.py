@@ -109,57 +109,6 @@ class Intelligence(commands.Cog):
 
     # --- Suggestions Subcommands ---
 
-    @pulse.command(name="learn", hidden=True)
-    @commands.has_permissions(administrator=True)
-    async def learn_channel(self, ctx, *, channel_or_text: Union[discord.TextChannel, str] = None):
-        """(Admin Only) Analyzes channel history to generate AI suggestions."""
-        print(f"DEBUG: !pulse learn triggered by {ctx.author}")
-        
-        target_channel = ctx.channel
-        
-        # Determine if the user provided a channel or just text
-        if isinstance(channel_or_text, discord.TextChannel):
-            target_channel = channel_or_text
-        elif isinstance(channel_or_text, str):
-            # User provided text (e.g. "!pulse learn I have an idea")
-            # We don't need to do anything special with the text because it's already in the channel history!
-            pass
-            
-        await ctx.send(f"🔍 Analyzing #{target_channel.name} history (including your recent messages) to learn about company needs...")
-        
-        async with ctx.typing():
-            messages = []
-            async for msg in target_channel.history(limit=100):
-                if not msg.author.bot:
-                    # Format: "User: Message Content"
-                    messages.append(f"{msg.author.display_name}: {msg.content}")
-            
-            if not messages:
-                await ctx.send("No recent non-bot messages found to learn from.")
-                return
-
-            # Reverse to chronological order
-            text_block = "\n".join(messages[::-1])
-
-            suggestions = await asyncio.to_thread(generate_suggestions_from_logs, text_block)
-
-            if not suggestions:
-                await ctx.send("I analyzed the chat but didn't find any specific needs or feature requests this time.")
-                return
-
-            count = 0
-            for sug in suggestions:
-                success = await asyncio.to_thread(
-                    add_ai_suggestion, 
-                    str(ctx.guild.id), 
-                    sug['content'], 
-                    target_channel.name, 
-                    sug['type']
-                )
-                if success:
-                    count += 1
-
-            await ctx.send(f"✅ Learning complete! I've generated and saved **{count}** new suggestions for your dashboard.")
 
     @pulse.command(name="suggestions", hidden=True)
     async def view_suggestions(self, ctx):

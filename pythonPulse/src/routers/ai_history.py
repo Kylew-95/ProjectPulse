@@ -3,6 +3,7 @@ from supabase import create_client
 import os
 import json
 from datetime import datetime
+from dependencies import check_pro_tier
 
 router = APIRouter()
 
@@ -14,6 +15,7 @@ def get_supabase():
 @router.get("/")
 async def get_history(user_id: str):
     try:
+        await check_pro_tier(user_id)
         supabase = get_supabase()
         res = supabase.table("ai_chat_history")\
             .select("id, title, created_at, updated_at")\
@@ -28,6 +30,7 @@ async def get_history(user_id: str):
 @router.get("/{chat_id}")
 async def get_chat_details(chat_id: str, user_id: str):
     try:
+        await check_pro_tier(user_id)
         supabase = get_supabase()
         res = supabase.table("ai_chat_history")\
             .select("*")\
@@ -44,6 +47,7 @@ async def get_chat_details(chat_id: str, user_id: str):
 async def save_chat(data: dict):
     try:
         user_id = data.get("user_id")
+        await check_pro_tier(user_id)
         chat_id = data.get("id") # Optional, for updates
         title = data.get("title", "New Chat")
         messages = data.get("messages", [])
@@ -89,6 +93,7 @@ async def save_chat(data: dict):
 @router.delete("/{chat_id}")
 async def delete_chat(chat_id: str, user_id: str):
     try:
+        await check_pro_tier(user_id)
         supabase = get_supabase()
         supabase.table("ai_chat_history")\
             .delete()\
@@ -104,6 +109,7 @@ async def delete_chat(chat_id: str, user_id: str):
 async def rename_chat(chat_id: str, data: dict):
     try:
         user_id = data.get("user_id")
+        await check_pro_tier(user_id)
         title = data.get("title")
         
         if not user_id or not title:

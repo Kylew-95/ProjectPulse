@@ -56,6 +56,8 @@ class SupabaseTicketService(TicketService):
                 guild_res = supabase.table("teams").select("id").eq("discord_guild_id", guild_id).execute()
                 if guild_res.data:
                     team_id = guild_res.data[0]["id"]
+                else:
+                    print(f"!!!! WARNING: No team found for guild {guild_id}. Ticket insertion might fail.")
             except Exception as e:
                 print(f"DEBUG: Team lookup failed for guild {guild_id}: {e}")
                 pass
@@ -67,8 +69,8 @@ class SupabaseTicketService(TicketService):
             "discord_id": discord_id,
             "discord_guild_id": guild_id,
             "user_name": report_data.get("user", "Unknown User"),
-            "description": report_data.get("original_issue", report_data.get("description", "No description provided")),
-            "title": report_data.get("summary") or report_data.get("title") or report_data.get("final_summary") or "New Issue",
+            "description": report_data.get("original_issue") or report_data.get("description") or "No description provided",
+            "title": report_data.get("summary") or report_data.get("title") or report_data.get("final_summary") or "New Ticket",
             "urgency_score": int(report_data.get("urgency_score", 5)),
             "status": (report_data.get("status") or "open").lower(),
             "type": (report_data.get("type") or "support").lower(),

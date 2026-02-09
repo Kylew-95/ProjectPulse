@@ -5,6 +5,10 @@ import discord
 
 router = APIRouter()
 
+@router.get("/test")
+async def discord_test():
+    return {"status": "discord_router_online"}
+
 class LearningChannelUpdate(BaseModel):
     guild_id: str
     channel_id: str
@@ -65,11 +69,25 @@ async def sync_guild(data: SyncGuildRequest, request: Request):
     try:
         from services.supabase_client import supabase
         
+        # Get the user's profile to find their Discord Snowflake ID
+        profile_res = supabase.table("profiles").select("discord_user_id").eq("id", data.user_id).execute()
+        
+        discord_uid = None
+        if profile_res.data:
+            discord_uid = profile_res.data[0].get("discord_user_id")
+            
+        if not discord_uid:
+            # If we don't know their Discord ID, we can't search bot guilds by owner
+            raise HTTPException(
+                status_code=400, 
+                detail="Your Discord account is not linked to your profile. Please add the bot to your server first, or use a Discord command to link your account."
+            )
+        
         # Find all guilds where the bot is present
         user_owned_guild = None
         for guild in bot.guilds:
-            # Check if this user is the owner
-            if str(guild.owner_id) == data.user_id:
+            # Check if this user is the owner using the Discord Snowflake ID
+            if str(guild.owner_id) == str(discord_uid):
                 user_owned_guild = guild
                 break
         
@@ -82,7 +100,6 @@ async def sync_guild(data: SyncGuildRequest, request: Request):
         }).eq("id", data.user_id).execute()
         
         # Also link the user's teams to this Discord guild
-        # This is critical for ticket creation and automated learning
         supabase.table("teams").update({
             "discord_guild_id": str(user_owned_guild.id)
         }).eq("owner_id", data.user_id).execute()
