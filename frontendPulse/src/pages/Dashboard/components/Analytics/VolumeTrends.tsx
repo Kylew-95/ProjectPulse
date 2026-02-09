@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import Card from '../../../../components/ui/Card';
 
 interface VolumeTrendsProps {
   data: { date: string; count: number }[];
 }
 
-type TimeRange = '7d' | '1m' | '1y' | '5y';
+type TimeRange = '7d' | '1m' | '1y' | '5y' ;
 
 const VolumeTrends: React.FC<VolumeTrendsProps> = ({ data }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('7d');
@@ -43,7 +44,7 @@ const VolumeTrends: React.FC<VolumeTrendsProps> = ({ data }) => {
   const filteredData = getFilteredData();
 
   return (
-    <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 lg:p-8 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
+    <Card className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 lg:gap-4 mb-6 lg:mb-8">
         <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white tracking-tight">Volume Trends</h3>
         
@@ -115,7 +116,7 @@ const VolumeTrends: React.FC<VolumeTrendsProps> = ({ data }) => {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </Card>
   );
 };
 

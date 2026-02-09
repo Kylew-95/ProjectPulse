@@ -15,6 +15,7 @@ import Tickets from './pages/Dashboard/Tickets';
 import Analytics from './pages/Dashboard/Analytics';
 import KnowledgeBase from './pages/Dashboard/KnowledgeBase';
 import Team from './pages/Dashboard/Team';
+import AIWorkspace from './pages/Dashboard/AIWorkspace';
 
 
 function App() {
@@ -49,6 +50,7 @@ function App() {
                <Route path="knowledge-base" element={<KnowledgeBase />} />
                <Route path="team" element={<Team />} />
                <Route path="team/:teamId" element={<Team />} />
+               <Route path="ai-workspace" element={<AIWorkspace />} />
                <Route path="settings" element={<Settings />} />
             </Route>
             

@@ -89,8 +89,13 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
                 return;
             }
 
-            let totalUrgency = 0;
             const trendsMap: Record<string, number> = {};
+            (tickets || []).forEach(t => {
+                const dateStr = t.created_at.substring(0, 10);
+                trendsMap[dateStr] = (trendsMap[dateStr] || 0) + 1;
+            });
+
+            let totalUrgency = 0;
             const workloadMap: Record<string, number> = {};
             const heatMap: Record<string, number> = {};
             const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -104,8 +109,6 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
                 stats.by_type[ticketType] = (stats.by_type[ticketType] || 0) + 1;
 
                 totalUrgency += (t.urgency_score || 0);
-                const dateStr = t.created_at.substring(0, 10);
-                trendsMap[dateStr] = (trendsMap[dateStr] || 0) + 1;
 
                 const assigneeName = t.assignee_profile?.full_name || 'Unassigned';
                 workloadMap[assigneeName] = (workloadMap[assigneeName] || 0) + 1;

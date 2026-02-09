@@ -1,4 +1,5 @@
 import React from 'react';
+import Card from '../../../../components/ui/Card';
 
 interface HeatmapData {
   day: string;
@@ -14,7 +15,7 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
   return (
-    <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm lg:col-span-2">
+    <Card className="p-8 lg:col-span-2">
       <div className="flex items-center justify-between mb-8">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white tracking-tight">Activity Heatmap</h3>
         <div className="flex items-center gap-4">
@@ -70,7 +71,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 };
 

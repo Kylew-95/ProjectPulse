@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Check, Rocket, Shield, Zap } from 'lucide-react';
-import ThemeToggle from '../../components/ui/ThemeToggle';
 import { getApiUrl } from '../../utils/apiConfig';
+import Navbar from '../../components/layout/Navbar';
+import Button from '../../components/ui/Button';
+import Card from '../../components/ui/Card';
+import Container from '../../components/ui/Container';
 
 interface Plan {
   id: string;
@@ -94,26 +97,9 @@ const Pricing = () => {
 
   return (
     <div className={`${theme} min-h-screen bg-background text-main flex flex-col items-center relative overflow-hidden transition-colors duration-300`}>
-      {/* Navbar - Using same structure as Home */}
-      <nav className="w-full border-b border-border-main bg-surface/50 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <img src="/logo.png" alt="Pulse Logo" className="w-10 h-10 object-contain" />
-            <span className="text-xl font-bold text-white tracking-tight">Pulse</span>
-          </Link>
-          <div className="flex items-center gap-6">
-            <ThemeToggle />
-            <button 
-              onClick={() => navigate('/')} 
-              className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
-            >
-              Back to Home
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
-      <div className="flex-1 w-full flex flex-col items-center justify-center p-8">
+      <Container className="flex-1 w-full flex flex-col items-center justify-center py-20">
         {/* Background Gradients */}
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
@@ -127,22 +113,23 @@ const Pricing = () => {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto relative z-10 w-full px-4">
+      <div className="grid md:grid-cols-3 gap-8 relative z-10 w-full">
         {plans.map((plan, index) => (
-          <div 
+          <Card 
             key={plan.name} 
-            className={`relative flex flex-col p-8 rounded-3xl border transition-all duration-300 hover:-translate-y-2 ${
+            glass={plan.name === 'Pro'}
+            className={`relative flex flex-col p-8 transition-all duration-300 hover:-translate-y-2 !rounded-3xl !border ${
                 plan.name === 'Pro' 
-                ? 'bg-gradient-to-b from-slate-800/80 to-slate-900/80 border-primary/50 shadow-2xl shadow-primary/20 scale-105 z-20 backdrop-blur-xl' 
-                : 'bg-slate-900/40 border-white/10 hover:border-white/20 hover:bg-slate-900/60 backdrop-blur-md'
+                ? 'bg-gradient-to-b from-slate-800/80 to-slate-900/80 border-primary/50 shadow-2xl shadow-primary/20 scale-105 z-20' 
+                : 'bg-slate-900/40 border-white/10 hover:border-white/20 hover:bg-slate-900/60 text-white'
             }`}
             style={{ animationDelay: `${index * 100}ms` }}
           >
              
              {plan.name === 'Pro' && (
-                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg border border-white/20 tracking-wide uppercase">
-                     Most Popular
-                 </div>
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg border border-white/20 tracking-wide uppercase">
+                      Most Popular
+                  </div>
              )}
 
              <div className="mb-8">
@@ -178,18 +165,15 @@ const Pricing = () => {
                ))}
              </ul>
 
-              <button
+              <Button
                 onClick={() => handleSubscribe(plan.priceId)}
-                disabled={loading}
-                className={`w-full py-4 rounded-xl transition-all font-bold shadow-lg active:scale-95 ${
-                    plan.name === 'Pro' 
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-primary/25 hover:shadow-primary/40' 
-                    : 'bg-white text-slate-900 hover:bg-slate-200 hover:shadow-xl'
-                }`}
+                loading={loading}
+                variant={plan.name === 'Pro' ? 'primary' : 'secondary'}
+                className="w-full py-4 text-base"
               >
-                {loading ? 'Processing...' : (plan.name === 'Pro' ? 'Start 1-Week Free Trial' : 'Switch to this plan')}
-              </button>
-          </div>
+                {plan.name === 'Pro' ? 'Start 1-Week Free Trial' : 'Switch to this plan'}
+              </Button>
+          </Card>
         ))}
       </div>
 
@@ -201,7 +185,7 @@ const Pricing = () => {
             Cancel anytime. No long-term contracts.
         </p>
       </div>
-      </div>
+      </Container>
     </div>
   );
 };

@@ -3,7 +3,7 @@ import os
 import traceback
 from supabase import create_client
 from dependencies import check_enterprise_tier
-from services.ai_service import generate_suggested_reply
+from services.ai_service import generate_suggested_reply, chat_with_pulse
 from rate_limiter import limiter
 
 router = APIRouter()
@@ -119,5 +119,27 @@ async def suggest_reply(data: dict, request: Request):
         raise he
     except Exception as e:
         print(f"Suggestion Endpoint Error: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+@router.post("/chat")
+@limiter.limit("10/minute")
+async def ai_chat(data: dict, request: Request):
+    try:
+        user_id = data.get("user_id")
+        await check_enterprise_tier(user_id)
+        
+        query = data.get("query")
+        context = data.get("context", {})
+        
+        if not query:
+            raise HTTPException(status_code=400, detail="query is required")
+
+        response = chat_with_pulse(query, context)
+        return {"response": response}
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"Chat Endpoint Error: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

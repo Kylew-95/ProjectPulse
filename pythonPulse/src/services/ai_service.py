@@ -436,3 +436,42 @@ def process_company_info(info_text: str):
     except Exception as e:
         print(f"Cohere Info Process Error: {e}")
         return []
+def chat_with_pulse(query: str, context: dict):
+    """
+    General AI chat interface for Project Pulse.
+    Uses context (tickets, teams, etc.) to answer queries.
+    """
+    # Convert context to a readable string for the prompt
+    context_str = json.dumps(context, indent=2)
+    
+    prompt = f"""
+    You are the Project Pulse AI Assistant, a premium AI built into a project management dashboard.
+    Your goal is to help users understand their project data, teams, and tickets.
+    
+    USER CONTEXT:
+    {context_str}
+    
+    USER QUERY:
+    "{query}"
+    
+    INSTRUCTIONS:
+    1. Answer the query based on the provided context if possible.
+    2. If the context doesn't contain the answer, use your general knowledge but mention you don't see specific data for it.
+    3. Be professional, concise, and helpful. Use Discord-style markdown for formatting (bolding, lists).
+    4. If asked to "Summarize", provide a high-level overview.
+    5. If asked "Who is busy", look at the team workloads in context.
+    
+    Keep the response insightful and friendly.
+    """
+
+    if not co:
+        return "AI service is currently unavailable. Please try again later."
+    try:
+        response = co.chat(
+            message=prompt,
+            model="command-a-03-2025"
+        )
+        return response.text.strip()
+    except Exception as e:
+        print(f"Cohere Chat Error: {e}")
+        return "I encountered an error while thinking. My apologies!"

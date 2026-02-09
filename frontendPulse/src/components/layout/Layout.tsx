@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Ticket, BarChart2, Settings, Users, LogOut, Book, Lock, Menu, X as CloseIcon } from 'lucide-react';
+import { LayoutDashboard, Ticket, BarChart2, Settings, Users, LogOut, Book, Lock, Menu, X as CloseIcon, Sparkles } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import SidebarProfile from './SidebarProfile';
 import ThemeToggle from '../ui/ThemeToggle';
@@ -36,6 +36,7 @@ const Layout = () => {
       { icon: Users, label: 'Teams', path: '/dashboard/team' },
       { icon: Ticket, label: 'Tickets', path: '/dashboard/tickets' },
       { icon: BarChart2, label: 'Analytics', path: '/dashboard/analytics', isEnterprise: true },
+      { icon: Sparkles, label: 'AI Workspace', path: '/dashboard/ai-workspace', isEnterprise: true },
       { icon: Book, label: 'Knowledge Base', path: '/dashboard/knowledge-base', isEnterprise: true },
       { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
     ];

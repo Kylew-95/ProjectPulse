@@ -1,5 +1,6 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import Card from '../../../../components/ui/Card';
 
 interface DistributionPieChartProps {
   title: string;
@@ -21,7 +22,7 @@ const DistributionPieChart: React.FC<DistributionPieChartProps> = ({
   colorOffset = 0
 }) => {
   return (
-    <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
+    <Card className="p-8">
       <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-8 tracking-tight">{title}</h3>
       <div className="h-[300px] w-full flex flex-col items-center justify-center gap-6">
         <div className="relative w-full h-full max-h-[220px]">
@@ -79,7 +80,7 @@ const DistributionPieChart: React.FC<DistributionPieChartProps> = ({
           ))}
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 

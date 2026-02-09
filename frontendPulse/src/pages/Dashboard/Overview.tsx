@@ -6,8 +6,9 @@ import CommandHeader from './components/Overview/CommandHeader';
 import PremiumStatCard from './components/Overview/PremiumStatCard';
 import AISuggestions from './components/Overview/AISuggestions';
 import CreateTicketModal from '../../components/tickets/CreateTicketModal';
-
-
+import Card from '../../components/ui/Card';
+import Badge from '../../components/ui/Badge';
+import Container from '../../components/ui/Container';
 
 import { motion, type Variants } from 'framer-motion';
 
@@ -86,7 +87,7 @@ const Overview = () => {
 
       const teams = data?.map(m => {
         const t = Array.isArray(m.teams) ? m.teams[0] : m.teams;
-        return { id: (t as any).id, name: (t as any).name };
+        return { id: (t as { id: string }).id, name: (t as { name: string }).name };
       }) || [];
 
       setUserTeams(teams);
@@ -117,141 +118,141 @@ const Overview = () => {
   const successRateTrend = resolutionRate >= 70 ? "High" : resolutionRate >= 40 ? "Mid" : "Low";
 
   return (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="relative max-w-[1400px] mx-auto p-4 md:p-10 min-h-screen overflow-hidden"
-    >
-      {/* Dynamic Background Glow */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
-        <motion.div 
-          animate={{
-            opacity: [0.3, 0.5, 0.3],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-[10%] left-[10%] w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px]"
-        />
-        <motion.div 
-          animate={{
-            opacity: [0.2, 0.4, 0.2],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute top-[20%] -right-[5%] w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px]"
-        />
-      </div>
-
-      <motion.div variants={itemVariants}>
-        <CommandHeader 
-          userName={profile?.full_name || user?.user_metadata.full_name || 'User'} 
-          plan={profile?.subscription_tier || 'Starter'} 
-        />
-      </motion.div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <motion.div variants={itemVariants}>
-          <PremiumStatCard 
-            title="Total Operations" 
-            value={stats.total} 
-            icon={Ticket} 
-            color="#3b82f6" 
-            trend="↑ 12%"
+    <Container size="full" className="relative p-4 md:p-10 min-h-screen overflow-hidden">
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Dynamic Background Glow */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
+          <motion.div 
+            animate={{
+              opacity: [0.3, 0.5, 0.3],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -top-[10%] left-[10%] w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px]"
           />
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <PremiumStatCard 
-            title="Active Issues" 
-            value={stats.open} 
-            icon={Activity} 
-            color="#f59e0b" 
-            trend="↓ 5%"
-            trendIsPositive={false}
+          <motion.div 
+            animate={{
+              opacity: [0.2, 0.4, 0.2],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+            className="absolute top-[20%] -right-[5%] w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px]"
           />
-        </motion.div>
-        <motion.div variants={itemVariants}>
-          <PremiumStatCard 
-            title="Success Rate" 
-            value={`${resolutionRate.toFixed(0)}%`} 
-            icon={ShieldCheck} 
-            color={successRateColor}
-            trend={successRateTrend}
-          />
-        </motion.div>
-      </div>
-
-      <motion.div variants={itemVariants} className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 shadow-sm">
-           <div className="flex justify-between items-center mb-8">
-              <div className="space-y-1">
-                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white tracking-tight">System Intelligence</h2>
-                 <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Monitoring automated urgency scoring and team analytics.</p>
-              </div>
-              <TrendingUp size={18} className="text-slate-400" />
-           </div>
-           
-           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="p-6 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 group hover:border-blue-500/30 transition-colors">
-                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Utility Load</p>
-                 <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-3xl font-semibold text-slate-900 dark:text-white">{globalLoad.toFixed(1)}</span>
-                    <span className="text-sm font-medium text-slate-500">%</span>
-                 </div>
-                 <div className="h-1.5 w-full bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${globalLoad}%` }}
-                      transition={{ duration: 1.5, ease: "easeOut" }}
-                      className="h-full bg-blue-500"
-                    ></motion.div>
-                 </div>
-              </div>
-
-              <div className="p-6 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 group hover:border-emerald-500/30 transition-colors">
-                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Resolution Velocity</p>
-                 <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-3xl font-semibold text-slate-900 dark:text-white">{resolutionRate.toFixed(1)}</span>
-                    <span className="text-sm font-medium text-slate-500">%</span>
-                 </div>
-                 <div className="h-1.5 w-full bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${resolutionRate}%` }}
-                      transition={{ duration: 1.5, ease: "easeOut" }}
-                      className="h-full bg-emerald-500"
-                    ></motion.div>
-                 </div>
-              </div>
-           </div>
         </div>
+
+        <motion.div variants={itemVariants}>
+          <CommandHeader 
+            userName={profile?.full_name || user?.user_metadata.full_name || 'User'} 
+            plan={profile?.subscription_tier || 'Starter'} 
+          />
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <motion.div variants={itemVariants}>
+            <PremiumStatCard 
+              title="Total Operations" 
+              value={stats.total} 
+              icon={Ticket} 
+              color="#3b82f6" 
+              trend="↑ 12%"
+            />
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <PremiumStatCard 
+              title="Active Issues" 
+              value={stats.open} 
+              icon={Activity} 
+              color="#f59e0b" 
+              trend="↓ 5%"
+              trendIsPositive={false}
+            />
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <PremiumStatCard 
+              title="Success Rate" 
+              value={`${resolutionRate.toFixed(0)}%`} 
+              icon={ShieldCheck} 
+              color={successRateColor}
+              trend={successRateTrend}
+            />
+          </motion.div>
+        </div>
+
+        <motion.div variants={itemVariants} className="grid lg:grid-cols-3 gap-8">
+          <Card className="lg:col-span-2 p-8 shadow-sm">
+             <div className="flex justify-between items-center mb-8">
+                <div className="space-y-1">
+                   <h2 className="text-lg font-semibold text-slate-900 dark:text-white tracking-tight">System Intelligence</h2>
+                   <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Monitoring automated urgency scoring and team analytics.</p>
+                </div>
+                <TrendingUp size={18} className="text-slate-400" />
+             </div>
+             
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="p-6 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 group hover:border-blue-500/30 transition-colors">
+                   <Badge variant="slate" size="xs" className="mb-4">Utility Load</Badge>
+                   <div className="flex items-baseline gap-2 mb-4">
+                      <span className="text-3xl font-semibold text-slate-900 dark:text-white">{globalLoad.toFixed(1)}</span>
+                      <span className="text-sm font-medium text-slate-500">%</span>
+                   </div>
+                   <div className="h-1.5 w-full bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${globalLoad}%` }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                        className="h-full bg-blue-500"
+                      ></motion.div>
+                   </div>
+                </div>
+
+                <div className="p-6 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 group hover:border-emerald-500/30 transition-colors">
+                   <Badge variant="slate" size="xs" className="mb-4">Resolution Velocity</Badge>
+                   <div className="flex items-baseline gap-2 mb-4">
+                      <span className="text-3xl font-semibold text-slate-900 dark:text-white">{resolutionRate.toFixed(1)}</span>
+                      <span className="text-sm font-medium text-slate-500">%</span>
+                   </div>
+                   <div className="h-1.5 w-full bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${resolutionRate}%` }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                        className="h-full bg-emerald-500"
+                      ></motion.div>
+                   </div>
+                </div>
+             </div>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <AISuggestions 
+            guildId={(profile?.discord_guild_id ?? null) as string | null} 
+            onCreateTicket={handleCreateTicketFromSuggestion}
+          />
+        </motion.div>
+
+        {isTicketModalOpen && (
+          <CreateTicketModal
+            onClose={() => {
+              setIsTicketModalOpen(false);
+              setInitialTicketData(null);
+            }}
+            onTicketCreated={() => {
+              fetchStats();
+              setIsTicketModalOpen(false);
+              setInitialTicketData(null);
+            }}
+            teamId={userTeams[0]?.id || null}
+            userTeams={userTeams}
+            initialData={initialTicketData || undefined}
+          />
+        )}
       </motion.div>
-
-      <motion.div variants={itemVariants}>
-        <AISuggestions 
-          guildId={(profile?.discord_guild_id ?? null) as string | null} 
-          onCreateTicket={handleCreateTicketFromSuggestion}
-        />
-      </motion.div>
-
-      {isTicketModalOpen && (
-        <CreateTicketModal
-          onClose={() => {
-            setIsTicketModalOpen(false);
-            setInitialTicketData(null);
-          }}
-          onTicketCreated={() => {
-            fetchStats();
-            setIsTicketModalOpen(false);
-            setInitialTicketData(null);
-          }}
-          teamId={userTeams[0]?.id || null}
-          userTeams={userTeams}
-          initialData={initialTicketData || undefined}
-        />
-      )}
-    </motion.div>
-
+    </Container>
   );
 };
 

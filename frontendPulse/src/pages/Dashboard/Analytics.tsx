@@ -5,6 +5,7 @@ import PageHeader from '../../components/common/PageHeader';
 import SubscriptionGate from '../../components/ui/SubscriptionGate';
 import { useAuth } from '../../context/AuthContext';
 import { getApiUrl } from '../../utils/apiConfig';
+import Button from '../../components/ui/Button';
 
 // Components
 import VolumeTrends from './components/Analytics/VolumeTrends';
@@ -19,7 +20,6 @@ import AnalyticsOverview from './components/Analytics/AnalyticsOverview';
 import { useAnalyticsData, type TimeRange } from './hooks/useAnalyticsData';
 
 const COLORS = ['#6366f1', '#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6'];
-
 const Analytics = () => {
   const { profile } = useAuth();
   const [timeRange, setTimeRange] = useState<TimeRange>('7d');
@@ -84,18 +84,26 @@ const Analytics = () => {
                 ))}
             </div>
 
-            <button onClick={refresh} className="p-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 rounded-lg transition-all border border-slate-200 dark:border-white/5 active:scale-95 group shadow-sm" title="Refresh data">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={refresh}
+              className="p-2 min-w-0 group"
+              title="Refresh data"
+            >
                 <Clock size={16} className={`${loading ? "animate-spin" : "group-hover:rotate-180"} transition-transform duration-500`} />
-            </button>
+            </Button>
 
-            <button 
+            <Button 
+              variant="secondary" 
+              size="sm" 
               onClick={handleExport} 
-              disabled={exporting}
-              className="p-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 rounded-lg transition-all border border-slate-200 dark:border-white/5 active:scale-95 group shadow-sm disabled:opacity-50" 
+              loading={exporting}
+              className="p-2 min-w-0 group"
               title="Export to Excel"
             >
-                <Download size={16} className={exporting ? "animate-bounce" : "group-hover:translate-y-0.5 transition-transform"} />
-            </button>
+                {!exporting && <Download size={16} className="group-hover:translate-y-0.5 transition-transform" />}
+            </Button>
 
             <AnalyticsCustomizer showCustomizer={showCustomizer} setShowCustomizer={setShowCustomizer} activeWidgets={activeWidgets} toggleWidget={toggleWidget} />
         </div>

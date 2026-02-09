@@ -1,5 +1,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import Card from '../../../../components/ui/Card';
+import Badge from '../../../../components/ui/Badge';
 
 interface TeamWorkloadProps {
   data: { name: string; count: number }[];
@@ -7,12 +9,12 @@ interface TeamWorkloadProps {
 
 const TeamWorkload: React.FC<TeamWorkloadProps> = ({ data }) => {
   return (
-    <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm lg:col-span-2">
+    <Card className="p-8 lg:col-span-2">
       <div className="flex items-center justify-between mb-8">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white tracking-tight">Assignee Workload</h3>
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-white/5 px-2.5 py-1 rounded-full border border-slate-100 dark:border-white/5">
+        <Badge variant="emerald" size="sm" className="font-bold border">
           Active Tickets
-        </span>
+        </Badge>
       </div>
 
       <div className="h-[300px] w-full">
@@ -52,7 +54,7 @@ const TeamWorkload: React.FC<TeamWorkloadProps> = ({ data }) => {
           </BarChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </Card>
   );
 };
 
