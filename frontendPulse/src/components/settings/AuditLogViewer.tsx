@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../../supabaseClient';
+import { useState, useEffect } from 'react';
+import { useQuery as useQueryReact } from '@apollo/client/react';
+import { GET_AUDIT_LOGS } from '../../graphql/operations';
 import { Search, RefreshCw, ShieldAlert } from 'lucide-react';
 
 interface AuditLog {
@@ -16,6 +17,14 @@ interface AuditLog {
   };
 }
 
+interface GetAuditLogsData {
+  audit_logsCollection: {
+    edges: {
+      node: AuditLog;
+    }[];
+  };
+}
+
 const AuditLogViewer = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,8 +34,23 @@ const AuditLogViewer = () => {
   const [filterEntity, setFilterEntity] = useState('');
   const [availableActions, setAvailableActions] = useState<string[]>([]);
   const [availableEntities, setAvailableEntities] = useState<string[]>([]);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [errorStatus, setErrorStatus] = useState<string | null>(null);
+
+  // GraphQL Hooks
+  const { data: logData, loading: isQueryLoading, refetch: refetchLogs } = useQueryReact<GetAuditLogsData>(GET_AUDIT_LOGS, {
+    variables: {
+      filter: {
+        _or: debouncedSearch ? [
+          { action: { ilike: `%${debouncedSearch}%` } },
+          { entity_type: { ilike: `%${debouncedSearch}%` } },
+          { entity_id: { ilike: `%${debouncedSearch}%` } }
+        ] : undefined,
+        action: filterAction ? { eq: filterAction } : undefined,
+        entity_type: filterEntity ? { eq: filterEntity } : undefined
+      },
+      orderBy: [{ created_at: 'DescNullsLast' }],
+      first: 100
+    }
+  });
 
   // Debounce search term
   useEffect(() => {
@@ -36,86 +60,26 @@ const AuditLogViewer = () => {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const fetchFilterOptions = useCallback(async () => {
-    try {
-        console.log('[AuditLogViewer] Fetching filter options...');
-        const { data: actionData } = await supabase
-            .from('audit_logs')
-            .select('action');
-        
-        const { data: entityData } = await supabase
-            .from('audit_logs')
-            .select('entity_type');
-
-        if (actionData) {
-            const uniqueActions = Array.from(new Set(actionData.map(a => a.action))).sort();
-            console.log('[AuditLogViewer] Found actions:', uniqueActions);
-            setAvailableActions(uniqueActions);
-        }
-        if (entityData) {
-            const uniqueEntities = Array.from(new Set(entityData.map(e => e.entity_type))).sort();
-            console.log('[AuditLogViewer] Found entities:', uniqueEntities);
-            setAvailableEntities(uniqueEntities);
-        }
-    } catch (err) {
-        console.error('[AuditLogViewer] Error fetching filter options:', err);
-    }
-  }, []);
-
-  const fetchLogs = useCallback(async () => {
-    setLoading(true);
-    setErrorStatus(null);
-    try {
-      console.log('[AuditLogViewer] Fetching logs with filters:', { debouncedSearch, filterAction, filterEntity });
-      let query = supabase
-        .from('audit_logs')
-        .select(`
-          *,
-          profiles:actor_id (full_name, email)
-        `);
-
-      // Server-side search
-      if (debouncedSearch) {
-        query = query.or(`action.ilike.%${debouncedSearch}%,entity_type.ilike.%${debouncedSearch}%,entity_id.ilike.%${debouncedSearch}%`);
-      }
-
-      // Server-side filters
-      if (filterAction) {
-        query = query.eq('action', filterAction);
-      }
-      if (filterEntity) {
-        query = query.eq('entity_type', filterEntity);
-      }
-
-      const { data, error } = await query
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (error) {
-        if (error.code === 'PGRST205') {
-          setErrorStatus('TABLE_MISSING');
-        } else {
-          throw error;
-        }
-      }
-      console.log('[AuditLogViewer] Fetched logs count:', data?.length || 0);
-      setLogs((data || []) as unknown as AuditLog[]);
-    } catch (err) {
-      console.error('[AuditLogViewer] Error fetching audit logs:', err);
-      setErrorStatus('ERROR');
-    } finally {
-      setLoading(false);
-    }
-  }, [debouncedSearch, filterAction, filterEntity]);
-
-  // Fetch filter options once
   useEffect(() => {
-    fetchFilterOptions();
-  }, [fetchFilterOptions]);
+    if (logData?.audit_logsCollection) {
+      const fetchedLogs = logData.audit_logsCollection.edges.map(e => e.node);
+      setLogs(fetchedLogs);
+      
+      // Extract filter options from initial load if not already set
+      if (availableActions.length === 0) {
+        const actions = Array.from(new Set(fetchedLogs.map(l => l.action))).sort();
+        setAvailableActions(actions);
+      }
+      if (availableEntities.length === 0) {
+        const entities = Array.from(new Set(fetchedLogs.map(l => l.entity_type))).sort();
+        setAvailableEntities(entities);
+      }
+    }
+  }, [logData, availableActions.length, availableEntities.length]);
 
   useEffect(() => {
-    fetchLogs();
-  }, [refreshKey, fetchLogs]);
+    setLoading(isQueryLoading);
+  }, [isQueryLoading]);
 
   // No longer hardcoded - fetched from DB
   
@@ -128,7 +92,7 @@ const AuditLogViewer = () => {
               System Audit Logs
             </h3>
             <button 
-              onClick={() => setRefreshKey(prev => prev + 1)}
+              onClick={() => refetchLogs()}
               className="p-2 bg-surface border border-border-main rounded-lg hover:bg-background transition-colors self-end sm:self-auto"
             >
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
@@ -186,25 +150,6 @@ const AuditLogViewer = () => {
             <tbody className="divide-y divide-border-main">
               {loading && logs.length === 0 ? (
                  <tr><td colSpan={5} className="px-4 py-8 text-center text-muted">Loading logs...</td></tr>
-              ) : errorStatus === 'TABLE_MISSING' ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center">
-                    <div className="max-w-md mx-auto">
-                      <ShieldAlert className="text-amber-500 mx-auto mb-3 opacity-50" size={32} />
-                      <h4 className="font-semibold text-main mb-2">Audit Logs Setup Required</h4>
-                      <p className="text-xs text-muted leading-relaxed mb-4">
-                        The audit_logs table hasn't been created in your Supabase database yet. 
-                        Please run the provided SQL migration in your dashboard to enable this feature.
-                      </p>
-                      <button 
-                        onClick={() => window.open('https://supabase.com/dashboard/project/ztzmykkriwjlsijazvoi/sql', '_blank')}
-                        className="text-xs font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-widest"
-                      >
-                        Open SQL Editor
-                      </button>
-                    </div>
-                  </td>
-                </tr>
               ) : logs.length === 0 ? (
                  <tr><td colSpan={5} className="px-4 py-8 text-center text-muted">No audit logs found</td></tr>
               ) : (

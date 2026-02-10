@@ -192,7 +192,7 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams, initia
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Create New Ticket</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-widest mt-1">
@@ -205,7 +205,7 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams, initia
         </div>
 
         {/* Form Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
           {step === 1 ? (
             <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
               <div className="space-y-2">
@@ -326,7 +326,7 @@ const CreateTicketModal = ({ onClose, onTicketCreated, teamId, userTeams, initia
         </div>
 
         {/* Footer Actions */}
-        <div className="p-6 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5 flex items-center justify-between">
+        <div className="p-4 sm:p-6 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/5 flex items-center justify-between">
           {step === 2 ? (
             <button
               onClick={() => setStep(1)}

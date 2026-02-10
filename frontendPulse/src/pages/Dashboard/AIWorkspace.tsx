@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Sparkles, 
   Plus,
@@ -7,6 +7,15 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useAnalyticsData } from './hooks/useAnalyticsData';
 import { getApiUrl } from '../../utils/apiConfig';
+import { useQuery as useQueryReact, useMutation as useMutationReact } from '@apollo/client/react';
+import { 
+  GET_HISTORY, 
+  GET_CHAT_DETAILS, 
+  SAVE_CHAT, 
+  UPDATE_CHAT, 
+  DELETE_CHAT 
+} from '../../graphql/operations';
+import { apolloClient } from '../../lib/apolloClient';
 import PageHeader from '../../components/common/PageHeader';
 import Breadcrumbs from '../../components/ui/Breadcrumbs';
 import SubscriptionGate from '../../components/ui/SubscriptionGate';
@@ -19,6 +28,7 @@ import AIMessageList from './components/AI/AIMessageList';
 import AIChatInput from './components/AI/AIChatInput';
 import AILanding from './components/AI/AILanding';
 
+// Local types
 interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -33,6 +43,32 @@ interface ChatSession {
   updated_at: string;
 }
 
+interface GetHistoryData {
+  ai_chat_historyCollection: {
+    edges: {
+      node: ChatSession;
+    }[];
+  };
+}
+
+interface GetChatDetailsData {
+  ai_chat_historyCollection: {
+    edges: {
+      node: {
+        id: string;
+        title: string;
+        messages: Message[];
+      };
+    }[];
+  };
+}
+
+interface SaveChatData {
+  insertIntoai_chat_historyCollection: {
+    records: ChatSession[];
+  };
+}
+
 const AIWorkspace = () => {
   const { user } = useAuth();
   const { data: analyticsData } = useAnalyticsData('all');
@@ -42,44 +78,43 @@ const AIWorkspace = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isWaitingForAI, setIsWaitingForAI] = useState(false);
-  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Load History
-  const fetchHistory = useCallback(async () => {
-    if (!user?.id) return;
-    setIsHistoryLoading(true);
-    try {
-      const res = await fetch(`${getApiUrl()}/intelligence/history/?user_id=${user.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setHistory(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch history:', error);
-    } finally {
-      setIsHistoryLoading(false);
-    }
-  }, [user?.id]);
+  // GraphQL Hooks
+  const { data: historyData, loading: isHistoryLoading, refetch: refetchHistory, error: historyError } = useQueryReact<GetHistoryData>(GET_HISTORY, {
+    variables: { userId: user?.id },
+    skip: !user?.id,
+    fetchPolicy: 'cache-and-network'
+  });
+
+  const [saveChat] = useMutationReact(SAVE_CHAT);
+  const [updateChat] = useMutationReact(UPDATE_CHAT);
+  const [deleteChatMutation] = useMutationReact(DELETE_CHAT);
 
   useEffect(() => {
-    fetchHistory();
-  }, [user, fetchHistory]);
+    console.log('historyData changed:', historyData);
+    if (historyError) console.error('History fetch error:', historyError);
+    if (historyData?.ai_chat_historyCollection?.edges) {
+      const formattedHistory = historyData.ai_chat_historyCollection.edges
+        .map(edge => edge.node)
+        .filter((node): node is ChatSession => !!node);
+      setHistory(formattedHistory);
+    }
+  }, [historyData, historyError]);
 
   const startNewChat = async () => {
     if (!user?.id) return;
     
-    // Create an initial welcome message
     const welcomeMessage: Message = {
       id: 'welcome',
       role: 'assistant',
@@ -87,44 +122,51 @@ const AIWorkspace = () => {
       timestamp: new Date().toISOString()
     };
 
-    try {
-      setIsLoading(true);
-      const payload = {
-        user_id: user.id,
-        title: "New Chat",
-        messages: [welcomeMessage]
-      };
-
-      const res = await fetch(`${getApiUrl()}/intelligence/history/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        const freshChat = await res.json();
-        setCurrentChatId(freshChat.id);
-        setMessages([welcomeMessage]);
-        fetchHistory(); // Refresh sidebar list
-      }
-    } catch (error) {
-      console.error('Failed to start new chat:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    setMessages([welcomeMessage]);
+    setCurrentChatId(null); // Clear current chat ID for a fresh start
   };
 
   const loadChat = async (id: string) => {
     if (!user?.id) return;
     setIsLoading(true);
-    setMessages([]); // Clear immediately for snappier feel
-    setCurrentChatId(id); // Set ID immediately
+    setMessages([]);
+    setCurrentChatId(id);
     try {
-      const res = await fetch(`${getApiUrl()}/intelligence/history/${id}?user_id=${user.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setCurrentChatId(data.id);
-        setMessages(data.messages);
+      // We could use useQuery for this too, but for simplicity in this migration 
+      // where we want to keep the loadChat click handler, we'll fetch it manually 
+      // or use the Apollo client directly.
+      console.log('Fetching chat details for ID:', id);
+      const { data } = await apolloClient.query<GetChatDetailsData>({
+        query: GET_CHAT_DETAILS,
+        variables: { chatId: id, userId: user.id },
+        fetchPolicy: 'network-only'
+      });
+      
+      console.log('Chat Details Data:', data);
+      const chatDetails = data?.ai_chat_historyCollection?.edges[0]?.node;
+      console.log('Found chatDetails:', chatDetails);
+      if (chatDetails) {
+        setCurrentChatId(id);
+        
+        let messagesArray = [];
+        try {
+          if (typeof chatDetails.messages === 'string') {
+            messagesArray = JSON.parse(chatDetails.messages);
+          } else if (Array.isArray(chatDetails.messages)) {
+            messagesArray = chatDetails.messages;
+          }
+        } catch (e) {
+          console.error('Error parsing messages:', e);
+        }
+
+        const validMessages = (Array.isArray(messagesArray) ? messagesArray : []).map((m: { id?: string; role?: 'user' | 'assistant'; content?: string; timestamp?: string }, idx: number) => ({
+          id: m.id || `msg-${idx}-${Date.now()}`,
+          role: m.role || 'assistant',
+          content: m.content || '',
+          timestamp: m.timestamp || new Date().toISOString()
+        }));
+
+        setMessages(validMessages);
       }
     } catch (error) {
       console.error('Failed to load chat:', error);
@@ -138,13 +180,11 @@ const AIWorkspace = () => {
     if (!user?.id || !window.confirm('Are you sure you want to delete this chat?')) return;
     
     try {
-      const res = await fetch(`${getApiUrl()}/intelligence/history/${id}?user_id=${user.id}`, {
-        method: 'DELETE'
+      await deleteChatMutation({
+        variables: { id, userId: user.id }
       });
-      if (res.ok) {
-        setHistory((prev: ChatSession[]) => prev.filter(c => c.id !== id));
-        if (currentChatId === id) startNewChat();
-      }
+      refetchHistory();
+      if (currentChatId === id) startNewChat();
     } catch (error) {
       console.error('Failed to delete chat:', error);
     }
@@ -154,16 +194,15 @@ const AIWorkspace = () => {
     if (!user?.id || !newTitle.trim()) return;
     
     try {
-      const res = await fetch(`${getApiUrl()}/intelligence/history/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: user.id, title: newTitle })
+      await updateChat({
+        variables: { 
+          id, 
+          userId: user.id, 
+          set: { title: newTitle, updated_at: new Date().toISOString() } 
+        }
       });
-      
-      if (res.ok) {
-        setHistory((prev: ChatSession[]) => prev.map(c => c.id === id ? { ...c, title: newTitle } : c));
-        setEditingChatId(null);
-      }
+      setHistory(prev => prev.map(c => c.id === id ? { ...c, title: newTitle } : c));
+      setEditingChatId(null);
     } catch (error) {
       console.error('Failed to rename chat:', error);
     }
@@ -171,29 +210,42 @@ const AIWorkspace = () => {
 
   const saveCurrentChat = async (updatedMessages: Message[]) => {
     if (!user?.id) return;
-    
-    // Don't save if it's just the welcome message
     if (updatedMessages.length <= 1) return;
 
     try {
-      const payload = {
-        id: currentChatId,
-        user_id: user.id,
-        title: updatedMessages.find(m => m.role === 'user')?.content.substring(0, 40) + '...' || 'New Chat',
-        messages: updatedMessages
-      };
-
-      const res = await fetch(`${getApiUrl()}/intelligence/history/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        const freshChat = await res.json();
-        if (!currentChatId) {
-          setCurrentChatId(freshChat.id);
-          fetchHistory(); // Refresh sidebar list
+      const title = updatedMessages.find(m => m.role === 'user')?.content.substring(0, 40) + '...' || 'New Chat';
+      const messagesJson = JSON.stringify(updatedMessages);
+      
+      if (currentChatId) {
+        // Update
+        await updateChat({
+          variables: {
+            id: currentChatId,
+            userId: user.id,
+            set: {
+              title,
+              messages: messagesJson,
+              updated_at: new Date().toISOString()
+            }
+          }
+        });
+      } else {
+         // Insert
+        const { data } = await saveChat({
+          variables: {
+            objects: [{
+              user_id: user.id,
+              title,
+              messages: messagesJson,
+              updated_at: new Date().toISOString()
+            }]
+          }
+        });
+        const insertData = data as SaveChatData;
+        if (insertData?.insertIntoai_chat_historyCollection?.records?.[0]?.id) {
+          const newChat = insertData.insertIntoai_chat_historyCollection.records[0];
+          setCurrentChatId(newChat.id);
+          setHistory(prev => [newChat, ...prev]);
         }
       }
     } catch (error) {
@@ -362,12 +414,10 @@ const AIWorkspace = () => {
             />
           </div>
         </div>
-
-
       </div>
     </div>
-  </SubscriptionGate>
-);
+    </SubscriptionGate>
+  );
 };
 
 export default AIWorkspace;

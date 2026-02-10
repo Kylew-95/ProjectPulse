@@ -123,13 +123,13 @@ const Analytics = () => {
           "Enhanced API Access"
         ]}
       >
-        <div className="grid lg:grid-cols-2 gap-8">
-          {activeWidgets.volume && <VolumeTrends data={data?.daily_trends || []} />}
-          {activeWidgets.priority && <DistributionPieChart title="Priority Distribution" data={data ? Object.entries(data.by_priority).map(([name, value]) => ({ name, value })) : []} colors={COLORS} />}
-          {activeWidgets.type && <DistributionPieChart title="Ticket Type Breakdown" data={data ? Object.entries(data.by_type).map(([name, value]) => ({ name, value })) : []} colors={COLORS} innerRadius={70} paddingAngle={8} colorOffset={3} />}
-          {activeWidgets.status && <StatusDistribution data={data ? Object.entries(data.by_status).map(([name, value]) => ({ name, value })) : []} />}
-          {activeWidgets.workload && <TeamWorkload data={data?.workload || []} />}
-          {activeWidgets.heatmap && data && <ActivityHeatmap data={data.heatmap} />}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
+            {activeWidgets.volume && <VolumeTrends data={data?.daily_trends || []} />}
+            {activeWidgets.priority && <DistributionPieChart title="Priority Distribution" data={data ? Object.entries(data.by_priority).map(([name, value]) => ({ name, value })) : []} colors={COLORS} />}
+            {activeWidgets.type && <DistributionPieChart title="Ticket Type Breakdown" data={data ? Object.entries(data.by_type).map(([name, value]) => ({ name, value })) : []} colors={COLORS} innerRadius={70} paddingAngle={8} colorOffset={3} />}
+            {activeWidgets.status && <StatusDistribution data={data ? Object.entries(data.by_status).map(([name, value]) => ({ name, value })) : []} />}
+            {activeWidgets.workload && <TeamWorkload data={data?.workload || []} />}
+            {activeWidgets.heatmap && data && <ActivityHeatmap data={data.heatmap} />}
         </div>
       </SubscriptionGate>
     </div>

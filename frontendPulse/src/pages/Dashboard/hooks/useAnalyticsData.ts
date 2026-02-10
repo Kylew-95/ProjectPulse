@@ -38,17 +38,17 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
         setLoading(true);
         try {
             const { data: tickets, error } = await supabase
-                .from('tickets')
+                .from('tickets_view')
                 .select(`
-          id, 
-          title,
-          status, 
-          priority, 
-          type, 
-          urgency_score, 
-          created_at,
-          assignee_profile:profiles!tickets_assignee_id_fkey(full_name)
-        `)
+                    id,
+                    title,
+                    status,
+                    priority,
+                    type,
+                    urgency_score,
+                    created_at,
+                    assignee_full_name
+                `)
                 .returns<Ticket[]>();
 
             if (error) throw error;
@@ -99,12 +99,13 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
             if (allUserIds.length > 0) {
                 const { data: profilesRaw, error: profilesError } = await supabase
                     .from('profiles')
-                    .select('id, full_name')
+                    .select('id, full_name, email')
                     .in('id', allUserIds);
 
                 if (!profilesError && profilesRaw) {
                     profilesRaw.forEach(p => {
-                        profilesMap[p.id] = p.full_name || 'Unknown';
+                        const fallbackName = p.email ? p.email.split('@')[0] : 'Unknown';
+                        profilesMap[p.id] = p.full_name || fallbackName;
                     });
                 }
             }
@@ -157,13 +158,13 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
 
                 totalUrgency += (t.urgency_score || 0);
 
-                const assigneeName = t.assignee_profile?.full_name || 'Unassigned';
+                const assigneeName = t.assignee_full_name || 'Unassigned';
                 workloadMap[assigneeName] = (workloadMap[assigneeName] || 0) + 1;
 
                 const dateObj = new Date(t.created_at);
                 const day = daysOfWeek[dateObj.getDay()];
                 const hour = dateObj.getHours();
-                const key = `${day}-${hour}`;
+                const key = `${day} -${hour} `;
                 heatMap[key] = (heatMap[key] || 0) + 1;
             });
 
@@ -172,7 +173,7 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
             stats.heatmap = [];
             daysOfWeek.forEach(day => {
                 for (let hour = 0; hour < 24; hour++) {
-                    stats.heatmap.push({ day, hour, count: heatMap[`${day}-${hour}`] || 0 });
+                    stats.heatmap.push({ day, hour, count: heatMap[`${day} -${hour} `] || 0 });
                 }
             });
 
@@ -209,7 +210,7 @@ export const useAnalyticsData = (timeRange: TimeRange) => {
                     title: t.title,
                     status: t.status,
                     priority: t.priority,
-                    assignee: t.assignee_profile?.full_name || 'Unassigned'
+                    assignee: t.assignee_full_name || 'Unassigned'
                 }));
 
             stats.daily_trends = Object.entries(trendsMap)

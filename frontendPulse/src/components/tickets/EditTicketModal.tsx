@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { X, Loader2, Sparkles, Copy, Check, Lock, Send } from 'lucide-react';
+import { useMutation as useMutationReact } from '@apollo/client/react';
+import type { ExecutionResult } from 'graphql';
+import { UPDATE_TICKET } from '../../graphql/operations';
 import { supabase } from '../../supabaseClient';
 import SearchableSelect from '../ui/SearchableSelect';
 import type { Ticket } from '../../types/ticket';
@@ -14,6 +17,12 @@ interface TicketProfile {
   avatar_url: string | null;
   email: string | null;
   discord_id: string | null;
+}
+
+interface UpdateTicketData {
+  updateticketsCollection: {
+    records: { id: string; title: string }[];
+  };
 }
 
 
@@ -32,6 +41,7 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [editableReply, setEditableReply] = useState<string>('');
   const [sendLoading, setSendLoading] = useState(false);
+  const [updateTicketMutation] = useMutationReact<UpdateTicketData>(UPDATE_TICKET);
   const [copied, setCopied] = useState(false);
   const [profiles, setProfiles] = useState<TicketProfile[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<string>(ticket.team_id || '');
@@ -165,8 +175,33 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
 
   useEffect(() => {
     const fetchProfiles = async () => {
-      const { data } = await supabase.from('profiles').select('id, full_name, avatar_url, email, discord_id');
-      if (data) setProfiles(data);
+      // Fetch via team_members to ensure we only get relevant users and respect team boundaries
+      const { data } = await supabase
+        .from('team_members')
+        .select(`
+          profiles (
+            id,
+            full_name,
+            avatar_url,
+            email,
+            discord_id
+          )
+        `);
+      
+      if (data) {
+        // Extract profiles and remove duplicates
+        const uniqueProfilesMap = new Map();
+        data.forEach((item: { profiles: TicketProfile | TicketProfile[] | null }) => {
+          if (item.profiles) {
+            // Handle array or single object return from join
+            const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+            if (profile && !uniqueProfilesMap.has(profile.id)) {
+              uniqueProfilesMap.set(profile.id, profile);
+            }
+          }
+        });
+        setProfiles(Array.from(uniqueProfilesMap.values()));
+      }
     };
     fetchProfiles();
   }, []);
@@ -177,21 +212,23 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
     setLoading(true);
 
     try {
-      const { error } = await supabase
-        .from('tickets')
-        .update({
-          title: formData.title,
-          description: formData.description,
-          priority: formData.priority,
-          status: formData.status,
-          assignee_id: formData.assignee_id === '' ? null : formData.assignee_id,
-          team_id: selectedTeamId,
-          urgency_score: formData.urgency_score,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', ticket.id);
+      const result: ExecutionResult<UpdateTicketData> = await updateTicketMutation({
+        variables: {
+          id: ticket.id,
+          set: {
+            title: formData.title,
+            description: formData.description,
+            priority: formData.priority,
+            status: formData.status,
+            assignee_id: formData.assignee_id === '' ? null : formData.assignee_id,
+            team_id: selectedTeamId,
+            urgency_score: formData.urgency_score,
+            updated_at: new Date().toISOString()
+          }
+        }
+      });
 
-      if (error) throw error;
+      if (result.errors) throw new Error(result.errors[0].message);
       onTicketUpdated();
       onClose();
     } catch (err: unknown) {
@@ -204,16 +241,17 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
   };
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/5">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
+      <div className="bg-slate-900 border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden flex flex-col max-h-[95vh] sm:max-h-[90vh]">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/5 bg-white/5 shrink-0">
           <h2 className="text-xl font-bold text-white">Edit Ticket</h2>
           <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg text-slate-400 transition-colors">
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <div className="flex-1 overflow-y-auto">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-5">
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Title</label>
             <input
@@ -395,9 +433,10 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
           </div>
         </form>
 
-        {/* Comments Section */}
-        <div className="border-t border-white/5 bg-white/5 p-6 max-h-96 overflow-y-auto">
-          <CommentList ticketId={typeof ticket.id === 'string' ? parseInt(ticket.id) : ticket.id} />
+          {/* Comments Section */}
+          <div className="border-t border-white/5 bg-white/5 p-4 sm:p-6">
+            <CommentList ticketId={typeof ticket.id === 'string' ? parseInt(ticket.id) : ticket.id} />
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Trash2, Users, Tag, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { supabase } from '../../supabaseClient';
+import { useMutation as useMutationReact } from '@apollo/client/react';
+import type { ExecutionResult } from 'graphql';
+import { BULK_UPDATE_TICKETS, BULK_DELETE_TICKETS } from '../../graphql/operations';
 import toast from 'react-hot-toast';
 
 interface BulkActionToolbarProps {
@@ -10,6 +12,18 @@ interface BulkActionToolbarProps {
   profiles: { id: string; full_name: string | null; email: string | null }[];
 }
 
+interface BulkUpdateData {
+  updateticketsCollection: {
+    records: { id: string }[];
+  };
+}
+
+interface BulkDeleteData {
+  deleteFromticketsCollection: {
+    records: { id: string }[];
+  };
+}
+
 const BulkActionToolbar = ({ 
   selectedIds, 
   onClearSelection, 
@@ -17,16 +31,20 @@ const BulkActionToolbar = ({
   profiles 
 }: BulkActionToolbarProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [bulkUpdateMutation] = useMutationReact<BulkUpdateData>(BULK_UPDATE_TICKETS);
+  const [bulkDeleteMutation] = useMutationReact<BulkDeleteData>(BULK_DELETE_TICKETS);
 
   const handleBulkAssign = async (assigneeId: string) => {
     setIsProcessing(true);
     try {
-      const { error } = await supabase
-        .from('tickets')
-        .update({ assignee_id: assigneeId === 'unassign' ? null : assigneeId })
-        .in('id', selectedIds);
+      const result: ExecutionResult<BulkUpdateData> = await bulkUpdateMutation({
+        variables: {
+          filter: { id: { in: selectedIds } },
+          set: { assignee_id: assigneeId === 'unassign' ? null : assigneeId }
+        }
+      });
 
-      if (error) throw error;
+      if (result.errors) throw new Error(result.errors[0].message);
 
       toast.success(`${selectedIds.length} ticket(s) ${assigneeId === 'unassign' ? 'unassigned' : 'assigned'}!`);
       onActionComplete();
@@ -42,12 +60,14 @@ const BulkActionToolbar = ({
   const handleBulkStatus = async (status: string) => {
     setIsProcessing(true);
     try {
-      const { error } = await supabase
-        .from('tickets')
-        .update({ status })
-        .in('id', selectedIds);
+      const result: ExecutionResult<BulkUpdateData> = await bulkUpdateMutation({
+        variables: {
+          filter: { id: { in: selectedIds } },
+          set: { status }
+        }
+      });
 
-      if (error) throw error;
+      if (result.errors) throw new Error(result.errors[0].message);
 
       toast.success(`${selectedIds.length} ticket(s) updated to ${status}!`);
       onActionComplete();
@@ -63,12 +83,14 @@ const BulkActionToolbar = ({
   const handleBulkPriority = async (priority: string) => {
     setIsProcessing(true);
     try {
-      const { error } = await supabase
-        .from('tickets')
-        .update({ priority })
-        .in('id', selectedIds);
+      const result: ExecutionResult<BulkUpdateData> = await bulkUpdateMutation({
+        variables: {
+          filter: { id: { in: selectedIds } },
+          set: { priority }
+        }
+      });
 
-      if (error) throw error;
+      if (result.errors) throw new Error(result.errors[0].message);
 
       toast.success(`${selectedIds.length} ticket(s) priority updated!`);
       onActionComplete();
@@ -88,12 +110,13 @@ const BulkActionToolbar = ({
 
     setIsProcessing(true);
     try {
-      const { error } = await supabase
-        .from('tickets')
-        .delete()
-        .in('id', selectedIds);
+      const result: ExecutionResult<BulkDeleteData> = await bulkDeleteMutation({
+        variables: {
+          filter: { id: { in: selectedIds } }
+        }
+      });
 
-      if (error) throw error;
+      if (result.errors) throw new Error(result.errors[0].message);
 
       toast.success(`${selectedIds.length} ticket(s) deleted!`);
       onActionComplete();

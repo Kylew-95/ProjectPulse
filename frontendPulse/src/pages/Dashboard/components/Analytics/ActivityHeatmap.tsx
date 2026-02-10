@@ -49,20 +49,23 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ data }) => {
               {day}
             </span>
             <div className="flex-1 flex gap-1.5 h-10">
-              {data.filter(h => h.day === day).sort((a, b) => a.hour - b.hour).map((h) => {
-                const intensity = Math.min(h.count * 15, 100);
+              {Array.from({ length: 24 }).map((_, hour) => {
+                const point = data.find(h => h.day === day && h.hour === hour);
+                const count = point?.count || 0;
+                const intensity = Math.min(count * 15, 100);
+                
                 return (
                   <div 
-                    key={h.hour}
+                    key={hour}
                     className="flex-1 rounded-[4px] cursor-help transition-all duration-300 hover:ring-2 hover:ring-blue-500/50 hover:scale-[1.1] relative group/cell"
                     style={{ 
-                      backgroundColor: h.count === 0 
+                      backgroundColor: count === 0 
                         ? 'rgba(0,0,0,0.02)' 
                         : `rgba(59, 130, 246, ${0.1 + (intensity / 100) * 0.9})` 
                     }}
                   >
                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-900 dark:bg-slate-800 text-white text-[10px] font-bold rounded-lg opacity-0 group-hover/cell:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none border border-white/10 shadow-xl">
-                      {h.count} tickets • {h.hour}:00
+                      {count} tickets • {hour}:00
                     </div>
                   </div>
                 );

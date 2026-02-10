@@ -1,6 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Book, Plus, Search, Edit2, Trash2, X, Check, Loader2 } from 'lucide-react';
-import { supabase } from '../../supabaseClient';
+import { useQuery as useQueryReact, useMutation as useMutationReact } from '@apollo/client/react';
+import { 
+  GET_KB_ENTRIES, 
+  INSERT_KB_ENTRY, 
+  UPDATE_KB_ENTRY, 
+  DELETE_KB_ENTRY 
+} from '../../graphql/operations';
 import Breadcrumbs from '../../components/ui/Breadcrumbs';
 import PageHeader from '../../components/common/PageHeader';
 import { useAuth } from '../../context/AuthContext';
@@ -13,6 +19,14 @@ interface KBEntry {
   created_at: string;
 }
 
+interface GetKBEntriesData {
+  knowledge_baseCollection: {
+    edges: {
+      node: KBEntry;
+    }[];
+  };
+}
+
 const KnowledgeBase = () => {
   const { user, profile } = useAuth();
   const [entries, setEntries] = useState<KBEntry[]>([]);
@@ -23,48 +37,30 @@ const KnowledgeBase = () => {
   const [formData, setFormData] = useState({ question: '', answer: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('knowledge_base')
-        .select('*')
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      setEntries(data || []);
-    } catch (error) {
-      console.error('Error fetching KB:', error);
-    } finally {
-      setLoading(false);
+  // GraphQL Hooks
+  const { data: kbData, loading: isKbLoading, refetch: refetchKb } = useQueryReact<GetKBEntriesData>(GET_KB_ENTRIES, {
+    skip: !profile || !['enterprise', 'super_admin'].includes(profile.subscription_tier || ''),
+  });
+
+  const [insertKbMutation] = useMutationReact(INSERT_KB_ENTRY);
+  const [updateKbMutation] = useMutationReact(UPDATE_KB_ENTRY);
+  const [deleteKbMutation] = useMutationReact(DELETE_KB_ENTRY);
+  useEffect(() => {
+    if (kbData?.knowledge_baseCollection) {
+      setEntries(kbData.knowledge_baseCollection.edges.map(e => e.node));
     }
-  }, [user]);
+  }, [kbData]);
+
+  useEffect(() => {
+    setLoading(isKbLoading);
+  }, [isKbLoading]);
 
   useEffect(() => {
     if (profile && !['enterprise', 'super_admin'].includes(profile.subscription_tier || '')) {
         setLoading(false);
         return;
     }
-
-    fetchData();
-
-    // Subscribe to real-time changes
-    const channel = supabase
-      .channel('kb-realtime')
-      .on(
-        'postgres_changes', 
-        { event: '*', schema: 'public', table: 'knowledge_base' }, 
-        () => {
-          fetchData();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchData, profile]);
+  }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,26 +68,24 @@ const KnowledgeBase = () => {
     setSubmitting(true);
     try {
       if (editingEntry) {
-         // Update
-         const { error } = await supabase
-            .from('knowledge_base')
-            .update({ question: formData.question, answer: formData.answer })
-            .eq('id', editingEntry.id);
-            
-         if (error) throw error;
+         await updateKbMutation({
+           variables: { 
+             id: editingEntry.id, 
+             set: { question: formData.question, answer: formData.answer } 
+           }
+         });
       } else {
-         // Create
-         const { error } = await supabase
-            .from('knowledge_base')
-            .insert([{ question: formData.question, answer: formData.answer }]);
-            
-         if (error) throw error;
+         await insertKbMutation({
+           variables: { 
+             objects: [{ question: formData.question, answer: formData.answer }] 
+           }
+         });
       }
 
       setIsModalOpen(false);
       setEditingEntry(null);
       setFormData({ question: '', answer: '' });
-      fetchData();
+      refetchKb();
     } catch (error) {
       console.error('Error saving KB entry:', error);
     } finally {
@@ -103,13 +97,8 @@ const KnowledgeBase = () => {
     if (!user) return;
     if (!confirm('Are you sure you want to delete this entry?')) return;
     try {
-      const { error } = await supabase
-        .from('knowledge_base')
-        .delete()
-        .eq('id', id);
-        
-      if (error) throw error;
-      fetchData();
+      await deleteKbMutation({ variables: { id } });
+      refetchKb();
     } catch (error) {
       console.error('Error deleting KB entry:', error);
     }

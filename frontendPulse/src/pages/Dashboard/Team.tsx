@@ -1,16 +1,31 @@
+import { useQuery as useQueryReact, useMutation as useMutationReact } from '@apollo/client/react';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { supabase } from '../../supabaseClient';
-import CreateTeamModal from '../../components/teams/CreateTeamModal';
-import InviteModal from '../../components/teams/InviteModal';
+import {
+  GET_TEAMS_FOR_USER,
+  GET_TEAM_MEMBERS,
+  INVITE_MEMBER,
+  UPDATE_MEMBER_ROLE,
+  DELETE_MEMBER,
+  DELETE_TEAM
+} from '../../graphql/operations';
 import PermissionsModal from '../../components/teams/PermissionsModal';
 import TeamHeader from '../../components/teams/TeamHeader';
 import TeamList from '../../components/teams/TeamList';
 import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal';
-
+import CreateTeamModal from '../../components/teams/CreateTeamModal';
+import InviteModal from '../../components/teams/InviteModal';
 import Breadcrumbs from '../../components/ui/Breadcrumbs';
 import { exportToCSV } from '../../utils/exportUtils';
+// removed Loader2
+
+interface MemberProfile {
+  full_name: string | null;
+  avatar_url: string | null;
+  email: string | null;
+  discord_status: string | null;
+}
 
 interface TeamMember {
   id: string;
@@ -19,231 +34,163 @@ interface TeamMember {
   discord_id: string | null;
   role: string;
   status: string;
-  profiles: {
-    full_name: string | null;
-    avatar_url: string | null;
-    email: string | null;
-  } | null;
+  profiles: MemberProfile | null;
   avatar_url?: string | null;
 }
 
-interface TeamResponse {
+interface Team {
   id: string;
   name: string;
   members: {
     id: string;
     user_id: string;
-    profiles: {
-      avatar_url: string | null;
-    } | null;
+    avatar_url: string | null;
+    full_name: string | null;
   }[];
 }
 
-interface MemberResponse {
-  id: string;
-  user_id: string;
-  email: string;
-  discord_id: string | null;
-  role: string;
-  status: string;
-  profiles: {
-    full_name: string | null;
-    avatar_url: string | null;
-    email: string | null;
-    discord_status: string | null; // Added discord_status to match query
-  } | null;
+interface GetTeamsForUserData {
+  team_membersCollection: {
+    edges: {
+      node: {
+        teams: {
+          id: string;
+          name: string;
+          team_membersCollection: {
+            edges: {
+              node: {
+                id: string;
+                user_id: string;
+                profiles: {
+                  full_name: string | null;
+                  avatar_url: string | null;
+                } | null;
+              };
+            }[];
+          };
+        };
+      };
+    }[];
+  };
 }
 
-interface ProfileData {
-  id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  email: string | null;
-  discord_status?: string | null;
+interface GetTeamMembersData {
+  teamsCollection: {
+    edges: {
+      node: {
+        id: string;
+        name: string;
+        team_membersCollection: {
+          edges: {
+            node: TeamMember;
+          }[];
+        };
+      };
+    }[];
+  };
 }
 
 const Team = () => {
-  const { user, profile } = useAuth();
-  const { teamId } = useParams();
-  const navigate = useNavigate();
-  const [members, setMembers] = useState<TeamMember[]>([]);
+    const { user, profile } = useAuth();
+    const { teamId } = useParams();
+    const navigate = useNavigate();
+    const [members, setMembers] = useState<TeamMember[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
+    const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
+    const [selectedTeam, setSelectedTeam] = useState<{ id: string; name: string } | null>(null);
+    const [teams, setTeams] = useState<Team[]>([]);
+    const [inviteIdentifier, setInviteIdentifier] = useState('');
+    const [inviteRole, setInviteRole] = useState('Developer');
+    const [deleteModal, setDeleteModal] = useState<{
+        isOpen: boolean;
+        type: 'member' | 'team';
+        id: string;
+        title: string;
+        message: string;
+    }>({
+        isOpen: false,
+        type: 'team',
+        id: '',
+        title: '',
+        message: ''
+    });
 
-  /* Hooks must be called before any early returns */
-  const [loading, setLoading] = useState(true);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
-  const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState<{ id: string; name: string } | null>(null);
-  const [teams, setTeams] = useState<{ id: string; name: string; members: { id: string; user_id: string; avatar_url: string | null }[] }[]>([]);
-  const [inviteIdentifier, setInviteIdentifier] = useState('');
-  const [inviteRole, setInviteRole] = useState('Developer');
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [deleteModal, setDeleteModal] = useState<{
-    isOpen: boolean;
-    type: 'member' | 'team';
-    id: string;
-    title: string;
-    message: string;
-  }>({
-    isOpen: false,
-    type: 'team',
-    id: '',
-    title: '',
-    message: ''
-  });
-
-  const refreshData = () => setRefreshTrigger(prev => prev + 1);
-  const viewMode = teamId ? 'members' : 'teams';
-
-  useEffect(() => {
-    const fetchData = async () => {
-        if (!user) return;
-        setLoading(true);
-        try {
-            if (viewMode === 'teams') {
-                // Step 1: Get all team IDs the current user belongs to
-                const { data: userTeams, error: userTeamsError } = await supabase
-                    .from('team_members')
-                    .select('team_id')
-                    .eq('user_id', user.id);
-
-                if (userTeamsError) throw userTeamsError;
-
-                const teamIds = userTeams.map(ut => ut.team_id);
-
-                if (teamIds.length === 0) {
-                    setTeams([]);
-                    setLoading(false);
-                    return;
-                }
-
-                // Step 2: Fetch full team details for those IDs (WITHOUT profiles embedding)
-                const { data: teamsData, error: teamsError } = await supabase
-                    .from('teams')
-                    .select(`
-                        id, 
-                        name, 
-                        members:team_members(
-                            id,
-                            user_id
-                        )
-                    `)
-                    .in('id', teamIds);
-
-                if (teamsError) throw teamsError;
-
-                const typedTeamsData = teamsData as unknown as TeamResponse[];
-
-                // Step 3: Extract all unique user IDs to fetch profiles
-                const allUserIds = Array.from(new Set(
-                    typedTeamsData.flatMap(t => t.members.map(m => m.user_id))
-                ));
-
-                // Step 4: Fetch profiles
-                const profilesMap: Record<string, ProfileData> = {};
-                if (allUserIds.length > 0) {
-                    const { data: profilesData, error: profilesError } = await supabase
-                        .from('profiles')
-                        .select('id, full_name, avatar_url, email')
-                        .in('id', allUserIds);
-                    
-                    if (profilesError) throw profilesError;
-
-                    const typedProfilesData = profilesData as unknown as ProfileData[];
-                    typedProfilesData.forEach((p) => {
-                        profilesMap[p.id] = p;
-                    });
-                }
-
-                const formattedTeams = typedTeamsData.map((t) => ({
-                    id: t.id,
-                    name: t.name,
-                    members: t.members.map((m) => ({
-                        id: m.id,
-                        user_id: m.user_id,
-                        avatar_url: profilesMap[m.user_id]?.avatar_url || null
-                    }))
-                }));
-
-                setTeams(formattedTeams);
-                setMembers([]);
-            } else if (viewMode === 'members' && teamId) {
-                if (!selectedTeam || selectedTeam.id !== teamId) {
-                  const { data: teamData, error: teamError } = await supabase
-                    .from('teams')
-                    .select('id, name')
-                    .eq('id', teamId)
-                    .single();
-                  
-                  if (teamError) throw teamError;
-                  setSelectedTeam(teamData);
-                }
-
-                // Step 1: Fetch team members (WITHOUT embedded profiles)
-                const { data: membersData, error: membersError } = await supabase
-                    .from('team_members')
-                    .select(`
-                        id,
-                        user_id,
-                        email,
-                        discord_id,
-                        role,
-                        status
-                    `)
-                    .eq('team_id', teamId);
-
-                if (membersError) throw membersError;
-
-                const typedMembersData = membersData as unknown as MemberResponse[];
-
-                // Step 2: Fetch profiles for these members
-                const userIds = typedMembersData.map(m => m.user_id);
-                const profilesMap: Record<string, ProfileData> = {};
-
-                if (userIds.length > 0) {
-                    const { data: profilesData, error: profilesError } = await supabase
-                        .from('profiles')
-                        .select('id, full_name, avatar_url, email, discord_status')
-                        .in('id', userIds);
-
-                    if (profilesError) throw profilesError;
-                    
-                    const typedProfilesData = profilesData as unknown as ProfileData[];
-                    typedProfilesData.forEach((p) => {
-                        profilesMap[p.id] = p;
-                    });
-                }
-
-                const formattedMembers = typedMembersData.map((m) => {
-                    const profile = profilesMap[m.user_id];
-                    return {
-                        id: m.id,
-                        user_id: m.user_id,
-                        email: m.email,
-                        discord_id: m.discord_id,
-                        role: m.role,
-                        status: m.status,
-                        profiles: profile ? {
-                            full_name: profile.full_name,
-                            avatar_url: profile.avatar_url,
-                            email: profile.email,
-                            discord_status: profile.discord_status
-                        } : null,
-                        avatar_url: profile?.avatar_url
-                    };
-                });
-
-                setMembers(formattedMembers);
-            }
-        } catch (err: unknown) {
-            console.error('Error fetching dashboard data:', err);
-        } finally {
-            setLoading(false);
-        }
+    const refreshData = () => {
+      refetchTeams();
+      refetchMembers();
     };
 
-    fetchData();
-  }, [user, viewMode, teamId, refreshTrigger, selectedTeam]);
+    const viewMode = teamId ? 'members' : 'teams';
+
+  // GraphQL Hooks
+  const { data: teamsData, loading: teamsLoading, error: teamsError, refetch: refetchTeams } = useQueryReact<GetTeamsForUserData>(GET_TEAMS_FOR_USER, {
+    variables: { userId: user?.id },
+    skip: viewMode !== 'teams' || !user?.id,
+  });
+
+  const { data: membersData, loading: membersLoading, error: membersError, refetch: refetchMembers } = useQueryReact<GetTeamMembersData>(GET_TEAM_MEMBERS, {
+    variables: { teamId },
+    skip: viewMode !== 'members' || !teamId,
+  });
+
+  const [inviteMemberMutation] = useMutationReact(INVITE_MEMBER);
+  const [updateMemberRoleMutation] = useMutationReact(UPDATE_MEMBER_ROLE);
+  const [deleteMemberMutation] = useMutationReact(DELETE_MEMBER);
+  const [deleteTeamMutation] = useMutationReact(DELETE_TEAM);
+
+  useEffect(() => {
+    console.log('DEBUG: Teams Query:', { teamsData, teamsLoading, teamsError, userId: user?.id });
+    if (viewMode === 'teams' && teamsData?.team_membersCollection) {
+      const formattedTeams = teamsData.team_membersCollection.edges.map(edge => {
+        const team = edge.node.teams;
+        if (!team) return null;
+        
+        return {
+          id: team.id,
+          name: team.name,
+          members: team.team_membersCollection.edges.map(mEdge => ({
+            id: mEdge.node.id,
+            user_id: mEdge.node.user_id,
+            avatar_url: mEdge.node.profiles?.avatar_url || null,
+            full_name: mEdge.node.profiles?.full_name || null
+          }))
+        };
+      }).filter(Boolean) as Team[];
+      setTeams(formattedTeams);
+      setLoading(false);
+    } else if (viewMode === 'members' && membersData?.teamsCollection) {
+      if (membersData.teamsCollection.edges.length > 0) {
+        const teamData = membersData.teamsCollection.edges[0].node;
+        setSelectedTeam({ id: teamData.id, name: teamData.name });
+        
+        const formattedMembers = teamData.team_membersCollection.edges.map(edge => ({
+          ...edge.node,
+          avatar_url: edge.node.profiles?.avatar_url,
+        }));
+        setMembers(formattedMembers);
+      }
+      setLoading(false);
+    }
+    
+    // Sync local loading state with network loading
+    if ((viewMode === 'teams' && !teamsLoading) || (viewMode === 'members' && !membersLoading)) {
+        setLoading(false);
+    }
+    
+    if (teamsError || membersError) {
+        console.error('Teams/Members Query Error:', teamsError || membersError);
+        setLoading(false);
+    }
+
+  }, [teamsData, membersData, viewMode, teamsLoading, membersLoading, teamsError, membersError, user?.id]);
+
+  const handleInviteSuccess = () => {
+    setIsInviteModalOpen(false);
+    setInviteIdentifier('');
+    refreshData();
+  };
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,19 +198,18 @@ const Team = () => {
     setLoading(true);
     try {
       const isEmail = inviteIdentifier.includes('@');
-      const { error } = await supabase
-        .from('team_members')
-        .insert([{
-          team_id: teamId,
-          email: isEmail ? inviteIdentifier : 'pending@discord.user',
-          discord_id: isEmail ? null : inviteIdentifier,
-          role: inviteRole,
-          status: 'inactive'
-        }]);
-      if (error) throw error;
-      setIsInviteModalOpen(false);
-      setInviteIdentifier('');
-      refreshData();
+      await inviteMemberMutation({
+        variables: {
+          objects: [{
+            team_id: teamId,
+            email: isEmail ? inviteIdentifier : 'pending@discord.user',
+            discord_id: isEmail ? null : inviteIdentifier,
+            role: inviteRole,
+            status: 'inactive'
+          }]
+        }
+      });
+      handleInviteSuccess();
     } catch (err: unknown) {
       alert(`Error: ${(err as Error).message}`);
     } finally {
@@ -273,8 +219,9 @@ const Team = () => {
 
   const handleUpdateRole = async (memberId: string, newRole: string) => {
     try {
-      const { error } = await supabase.from('team_members').update({ role: newRole }).eq('id', memberId);
-      if (error) throw error;
+      await updateMemberRoleMutation({
+        variables: { id: memberId, set: { role: newRole } }
+      });
       setMembers(prev => prev.map(m => m.id === memberId ? { ...m, role: newRole } : m));
     } catch (err: unknown) {
       alert(`Error: ${(err as Error).message}`);
@@ -305,12 +252,10 @@ const Team = () => {
     setLoading(true);
     try {
       if (deleteModal.type === 'member') {
-        const { error } = await supabase.from('team_members').delete().eq('id', deleteModal.id);
-        if (error) throw error;
+        await deleteMemberMutation({ variables: { id: deleteModal.id } });
         setMembers(prev => prev.filter(m => m.id !== deleteModal.id));
       } else {
-        const { error } = await supabase.from('teams').delete().eq('id', deleteModal.id);
-        if (error) throw error;
+        await deleteTeamMutation({ variables: { id: deleteModal.id } });
         setTeams(prev => prev.filter(t => t.id !== deleteModal.id));
         if (teamId === deleteModal.id) {
           navigate('/dashboard/team');

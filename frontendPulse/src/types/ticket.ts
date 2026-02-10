@@ -19,10 +19,14 @@ export interface Ticket {
     team_id: string;
     urgency_score: number | null;
     position: number | null;
+    assignee_full_name?: string | null;
+    assignee_avatar_url?: string | null;
+    reporter_full_name?: string | null;
+    reporter_avatar_url?: string | null;
+    team_name?: string | null;
     assignee_profile?: { full_name: string; avatar_url: string } | null;
     reporter_profile?: { full_name: string; avatar_url: string } | null;
-    team?: { name: string };
-    teams?: { name: string };
+    teams?: { id: string; name: string } | null;
     tags?: Tag[];
 }
 

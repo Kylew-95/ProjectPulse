@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
-import { gql } from '@apollo/client';
-import { useQuery } from '@apollo/client/react';
+import { useQuery as useQueryReact, useMutation as useMutationReact } from '@apollo/client/react';
+import type { ExecutionResult } from 'graphql';
+
+import { GET_TICKETS, UPDATE_TICKET, DELETE_TICKET } from '../../graphql/operations';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../supabaseClient';
 import { LayoutGrid, List as ListIcon, Trash2 } from 'lucide-react';
@@ -21,7 +23,7 @@ import BulkActionToolbar from '../../components/tickets/BulkActionToolbar';
 import type { Ticket } from '../../types/ticket';
 
 interface GetTicketsQuery {
-  ticketsCollection: {
+  tickets_viewCollection: {
     edges: Array<{
       node: {
         id: string;
@@ -34,19 +36,25 @@ interface GetTicketsQuery {
         assignee_id: string | null;
         team_id: string;
         position: number | null;
-        assignee_profile: {
-          full_name: string;
-          avatar_url: string;
-        } | null;
-        reporter_profile: {
-          full_name: string;
-          avatar_url: string;
-        } | null;
-        teams: {
-          name: string;
-        } | null;
+        assignee_full_name: string | null;
+        assignee_avatar_url: string | null;
+        reporter_full_name: string | null;
+        reporter_avatar_url: string | null;
+        team_name: string | null;
       };
     }>;
+  };
+}
+
+interface UpdateTicketData {
+  updateticketsCollection: {
+    records: { id: string; title: string }[];
+  };
+}
+
+interface DeleteTicketData {
+  deleteFromticketsCollection: {
+    records: { id: string }[];
   };
 }
 
@@ -70,35 +78,17 @@ const Tickets = () => {
   });
   const [selectedTicketIds, setSelectedTicketIds] = useState<(string | number)[]>([]);
   const [profiles, setProfiles] = useState<{ id: string; full_name: string | null; email: string | null }[]>([]);
-  
-  // GraphQL Query
-  const GET_TICKETS = gql`
-    query GetTickets {
-      ticketsCollection(orderBy: {position: AscNullsLast}) {
-        edges {
-          node {
-            id
-            title
-            status
-            priority
-            urgency_score
-            created_at
-            description
-            assignee_id
-            team_id
-            position
-            teams {
-              name
-            }
-          }
-        }
-      }
-    }
-  `;
 
-  const { data: graphqlData, loading: graphqlLoading, error: graphqlError, refetch } = useQuery<GetTicketsQuery>(GET_TICKETS, {
+  console.log('DEBUG: Tickets State:', tickets.length, tickets);
+  
+  // GraphQL Query (imported)
+
+  const { data: graphqlData, loading: graphqlLoading, error: graphqlError, refetch } = useQueryReact<GetTicketsQuery>(GET_TICKETS, {
     fetchPolicy: 'cache-and-network',
   });
+
+  const [updateTicketMutation] = useMutationReact<UpdateTicketData>(UPDATE_TICKET);
+  const [deleteTicketMutation] = useMutationReact<DeleteTicketData>(DELETE_TICKET);
 
   // Ref to track the last processed data to prevent overwriting optimistic updates with stale data
   const lastProcessedDataRef = useRef<GetTicketsQuery | undefined>(undefined);
@@ -107,9 +97,12 @@ const Tickets = () => {
   const moveShieldsRef = useRef<Map<string | number, { status: string; position: number; timestamp: number }>>(new Map());
 
   useEffect(() => {
-    if (graphqlLoading && !tickets.length) {
-       setLoading(true);
-    }
+    // Debug logging for state tracking
+    console.log('DEBUG: Effect Run:', { 
+      graphqlLoading, 
+      hasData: !!graphqlData, 
+      ticketsLength: tickets.length
+    });
     
     if (graphqlError) {
       console.error('GraphQL Error:', graphqlError);
@@ -118,89 +111,60 @@ const Tickets = () => {
       return;
     }
 
-    // 3. Process Data
     if (graphqlData && graphqlData !== lastProcessedDataRef.current) {
       lastProcessedDataRef.current = graphqlData;
 
-      const edges = graphqlData.ticketsCollection?.edges || [];
+      const edges = graphqlData.tickets_viewCollection?.edges || [];
+      console.log('DEBUG: Raw GraphQL Data:', graphqlData);
+      console.log('DEBUG: Edges found:', edges.length);
       
-      if (edges.length === 0) {
-        setTickets([]);
-        setLoading(false);
-        return;
-      }
+      const mappedTickets = edges.map((edge: { node: GetTicketsQuery['tickets_viewCollection']['edges'][0]['node'] }) => {
+        const t = edge.node;
+        let status = t.status;
+        let position = t.position;
 
-      const fetchProfiles = async () => {
-        try {
-          const rawTickets = edges.map((edge) => edge.node);
-          
-          // Extract unique User IDs
-          const userIds = new Set<string>();
-          rawTickets.forEach((t) => {
-            if (t.assignee_id) userIds.add(t.assignee_id);
-          });
+        const ticketIdStr = String(t.id);
+        const shield = moveShieldsRef.current.get(ticketIdStr);
+        
+        if (shield) {
+          const { status: optStatus, position: optPosition, timestamp } = shield;
+          const isRecent = Date.now() - timestamp < 8000;
 
-          const profilesMap: Record<string, { full_name: string; avatar_url: string }> = {};
-
-          if (userIds.size > 0) {
-            const { data: profiles } = await supabase
-              .from('profiles')
-              .select('id, full_name, avatar_url')
-              .in('id', Array.from(userIds));
-              
-            profiles?.forEach(p => {
-              profilesMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
-            });
-          }
-
-          const mappedTickets = rawTickets.map((t) => {
-            let status = t.status;
-            let position = t.position;
-
-            const ticketIdStr = String(t.id);
-            const shield = moveShieldsRef.current.get(ticketIdStr);
-            
-            if (shield) {
-              const { status: optStatus, position: optPosition, timestamp } = shield;
-              const isRecent = Date.now() - timestamp < 8000;
-
-              if (isRecent) {
-                if (status !== optStatus || position !== optPosition) {
-                  status = optStatus;
-                  position = optPosition;
-                } else {
-                  moveShieldsRef.current.delete(ticketIdStr);
-                }
-              } else {
-                moveShieldsRef.current.delete(ticketIdStr);
-              }
+          if (isRecent) {
+            if (status !== optStatus || position !== optPosition) {
+              status = optStatus;
+              position = optPosition;
+            } else {
+              moveShieldsRef.current.delete(ticketIdStr);
             }
-
-            return {
-              ...t,
-              status,
-              position,
-              teams: t.teams || undefined,
-              assignee: (t.assignee_id && profilesMap[t.assignee_id]?.full_name) || null,
-              assignee_profile: (t.assignee_id && profilesMap[t.assignee_id]) || undefined,
-              reporter_profile: t.reporter_profile || undefined
-            };
-          }).sort((a, b) => (a.position || 0) - (b.position || 0));
-
-          setTickets(mappedTickets);
-        } catch (err) {
-          console.error("Error processing ticket profiles:", err);
-          setError("Failed to load user profiles for tickets.");
-        } finally {
-          setLoading(false);
+          } else {
+            moveShieldsRef.current.delete(ticketIdStr);
+          }
         }
-      };
 
-      fetchProfiles();
-    } else if (!graphqlLoading && !graphqlData) {
-      // Handle the case where loading is finished but no data was returned at all
+        return {
+          ...t,
+          status,
+          position,
+          teams: t.team_name ? { id: t.team_id, name: t.team_name } : undefined,
+          assignee: t.assignee_full_name || null,
+          assignee_profile: t.assignee_full_name ? { full_name: t.assignee_full_name, avatar_url: t.assignee_avatar_url || '' } : undefined,
+          reporter_profile: t.reporter_full_name ? { full_name: t.reporter_full_name, avatar_url: t.reporter_avatar_url || '' } : undefined
+        };
+      }).sort((a: Ticket, b: Ticket) => (a.position || 0) - (b.position || 0));
+      
+      console.log('DEBUG: Mapped Tickets:', mappedTickets);
+
+      setTickets(mappedTickets as Ticket[]);
       setLoading(false);
     }
+    
+    // Fallback: If network is done, ensure local loading is off
+    // This handles cases where data ref didn't change but loading finished
+    if (!graphqlLoading) {
+      setLoading(false);
+    }
+
   }, [graphqlData, graphqlLoading, graphqlError, tickets.length]);
 
   // Keep user teams fetch for creating tickets
@@ -280,12 +244,14 @@ const Tickets = () => {
               updateData.position = newPosition;
           }
 
-          const { error } = await supabase
-              .from('tickets')
-              .update(updateData)
-              .eq('id', ticketId);
+          const result: ExecutionResult<UpdateTicketData> = await updateTicketMutation({
+            variables: {
+              id: ticketId,
+              set: updateData
+            }
+          });
           
-          if (error) throw error;
+          if (result.errors) throw new Error(result.errors[0].message);
       } catch (err) {
           console.error("Failed to move ticket:", err);
           alert("Failed to update position. Reverting...");
@@ -300,8 +266,10 @@ const Tickets = () => {
   const confirmDelete = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.from('tickets').delete().eq('id', deleteModal.id);
-      if (error) throw error;
+      const result: ExecutionResult<DeleteTicketData> = await deleteTicketMutation({
+        variables: { id: deleteModal.id }
+      });
+      if (result.errors) throw new Error(result.errors[0].message);
       setTickets(prev => prev.filter(t => t.id !== deleteModal.id));
       setDeleteModal(prev => ({ ...prev, isOpen: false }));
     } catch (err: unknown) {
