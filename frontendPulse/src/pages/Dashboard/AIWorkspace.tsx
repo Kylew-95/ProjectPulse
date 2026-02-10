@@ -81,14 +81,36 @@ const AIWorkspace = () => {
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatCardRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    const end = messagesEndRef.current;
+    if (!end) return;
+    
+    const container = end.closest('.overflow-y-auto');
+    if (container instanceof HTMLElement) {
+      if (behavior === 'auto') {
+        container.scrollTop = container.scrollHeight;
+      } else {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (messages.length > 0) {
+      const timer = setTimeout(() => {
+        // When the chat just loaded (e.g. currentChatId just set), snap instantly
+        // Otherwise use smooth scroll for new messages.
+        // For switching chats specifically, instant is better.
+        scrollToBottom('auto');
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [messages, currentChatId]);
 
   // GraphQL Hooks
   const { data: historyData, loading: isHistoryLoading, refetch: refetchHistory, error: historyError } = useQueryReact<GetHistoryData>(GET_HISTORY, {
@@ -147,6 +169,10 @@ const AIWorkspace = () => {
       console.log('Found chatDetails:', chatDetails);
       if (chatDetails) {
         setCurrentChatId(id);
+        
+        // When switching chats, also scroll the whole chat area into view 
+        // especially important for mobile where history is below the chat box
+        chatCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         
         let messagesArray = [];
         try {
@@ -358,7 +384,7 @@ const AIWorkspace = () => {
 
         <div className="flex flex-col xl:grid xl:grid-cols-4 gap-6 xl:gap-8">
           {/* Main Chat Area */}
-          <div className="xl:col-span-3 flex flex-col h-[600px] sm:h-[700px] xl:h-[800px]">
+          <div ref={chatCardRef} className="xl:col-span-3 flex flex-col h-[600px] sm:h-[700px] xl:h-[800px] scroll-mt-24">
             <Card className="flex-1 flex flex-col overflow-hidden border-slate-200 dark:border-white/5 shadow-xl shadow-blue-500/5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
               {/* Chat Header */}
               <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between bg-white/50 dark:bg-slate-900/50">
