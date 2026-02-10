@@ -65,7 +65,7 @@ const TicketCard = ({ ticket, index, onEdit }: TicketCardProps) => {
           <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800/50">
              {/* Team Name */}
              <span className="text-[10px] text-slate-500 font-medium truncate max-w-[80px]">
-                {ticket.team?.name || ticket.teams?.name || 'No Team'}
+                {ticket.teams?.name || 'No Team'}
              </span>
 
              {/* Assignee Avatar */}

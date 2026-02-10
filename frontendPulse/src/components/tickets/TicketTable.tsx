@@ -93,7 +93,7 @@ const TicketTable = ({
         },
         filterFn: 'equals'
     }),
-    columnHelper.accessor(row => row.team?.name || row.teams?.name || '—', {
+    columnHelper.accessor(row => row.teams?.name || '—', {
         id: 'team',
         header: 'Team',
         cell: info => <span className="text-muted text-sm font-medium">{info.getValue()}</span>,
@@ -174,8 +174,9 @@ const TicketTable = ({
             </div>
         )
     })
-  ], [user, onEdit, onDelete]);
+  ], [user, onEdit, onDelete, columnHelper]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: tickets,
     columns,
@@ -199,7 +200,7 @@ const TicketTable = ({
         const status = (row.getValue('status') as string)?.toLowerCase() || '';
         const priority = (row.getValue('priority') as string)?.toLowerCase() || '';
         const assignee = (row.original.assignee_profile?.full_name)?.toLowerCase() || '';
-        const teamName = (row.original.team?.name || row.original.teams?.name)?.toLowerCase() || '';
+        const teamName = (row.original.teams?.name || '')?.toLowerCase() || '';
 
         return title.includes(search) || 
                status.includes(search) ||
