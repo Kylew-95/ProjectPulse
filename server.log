@@ -1,0 +1,59 @@
+nohup: ignoring input
+----------------------------------------------------
+🚀 Starting ProjectPulse Web (Backend + Frontend)...
+----------------------------------------------------
+Starting Backend (Python)...
+Starting Frontend (Vite)...
+👉 You can now interact with the Vite CLI (press 'h' for help, 'u' for url, etc.)
+
+> frontend-pulse@0.0.0 dev
+> vite
+
+
+  [32m[1mVITE[22m v7.3.1[39m  [2mready in [0m[1m362[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m3000[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+INFO:     Started server process [27492]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+Starting Plan Tiers Sync...
+Product 'Starter' already exists. Updating...
+  Price found for Starter: 18.0 GBP
+Product 'Pro' already exists. Updating...
+  Price found for Pro: 24.0 GBP
+Product 'Enterprise' already exists. Updating...
+  Price found for Enterprise: 120.0 GBP
+Sync Complete!
+Starting Stripe Listener (Background)...
+Loaded extension: intelligence.py
+DEBUG: Starting Daily Pulse scheduler on Instance (PID: 27492)
+Loaded extension: summary.py
+Loaded extension: urgency.py
+Logged in as Pulse#4699 (ID: 1464385808914976923)
+------
+SYNC: User 84b9ac34-24ee-4d65-a381-8f757c8c01c8 is 'super_admin' or no sub found. Skipping tier overwrite.
+SYNC: Force updated profile 84b9ac34-24ee-4d65-a381-8f757c8c01c8 to none
+INFO:     127.0.0.1:7127 - "POST /billing/sync-subscription HTTP/1.1" 200 OK
+SYNC: User 84b9ac34-24ee-4d65-a381-8f757c8c01c8 is 'super_admin' or no sub found. Skipping tier overwrite.
+SYNC: Force updated profile 84b9ac34-24ee-4d65-a381-8f757c8c01c8 to none
+INFO:     127.0.0.1:51990 - "POST /billing/sync-subscription HTTP/1.1" 200 OK
+SYNC: Force updated profile 84b9ac34-24ee-4d65-a381-8f757c8c01c8 to none
+INFO:     127.0.0.1:4323 - "POST /billing/sync-subscription HTTP/1.1" 200 OK
+SYNC: Force updated profile 84b9ac34-24ee-4d65-a381-8f757c8c01c8 to none
+INFO:     127.0.0.1:26317 - "POST /billing/sync-subscription HTTP/1.1" 200 OK
+INFO:     127.0.0.1:4323 - "GET /billing/products HTTP/1.1" 200 OK
+INFO:     127.0.0.1:26317 - "GET /billing/products HTTP/1.1" 200 OK
+SYNC: Force updated profile 84b9ac34-24ee-4d65-a381-8f757c8c01c8 to none
+INFO:     127.0.0.1:46269 - "POST /billing/sync-subscription HTTP/1.1" 200 OK
+SYNC: Force updated profile 84b9ac34-24ee-4d65-a381-8f757c8c01c8 to none
+INFO:     127.0.0.1:34075 - "POST /billing/sync-subscription HTTP/1.1" 200 OK
+SYNC: Force updated profile 84b9ac34-24ee-4d65-a381-8f757c8c01c8 to none
+INFO:     127.0.0.1:53385 - "POST /billing/sync-subscription HTTP/1.1" 200 OK
+SYNC: Force updated profile 84b9ac34-24ee-4d65-a381-8f757c8c01c8 to none
+INFO:     127.0.0.1:51408 - "POST /billing/sync-subscription HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46269 - "GET /billing/products HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51408 - "GET /billing/products HTTP/1.1" 200 OK
+^C
+🛑 Stopping all services...

@@ -42,8 +42,9 @@ const Layout = () => {
       { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
     ];
 
-    const isEnterprise = ['enterprise', 'super_admin'].includes(profile?.subscription_tier || '');
-    const isPro = ['pro', 'enterprise', 'super_admin'].includes(profile?.subscription_tier || '');
+    const isSuperAdmin = profile?.subscription_tier?.toLowerCase() === 'super_admin';
+    const isEnterprise = (profile?.subscription_tier === 'enterprise') || isSuperAdmin;
+    const isPro = ['pro', 'enterprise'].includes(profile?.subscription_tier || '') || isSuperAdmin;
   
     return (
       <div className="flex min-h-screen bg-background transition-colors duration-300 relative">

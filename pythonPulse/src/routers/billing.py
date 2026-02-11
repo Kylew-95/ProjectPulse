@@ -495,7 +495,7 @@ async def stripe_webhook(request: Request):
             except:
                 pass
             
-            if current_tier == 'super_admin':
+            if current_tier and current_tier.lower() == 'super_admin':
                 print(f"WEBHOOK: User {user_id} is 'super_admin'. Skipping tier overwrite in checkout.", flush=True)
                 plan_tier_id = 'super_admin' # Keep existing
             # ---------------------------
@@ -509,11 +509,11 @@ async def stripe_webhook(request: Request):
                 'updated_at': 'now()',
                 'trial_start': trial_start,
                 'trial_end': trial_end,
-                'status': 'active' if current_tier == 'super_admin' else status,
+                'status': 'active' if current_tier and current_tier.lower() == 'super_admin' else status,
                 'last_plan_change_at': 'now()' # Update cooldown on successful checkout
             }
 
-            if current_tier != 'super_admin':
+            if not current_tier or current_tier.lower() != 'super_admin':
                 update_data['subscription_tier'] = plan_tier_id
 
             # Use upsert to create profile if it's missing (failsafe)
@@ -566,7 +566,7 @@ async def stripe_webhook(request: Request):
              # --- PROTECT SUPER_ADMIN ---
              try:
                  profile_res = supabase.table('profiles').select('subscription_tier').eq('id', user_id).single().execute()
-                 if profile_res.data and profile_res.data.get('subscription_tier') == 'super_admin':
+                 if profile_res.data and profile_res.data.get('subscription_tier') and profile_res.data.get('subscription_tier').lower() == 'super_admin':
                      print(f"WEBHOOK: User {user_id} is 'super_admin'. Skipping status sync.", flush=True)
                      return {"status": "success", "message": "super_admin protected"}
              except:
@@ -582,7 +582,7 @@ async def stripe_webhook(request: Request):
              # Sync Tier if not super_admin
              try:
                  profile_res = supabase.table('profiles').select('subscription_tier').eq('id', user_id).single().execute()
-                 if profile_res.data and profile_res.data.get('subscription_tier') != 'super_admin':
+                 if profile_res.data and (not profile_res.data.get('subscription_tier') or profile_res.data.get('subscription_tier').lower() != 'super_admin'):
                      # Fetch tier from sub metadata
                      plan_tier_id = sub.get('metadata', {}).get('plan_tier_id')
                      if not plan_tier_id:
@@ -768,12 +768,12 @@ async def sync_subscription(data: dict):
 
              update_data = {
                  'id': user_id,
-                 'status': 'active' if current_tier == 'super_admin' else status,
+                 'status': 'active' if current_tier and current_tier.lower() == 'super_admin' else status,
                  'updated_at': 'now()',
              }
              
              # If NOT super_admin, we handle tier updates
-             if current_tier != 'super_admin' and target_sub:
+             if (not current_tier or current_tier.lower() != 'super_admin') and target_sub:
                   # --- ADD-ON LOGIC: SCAN ALL ITEMS ---
                   try:
                       active_addons = []
@@ -811,7 +811,7 @@ async def sync_subscription(data: dict):
                   except Exception as e:
                       print(f"SYNC ERROR: Failed to scan subscription items: {e}", flush=True)
                   # ------------------------------------
-             elif status == 'none' and current_tier != 'super_admin':
+             elif status == 'none' and (not current_tier or current_tier.lower() != 'super_admin'):
                  update_data['subscription_tier'] = None
                  update_data['addons'] = []
              else:

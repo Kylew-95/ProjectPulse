@@ -30,9 +30,10 @@ const SubscriptionGate = ({
   const currentTier = profile?.subscription_tier || 'starter';
   const addons = profile?.addons || [];
   
+  const isSuperAdmin = profile?.subscription_tier?.toLowerCase() === 'super_admin';
   const hasAccess = 
-    (tier === 'pro' && ['pro', 'enterprise', 'super_admin'].includes(currentTier)) ||
-    (tier === 'enterprise' && ['enterprise', 'super_admin'].includes(currentTier)) ||
+    (tier === 'pro' && (['pro', 'enterprise'].includes(currentTier) || isSuperAdmin)) ||
+    (tier === 'enterprise' && (currentTier === 'enterprise' || isSuperAdmin)) ||
     (showAddonOption && addons.includes('ai_workspace'));
 
   const handleUpgrade = async () => {

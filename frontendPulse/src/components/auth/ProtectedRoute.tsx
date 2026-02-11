@@ -55,8 +55,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  const isTrialActive = profile?.trial_end ? new Date(profile.trial_end) > new Date() : false;
-  const isPaid = ['active', 'trialing'].includes(profile?.status || '') || isTrialActive || profile?.subscription_tier === 'super_admin';
+    const isTrialActive = profile?.trial_end ? new Date(profile.trial_end) > new Date() : false;
+    
+    // Check if user is super_admin (case-insensitive for robustness)
+    const isSuperAdmin = profile?.subscription_tier?.toLowerCase() === 'super_admin';
+    
+    const isPaid = ['active', 'trialing'].includes(profile?.status || '') || isTrialActive || isSuperAdmin;
   const isPricingPage = location.pathname === '/pricing';
 
   if (!isPaid && !isPricingPage) {

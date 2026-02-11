@@ -182,7 +182,7 @@ const AISuggestions = ({ guildId, onCreateTicket }: { guildId: string | null, on
             ) : (
               <div className="w-full p-10 text-center rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/50">
                 <Lightbulb size={32} className="mx-auto text-slate-300 mb-4 opacity-50" />
-                <p className="text-slate-500 dark:text-slate-400 font-medium">No insights generated yet.</p>
+                <p className="text-slate-500 dark:text-slate-400 font-medium">You have no AI insights yet.</p>
                 <p className="text-xs text-slate-400 mt-2">Run `!pulse learn` in your Discord to generate new suggestions.</p>
               </div>
             )}

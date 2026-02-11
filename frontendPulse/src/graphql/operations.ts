@@ -350,6 +350,38 @@ export const GET_AUDIT_LOGS = gql`
   }
 `;
 
+export const DELETE_AUDIT_LOGS = gql`
+  mutation DeleteAuditLogs($filter: audit_logsFilter!) {
+    deleteFromaudit_logsCollection(filter: $filter) {
+      records {
+        id
+      }
+    }
+  }
+`;
+
+export const DELETE_AUDIT_LOG_BATCH = gql`
+  mutation DeleteAuditLogBatch($filter: audit_logsFilter!, $atMost: Int!) {
+    deleteFromaudit_logsCollection(filter: $filter, atMost: $atMost) {
+      records {
+        id
+      }
+    }
+  }
+`;
+
+export const GET_LOG_IDS_FOR_DELETION = gql`
+  query GetLogIdsForDeletion($first: Int) {
+    audit_logsCollection(first: $first, orderBy: [{created_at: DescNullsFirst}]) {
+      edges {
+        node {
+          id
+        }
+      }
+    }
+  }
+`;
+
 /**
  * ANALYTICS (Tickets Breakdown)
  */

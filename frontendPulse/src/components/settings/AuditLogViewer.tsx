@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useQuery as useQueryReact } from '@apollo/client/react';
-import { GET_AUDIT_LOGS } from '../../graphql/operations';
-import { Search, RefreshCw, ShieldAlert } from 'lucide-react';
+import { useQuery as useQueryReact, useMutation as useMutationReact } from '@apollo/client/react';
+import { GET_AUDIT_LOGS, DELETE_AUDIT_LOGS, DELETE_AUDIT_LOG_BATCH, GET_LOG_IDS_FOR_DELETION } from '../../graphql/operations';
+import { Search, RefreshCw, ShieldAlert, Trash2, AlertTriangle } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import DeleteConfirmationModal from '../ui/DeleteConfirmationModal';
+import ClearAuditLogsModal from '../ui/ClearAuditLogsModal';
 
 interface AuditLog {
   id: number;
@@ -25,6 +28,22 @@ interface GetAuditLogsData {
   };
 }
 
+interface DeleteLogsData {
+  deleteFromaudit_logsCollection: {
+    records: { id: string }[];
+  };
+}
+
+interface LogIdsData {
+  audit_logsCollection: {
+    edges: {
+      node: {
+        id: string;
+      };
+    }[];
+  };
+}
+
 const AuditLogViewer = () => {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +53,17 @@ const AuditLogViewer = () => {
   const [filterEntity, setFilterEntity] = useState('');
   const [availableActions, setAvailableActions] = useState<string[]>([]);
   const [availableEntities, setAvailableEntities] = useState<string[]>([]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+  const [selectedLogId, setSelectedLogId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const { profile } = useAuth();
+
+  const isAdmin = profile?.subscription_tier?.toLowerCase() === 'super_admin' || 
+    profile?.status === 'active'; 
+    // However, the database function is_admin checks team_members. 
+    // Since this is System Audit, super_admin is the primary target.
 
   // GraphQL Hooks
   const { data: logData, loading: isQueryLoading, refetch: refetchLogs } = useQueryReact<GetAuditLogsData>(GET_AUDIT_LOGS, {
@@ -52,6 +82,121 @@ const AuditLogViewer = () => {
     }
   });
 
+  const [deleteLogs] = useMutationReact<DeleteLogsData>(DELETE_AUDIT_LOGS, {
+    onCompleted: () => {
+      console.log('Parent: onCompleted firing');
+      refetchLogs();
+    },
+    onError: (error) => {
+      console.error('Parent: useMutation onError hook caught:', error);
+      alert(`Mutation Error: ${error.message}`);
+    }
+  });
+
+  const [deleteBatch] = useMutationReact<DeleteLogsData>(DELETE_AUDIT_LOG_BATCH);
+
+  // Helper hook for fetching IDs during clear all
+  const { refetch: fetchNextBatchIds } = useQueryReact<LogIdsData>(GET_LOG_IDS_FOR_DELETION, {
+    skip: true, // Only use refetch manually
+    variables: { first: 50 },
+    notifyOnNetworkStatusChange: true
+  });
+
+  const handleDeleteLog = (id: number) => {
+    setSelectedLogId(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeleteLog = async () => {
+    if (!selectedLogId) return;
+    setIsDeleting(true);
+    console.log('Attempting to delete log:', selectedLogId);
+    try {
+      const result = await deleteLogs({
+        variables: {
+          filter: { id: { eq: selectedLogId } }
+        }
+      });
+      console.log('Delete result:', result);
+      setIsDeleteModalOpen(false);
+      setSelectedLogId(null);
+    } catch (err) {
+      console.error('Failed to delete log:', err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleClearLogs = () => {
+    setIsClearModalOpen(true);
+  };
+
+  const confirmClearLogs = async () => {
+    console.log('Parent: confirmClearLogs initiated (ID-Targeted Batched Mode)');
+    setIsDeleting(true);
+    
+    try {
+      let deletedCount = 0;
+      let hasMore = true;
+      const BATCH_SIZE = 20;
+
+      while (hasMore) {
+        console.log(`Parent: Fetching next batch of ${BATCH_SIZE} IDs...`);
+        // Fetch IDs fresh from DB to avoid state staleness or RLS issues
+        const { data: idData } = await fetchNextBatchIds({ first: BATCH_SIZE });
+        const edges = idData?.audit_logsCollection?.edges || [];
+        const idsToDelete: string[] = edges.map((e) => e.node.id);
+        
+        if (idsToDelete.length === 0) {
+          console.log('Parent: No more IDs found. Finished.');
+          hasMore = false;
+          break;
+        }
+
+        console.log(`Parent: Deleting batch of ${idsToDelete.length} specific IDs...`);
+        const result = await deleteBatch({
+          variables: {
+            filter: { id: { in: idsToDelete } },
+            atMost: BATCH_SIZE
+          }
+        });
+        
+        const records = result.data?.deleteFromaudit_logsCollection?.records || [];
+        console.log(`Parent: Successfully deleted ${records.length} records in this batch.`);
+        
+        deletedCount += records.length;
+        
+        if (records.length < BATCH_SIZE && records.length < idsToDelete.length) {
+          // If we deleted fewer than we asked for, something might be up (RLS?)
+          console.warn('Parent: Deleted fewer records than expected in batch. Stopping.');
+          hasMore = false;
+        } else {
+          // Small delay before next batch
+          await new Promise(resolve => setTimeout(resolve, 150));
+        }
+        
+        // Safety break
+        if (deletedCount > 5000) {
+          console.warn('Parent: High deletion volume (5k). Stopping for safety.');
+          hasMore = false;
+        }
+      }
+
+      console.log(`Parent: Targeted batched clear completed. Total deleted: ${deletedCount}`);
+      setLogs([]);
+      refetchLogs();
+      setIsClearModalOpen(false);
+      console.log('Parent: Logs state cleared and modal closed');
+    } catch (err) {
+      console.error('Parent: Targeted batch mutation failed:', err);
+      const error = err as Error;
+      alert(`Failed to clear logs during batching: ${error.message}`);
+    } finally {
+      setIsDeleting(false);
+      console.log('Parent: isDeleting set back to false');
+    }
+  };
+
   // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -65,17 +210,13 @@ const AuditLogViewer = () => {
       const fetchedLogs = logData.audit_logsCollection.edges.map(e => e.node);
       setLogs(fetchedLogs);
       
-      // Extract filter options from initial load if not already set
-      if (availableActions.length === 0) {
-        const actions = Array.from(new Set(fetchedLogs.map(l => l.action))).sort();
-        setAvailableActions(actions);
-      }
-      if (availableEntities.length === 0) {
-        const entities = Array.from(new Set(fetchedLogs.map(l => l.entity_type))).sort();
-        setAvailableEntities(entities);
-      }
+      const actions = Array.from(new Set(fetchedLogs.map((l: AuditLog) => l.action).filter(Boolean))) as string[];
+      setAvailableActions(actions);
+      
+      const entities = Array.from(new Set(fetchedLogs.map((l: AuditLog) => l.entity_type).filter(Boolean))) as string[];
+      setAvailableEntities(entities);
     }
-  }, [logData, availableActions.length, availableEntities.length]);
+  }, [logData]);
 
   useEffect(() => {
     setLoading(isQueryLoading);
@@ -91,12 +232,24 @@ const AuditLogViewer = () => {
               <ShieldAlert className="text-blue-600" size={20} />
               System Audit Logs
             </h3>
-            <button 
-              onClick={() => refetchLogs()}
-              className="p-2 bg-surface border border-border-main rounded-lg hover:bg-background transition-colors self-end sm:self-auto"
-            >
-              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-            </button>
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              {isAdmin && (
+                <button 
+                  onClick={handleClearLogs}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors text-xs font-medium"
+                  title="Clear all logs"
+                >
+                  <AlertTriangle size={14} />
+                  Clear All
+                </button>
+              )}
+              <button 
+                onClick={() => refetchLogs()}
+                className="p-2 bg-surface border border-border-main rounded-lg hover:bg-background transition-colors"
+              >
+                <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              </button>
+            </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -145,13 +298,14 @@ const AuditLogViewer = () => {
                 <th className="px-4 py-3">Action</th>
                 <th className="px-4 py-3">Entity</th>
                 <th className="px-4 py-3">Details</th>
+                {isAdmin && <th className="px-4 py-3 w-10"></th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-border-main">
               {loading && logs.length === 0 ? (
-                 <tr><td colSpan={5} className="px-4 py-8 text-center text-muted">Loading logs...</td></tr>
+                 <tr><td colSpan={isAdmin ? 6 : 5} className="px-4 py-8 text-center text-muted">Loading logs...</td></tr>
               ) : logs.length === 0 ? (
-                 <tr><td colSpan={5} className="px-4 py-8 text-center text-muted">No audit logs found</td></tr>
+                 <tr><td colSpan={isAdmin ? 6 : 5} className="px-4 py-8 text-center text-muted">No audit logs found</td></tr>
               ) : (
                 logs.map(log => (
                   <tr key={log.id} className="hover:bg-background/30 transition-colors bg-surface">
@@ -172,6 +326,17 @@ const AuditLogViewer = () => {
                     <td className="px-4 py-3 text-muted max-w-xs truncate" title={JSON.stringify(log.metadata)}>
                       {JSON.stringify(log.metadata)}
                     </td>
+                    {isAdmin && (
+                      <td className="px-4 py-3">
+                        <button 
+                          onClick={() => handleDeleteLog(log.id)}
+                          className="p-1.5 text-muted hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
+                          title="Delete log entry"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -179,6 +344,22 @@ const AuditLogViewer = () => {
           </table>
         </div>
       </div>
+
+      <DeleteConfirmationModal 
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDeleteLog}
+        title="Delete Log Entry"
+        message="Are you sure you want to delete this system audit log entry? This action cannot be undone."
+        loading={isDeleting}
+      />
+
+      <ClearAuditLogsModal 
+        isOpen={isClearModalOpen}
+        onClose={() => setIsClearModalOpen(false)}
+        onConfirm={confirmClearLogs}
+        loading={isDeleting}
+      />
     </div>
   );
 };

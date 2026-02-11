@@ -60,6 +60,10 @@ h1, h2, h3,p {
     letter-spacing: -0.01em;
   }
 
+  button, [role="button"], input[type="button"], input[type="submit"], input[type="reset"], select {
+    cursor: pointer;
+  }
+
   /* Core Card Layout - Uniform across app */
   .app-card {
     background-color: var(--surface);

@@ -55,7 +55,8 @@ const EditTicketModal = ({ ticket, onClose, onTicketUpdated, userTeams }: EditTi
     urgency_score: ticket.urgency_score || 0
   });
 
-  const isEnterprise = ['enterprise', 'super_admin'].includes(profile?.subscription_tier || '');
+  const isSuperAdmin = profile?.subscription_tier?.toLowerCase() === 'super_admin';
+  const isEnterprise = (profile?.subscription_tier === 'enterprise') || isSuperAdmin;
 
   const handleSuggestReply = async () => {
     if (!isEnterprise) {

@@ -436,10 +436,10 @@ def process_company_info(info_text: str):
     except Exception as e:
         print(f"Cohere Info Process Error: {e}")
         return []
-def chat_with_pulse(query: str, context: dict):
+def chat_with_pulse(query: str, context: dict, kb_context: str = ""):
     """
     General AI chat interface for Project Pulse.
-    Uses context (tickets, teams, etc.) to answer queries.
+    Uses context (tickets, teams, etc.) and Knowledge Base to answer queries.
     """
     # Convert context to a readable string for the prompt
     print(f"DEBUG: Received AI Chat Context: {json.dumps(context, indent=2)}")
@@ -447,27 +447,29 @@ def chat_with_pulse(query: str, context: dict):
     
     prompt = f"""
     You are the Project Pulse AI Assistant, a premium AI built into a project management dashboard.
-    Your goal is to help users understand their project data, teams, and tickets.
+    Your goal is to help users understand their project data, teams, and tickets based ONLY on the data provided.
     
-    SYSTEM STATUS:
-    - Current Metrics: {context_str}
+    SYSTEM STATUS (Live Metrics): 
+    {context_str}
+    
+    KNOWLEDGE BASE (Company Info):
+    {kb_context if kb_context else "No company info in Knowledge Base yet."}
     
     USER QUERY:
     "{query}"
     
-    INSTRUCTIONS:
-    1. If the user is just saying hello or greeting you, respond with a friendly, premium welcome message. Mention that you have access to their project data and are ready to help.
-    2. For data-related queries (e.g., summaries, workloads, counts), use the "SYSTEM STATUS" metrics PRIVILEGEDLY.
-    3. If asked for a summary, look at 'recent_tickets' and 'total_tickets'.
-    4. If asked about teams or members, consult 'total_teams' and 'team_structure' (which contains team names and their members). Refer to 'team_workload' for distribution and 'recent_tickets' for specific ticket titles.
-    5. If the data for their query is not in the context, politely inform them based on what you *can* see.
-    6. Always mention specific numbers from the context when relevant (e.g., "You have X open tickets").
-    7. Be professional, concise, and helpful. Use Discord-style markdown.
-    8. DO NOT hallucinate metrics that are not in the provided JSON context.
+    CRITICAL GROUNDING RULES:
+    1. DO NOT HALLUCINATE: If the user asks about insights, company info, or project data that is NOT in the SYSTEM STATUS or KNOWLEDGE BASE provided above, you MUST explicitly state that you don't have that information yet.
+       - Example: If asked "Are there any insights?" and the context is empty, say: "I haven't generated any insights yet. You can start by running !pulse learn in Discord."
+       - Example: If asked for company mission and KB is empty, say: "I don't have any specific company information in my Knowledge Base yet."
+    2. GENERALIZATION: If the user asks a general question unrelated to the company or project data (e.g., "What is React?"), answer it accurately and helpfully without forcing it into a "Project Pulse" context.
+    3. DATA-AWARE: Always mention specific numbers from the context when relevant (e.g., "You have X open tickets").
+    4. GREETINGS: Respond to greetings with a friendly, professional tone.
+    5. BE CONCISE: Use Discord-style markdown and focus on direct answers.
 
     RESPONSE FORMAT:
-    - Conversational but data-aware.
-    - Direct and concise.
+    - Conversational but strictly data-aware.
+    - Honest about missing data.
     """
 
     if not co:
@@ -475,7 +477,7 @@ def chat_with_pulse(query: str, context: dict):
     try:
         response = co.chat(
             message=prompt,
-            model="command-a-03-2025" # Use a more robust modern model
+            model="command-r-plus" # Upgrade to Plus for better reasoning and grounding
         )
         return response.text.strip()
     except Exception as e:

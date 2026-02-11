@@ -167,9 +167,9 @@ const AISidebar: React.FC<AISidebarProps> = ({
         </div>
 
         <div className="mt-6 sm:mt-8 hidden sm:block">
-          <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3 sm:mb-4">Core Knowledge</p>
+          <p className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3 sm:mb-4">Available Capabilities</p>
           <div className="space-y-2 sm:y-3">
-            {['Ticket Priorities', 'Team Workloads', 'Urgency Scores', 'Daily Velocity'].map((item) => (
+            {['Project Data Analysis', 'Knowledge Base Search', 'Ticket Summarization', 'Team Performance'].map((item) => (
               <div key={item} className="flex items-center gap-2 group cursor-default">
                 <ChevronRight size={10} className="text-blue-500" />
                 <span className="text-[10px] sm:text-xs font-medium text-slate-600 dark:text-slate-400">{item}</span>

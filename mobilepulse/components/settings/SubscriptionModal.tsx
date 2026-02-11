@@ -163,9 +163,8 @@ export default function SubscriptionModal({ visible, onClose }: SubscriptionModa
 
 
 
-  // const isSuperAdmin = profile?.subscription_tier === 'super_admin';
-  // const isSuperAdmin = profile?.subscription_tier === 'super_admin';
-  const isSuperAdmin = false; // TEMPORARY: Allow testing as regular user even if super admin
+  // Check if user is super_admin (case-insensitive for robustness)
+  const isSuperAdmin = profile?.subscription_tier?.toLowerCase() === 'super_admin';
 
   return (
     <BottomSheetModal

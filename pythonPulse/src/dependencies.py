@@ -18,7 +18,7 @@ async def check_ai_access(user_id: str):
         addons = profile.get("addons") or []
         
         has_access = (
-            tier in ["enterprise", "super_admin"] or 
+            (tier and tier.lower() in ["enterprise", "super_admin"]) or 
             "ai_workspace" in addons
         )
         
@@ -41,7 +41,7 @@ async def check_pro_tier(user_id: str):
         res = supabase.table("profiles").select("subscription_tier").eq("id", user_id).maybe_single().execute()
         
         allowed_tiers = ["pro", "enterprise", "super_admin"]
-        if not res.data or res.data.get("subscription_tier") not in allowed_tiers:
+        if not res.data or (res.data.get("subscription_tier") and res.data.get("subscription_tier").lower() not in allowed_tiers):
             print(f"Access Denied: User {user_id} tier is {res.data.get('subscription_tier') if res.data else 'none'}", flush=True)
             raise HTTPException(status_code=403, detail="Pro or Enterprise tier required for this feature")
     except Exception as e:

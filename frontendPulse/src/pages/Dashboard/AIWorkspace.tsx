@@ -140,7 +140,7 @@ const AIWorkspace = () => {
     const welcomeMessage: Message = {
       id: 'welcome',
       role: 'assistant',
-      content: "Hello! I'm your Project Pulse AI. I have access to your project's latest tickets, team workloads, and performance trends. How can I help you today?",
+      content: "Hello! I'm your AI Assistant. I can help you analyze project data, summarize tickets, or answer general questions. How can I assist you today?",
       timestamp: new Date().toISOString()
     };
 

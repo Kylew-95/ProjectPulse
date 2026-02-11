@@ -16,7 +16,8 @@ const PremiumGate = ({ title, description, features }: PremiumGateProps) => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
-    const isEnterprise = ['enterprise', 'super_admin'].includes(profile?.subscription_tier || '');
+    const isSuperAdmin = profile?.subscription_tier?.toLowerCase() === 'super_admin';
+    const isEnterprise = (profile?.subscription_tier === 'enterprise') || isSuperAdmin;
 
     if (isEnterprise) {
         return null; // Return null because the parent usually renders children if enterprise

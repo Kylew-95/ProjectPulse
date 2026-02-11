@@ -134,7 +134,20 @@ async def ai_chat(data: dict, request: Request):
         if not query:
             raise HTTPException(status_code=400, detail="query is required")
 
-        response = chat_with_pulse(query, context)
+        # Fetch KB context
+        kb_entries = []
+        try:
+            url = os.getenv("SUPABASE_URL")
+            key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
+            supabase = create_client(url, key)
+            kb_res = supabase.table("knowledge_base").select("question, answer").execute()
+            kb_entries = kb_res.data or []
+        except Exception as kb_err:
+            print(f"Warning: KB fetch failed in chat: {kb_err}")
+            
+        kb_context = "\n".join([f"Q: {e['question']}\nA: {e['answer']}" for e in kb_entries])
+
+        response = chat_with_pulse(query, context, kb_context)
         return {"response": response}
         
     except HTTPException as he:
