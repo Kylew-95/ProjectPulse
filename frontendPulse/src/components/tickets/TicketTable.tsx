@@ -19,7 +19,7 @@ import type { Ticket } from '../../types/ticket';
 interface TicketTableProps {
   tickets: Ticket[];
   loading: boolean;
-  userTeams: { id: string; name: string }[];
+  userTeams: { id: string; name: string; role: string }[];
   onEdit: (ticket: Ticket) => void;
   onDelete: (id: string | number) => Promise<void>;
 }
@@ -31,7 +31,7 @@ const TicketTable = ({
   onEdit,
   onDelete
 }: TicketTableProps) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -155,26 +155,34 @@ const TicketTable = ({
     columnHelper.display({
         id: 'actions',
         header: '',
-        cell: info => (
-            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-               <button 
-                  onClick={(e) => { e.stopPropagation(); onEdit(info.row.original); }}
-                  className="p-1.5 text-muted hover:text-blue-600 transition-colors rounded-md hover:bg-background/20"
-                  title="Edit Ticket"
-               >
-                 <Edit2 size={14} />
-               </button>
-               <button 
-                  onClick={(e) => { e.stopPropagation(); onDelete(info.row.original.id); }}
-                  className="p-1.5 text-muted hover:text-red-600 transition-colors rounded-md hover:bg-background/20"
-                  title="Delete Ticket"
-               >
-                 <Trash2 size={14} />
-               </button>
-            </div>
-        )
+        cell: info => {
+            const ticket = info.row.original;
+            const userTeamData = userTeams.find(t => t.id === ticket.team_id);
+            const isLead = userTeamData?.role === 'Team Lead' || userTeamData?.role === 'Admin' || profile?.subscription_tier === 'super_admin';
+
+            return (
+                <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onEdit(ticket); }}
+                        className="p-1.5 text-muted hover:text-blue-600 transition-colors rounded-md hover:bg-background/20"
+                        title="Edit Ticket"
+                    >
+                        <Edit2 size={14} />
+                    </button>
+                    {isLead && (
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); onDelete(ticket.id); }}
+                            className="p-1.5 text-muted hover:text-red-600 transition-colors rounded-md hover:bg-background/20"
+                            title="Delete Ticket"
+                        >
+                            <Trash2 size={14} />
+                        </button>
+                    )}
+                </div>
+            );
+        }
     })
-  ], [user, onEdit, onDelete, columnHelper]);
+  ], [user, profile, userTeams, onEdit, onDelete, columnHelper]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({

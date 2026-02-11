@@ -67,19 +67,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       if (isSuccess) {
           // Show loading state while waiting for webhook
           return (
-            <div className="min-h-screen bg-background text-white flex flex-col items-center justify-center p-6 text-center">
-                <HeartbeatLoader />
-                <h2 className="text-xl font-bold mt-4">Verifying Subscription...</h2>
-                <p className="text-slate-400 max-w-xs mt-2">Please wait while we confirm your payment. This usually takes a few seconds.</p>
-                {showRetry && (
-                  <button 
-                    onClick={() => window.location.reload()}
-                    className="mt-6 px-6 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Taking a while? Click to refresh
-                  </button>
-                )}
-            </div>
+            <HeartbeatLoader 
+              title="Verifying Subscription..."
+              subtitle="Please wait while we confirm your payment"
+              onRetry={showRetry ? () => window.location.reload() : undefined}
+            />
           );
       }
     return <Navigate to="/pricing" replace />;

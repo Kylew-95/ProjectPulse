@@ -17,6 +17,15 @@ export default {
         'text-muted': 'var(--text-secondary)',
         primary: '#3B82F6',
         secondary: '#10B981',
+      },
+      animation: {
+        'infinite-scroll': 'infinite-scroll 25s linear infinite',
+      },
+      keyframes: {
+        'infinite-scroll': {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-100%)' },
+        }
       }
     },
   },

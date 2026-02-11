@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Check, ExternalLink } from 'lucide-react';
+import { X, Check, ExternalLink, AlertCircle, Rocket, ArrowDownCircle } from 'lucide-react';
 import { getApiUrl } from '../../utils/apiConfig';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '../../types/auth';
@@ -14,6 +14,7 @@ interface SubscriptionModalProps {
 
 interface ModalPlan {
   name: string;
+  tier?: string;
   price: string;
   period: string;
   features: string[];
@@ -37,6 +38,49 @@ interface StripeProduct {
 const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModalProps) => {
   const [loading, setLoading] = useState(false);
   const [plans, setPlans] = useState<ModalPlan[]>([]);
+  const [errorModal, setErrorModal] = useState<{ 
+    isOpen: boolean; 
+    message: string;
+    title?: string;
+    type?: 'restriction' | 'duplicate' | 'downgrade'
+  }>({
+    isOpen: false,
+    message: '',
+    title: 'Subscription Restriction'
+  });
+
+  const [pendingDowngrade, setPendingDowngrade] = useState<(ModalPlan & { tier?: string }) | null>(null);
+
+  const PLAN_HIERARCHY = {
+    'starter': 1,
+    'pro': 2,
+    'enterprise': 3
+  };
+
+  const getFeatures = (name: string) => {
+      if (name === 'Starter') return [
+        '2,000 Tickets per month',
+        'Real-time team collaboration',
+        'Standard analytics dashboard',
+        'Discord & Email notifications',
+        'Community-led technical support'
+      ];
+      if (name === 'Pro') return [
+        '10,000 Tickets per month',
+        'Bi-directional Jira & GitHub sync',
+        'Advanced AI Status Reports',
+        'Multi-team workspace management',
+        '8/5 Priority engineer support'
+      ];
+      if (name === 'Enterprise') return [
+        'Unlimited scale & data retention',
+        'Custom-trained LLM for your team',
+        'SOC2 & Audit Log compliance',
+        'Dedicated Success Architect',
+        '99.9% Uptime SLA Guarantee'
+      ];
+      return [];
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -52,9 +96,10 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
                 .sort((a, b) => a.price - b.price)
                 .map((p) => ({
                 name: p.name,
+                tier: p.metadata?.plan_tier_id || p.name.toLowerCase(),
                 price: `£${p.price}`,
-                period: '/mo',
-                features: p.description ? p.description.split(',') : [],
+                period: '/mo + VAT',
+                features: getFeatures(p.name),
                 active: profile?.subscription_tier === p.metadata?.plan_tier_id || (p.name === 'Starter' && !profile?.subscription_tier),
                 priceId: p.price_id,
                 isEnterprise: p.name === 'Enterprise'
@@ -70,14 +115,47 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
     }
   }, [isOpen, profile]);
 
-  const getFeatures = (name: string) => {
-      if (name === 'Starter') return ['Up to 3 projects', 'Basic analytics', 'Community support'];
-      if (name === 'Pro') return ['Unlimited projects', 'Advanced analytics', 'Priority support', 'Custom workflows'];
-      if (name === 'Enterprise') return ['Dedicated account manager', 'SLA', 'SSO', 'Audit logs'];
-      return [];
+  const proceedWithDowngrade = () => {
+    if (pendingDowngrade) {
+      setErrorModal({ ...errorModal, isOpen: false });
+      handleSubscribe(pendingDowngrade, true);
+      setPendingDowngrade(null);
+    }
   };
 
-  const handleSubscribe = async (priceId: string) => {
+  const handleSubscribe = async (plan: ModalPlan & { tier?: string }, bypassChecks = false) => {
+    if (!bypassChecks) {
+        if (plan.active && profile?.status === 'active') {
+            setErrorModal({
+                isOpen: true,
+                title: 'Already Subscribed',
+                message: `You are already on the ${plan.name} plan. Please choose a different plan or visit your billing portal to manage your subscription.`,
+                type: 'duplicate'
+            });
+            return;
+        }
+
+        // Check for downgrade
+        if (profile?.status === 'active' && profile.subscription_tier && plan.tier) {
+            const currentTierKey = profile.subscription_tier?.toLowerCase() as keyof typeof PLAN_HIERARCHY;
+            const newTierKey = plan.tier?.toLowerCase() as keyof typeof PLAN_HIERARCHY;
+
+            const currentTierLevel = PLAN_HIERARCHY[currentTierKey] || 0;
+            const newTierLevel = PLAN_HIERARCHY[newTierKey] || 0;
+
+            if (newTierLevel < currentTierLevel) {
+                setPendingDowngrade(plan);
+                setErrorModal({
+                    isOpen: true,
+                    title: 'Confirm Downgrade',
+                    message: `Are you sure you want to switch to the ${plan.name} plan? You may lose access to advanced features immediately.`,
+                    type: 'downgrade'
+                });
+                return;
+            }
+        }
+    }
+
     setLoading(true);
     try {
       const apiUrl = getApiUrl();
@@ -85,11 +163,23 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          price_id: priceId,
+          price_id: plan.priceId,
           user_id: user?.id,
           email: user?.email
         }),
       });
+
+      if (response.status === 403) {
+        const data = await response.json();
+        setErrorModal({
+          isOpen: true,
+          title: 'Subscription Restriction',
+          message: data.detail || 'Plan changes are restricted to once every 30 days.',
+          type: 'restriction'
+        });
+        return;
+      }
+
       const data = await response.json();
       if (data.url) {
         window.location.href = data.url;
@@ -130,20 +220,58 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
+        <div className="fixed inset-0 z-[100] flex justify-end">
             <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm" 
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
                 onClick={onClose}
             />
+
+            {/* Error Modal Overlay */}
+            {errorModal.isOpen && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl w-full max-w-md shadow-2xl p-8 relative animate-in zoom-in-95 duration-200">
+                        <button 
+                            onClick={() => setErrorModal({ ...errorModal, isOpen: false })}
+                            className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                        >
+                            <X size={20} />
+                        </button>
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${
+                            errorModal.type === 'duplicate' ? 'bg-primary/10 text-primary' : errorModal.type === 'downgrade' ? 'bg-orange-500/10 text-orange-500' : 'bg-amber-500/10 text-amber-500'
+                        }`}>
+                            {errorModal.type === 'duplicate' ? <Rocket size={24} /> : errorModal.type === 'downgrade' ? <ArrowDownCircle size={24} /> : <AlertCircle className="text-amber-500" size={24} />}
+                        </div>
+                        <h3 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white">
+                            {errorModal.title || 'Subscription Restriction'}
+                        </h3>
+                        <p className="text-slate-500 dark:text-slate-400 leading-relaxed mb-8">
+                            {errorModal.message}
+                        </p>
+                        <button 
+                            onClick={() => {
+                                if (errorModal.type === 'downgrade') {
+                                    proceedWithDowngrade();
+                                } else {
+                                    setErrorModal({ ...errorModal, isOpen: false });
+                                }
+                            }}
+                            className="w-full py-4 text-sm font-bold uppercase tracking-widest rounded-2xl bg-primary text-white hover:bg-primary/90 transition-colors"
+                        >
+                            {errorModal.type === 'duplicate' ? 'Choose Different Plan' : errorModal.type === 'downgrade' ? 'Yes, I\'m sure' : 'Acknowledge'}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <motion.div 
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="relative w-full max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 h-full p-6 overflow-y-auto shadow-2xl"
+                className="relative w-full max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 h-full p-6 overflow-y-auto shadow-2xl z-10"
             >
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold">Manage Subscription</h2>
@@ -155,52 +283,51 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
                 <div className="space-y-6">
                     {/* Current Plan Status */}
                     <div className="p-4 bg-primary/10 border border-primary/20 rounded-xl">
-                        <p className="text-sm text-primary font-medium mb-1">My Current Plan</p>
+                        <p className="text-xs text-primary font-black uppercase tracking-widest mb-1">My Current Plan</p>
                         <div className="flex justify-between items-baseline">
-                             <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{profile?.subscription_tier?.toUpperCase() || 'NO PLAN'}</h3>
-                             <span className="text-sm font-medium px-2 py-0.5 bg-primary/20 text-primary rounded-full">{profile?.status?.toUpperCase()}</span>
+                             <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight italic">{profile?.subscription_tier?.toUpperCase() || 'NO PLAN'}</h3>
+                             <span className="text-[10px] font-black px-3 py-1 bg-primary/20 text-primary rounded-full uppercase tracking-tighter">{profile?.status?.toUpperCase() || 'INACTIVE'}</span>
                         </div>
                     </div>
 
-                    <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Available Plans</h3>
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.3em]">Available Plans</h3>
+                        <span className="text-[10px] text-slate-400 font-bold opacity-50 uppercase tracking-tighter">Prices exclude VAT</span>
+                    </div>
                     
                     <div className="space-y-4">
                         {plans.map((plan) => (
-                             <div key={plan.name} className={`p-4 rounded-xl border transition-colors ${
-                                 plan.active ? 'border-primary bg-primary/5' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-black/20 hover:border-slate-300 dark:hover:border-slate-700'
+                             <div key={plan.name} className={`p-5 rounded-[2rem] border transition-all duration-300 ${
+                                 plan.active ? 'border-primary ring-4 ring-primary/5 bg-primary/5' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-black/20 hover:border-slate-300 dark:hover:border-slate-700'
                              }`}>
-                                <div className="flex justify-between items-start mb-3">
+                                <div className="flex justify-between items-start mb-4">
                                     <div>
-                                        <h4 className="font-bold text-slate-900 dark:text-white">{plan.name}</h4>
-                                        <div className="flex items-baseline gap-1">
-                                            <span className="text-lg font-bold text-slate-900 dark:text-white">{plan.price}</span>
-                                            <span className="text-xs text-slate-500">{plan.period}</span>
+                                        <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-sm">{plan.name}</h4>
+                                        <div className="flex items-baseline gap-1 mt-1">
+                                            <span className="text-2xl font-black text-slate-900 dark:text-white tracking-tighter">{plan.price}</span>
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{plan.period}</span>
                                         </div>
                                     </div>
-                                    {plan.active && <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary"><Check size={14} /></div>}
+                                    {plan.active && <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary"><Check size={14} strokeWidth={4} /></div>}
                                 </div>
                                 
-                                <ul className="space-y-2 mb-4">
-                                     {(plan.features.length ? plan.features.slice(0, 3) : getFeatures(plan.name).slice(0, 3)).map((f: string, i: number) => (
-                                         <li key={i} className="flex items-center gap-2 text-xs text-slate-400">
-                                             <div className="w-1 h-1 rounded-full bg-slate-600"></div> {f}
+                                <ul className="space-y-2 mb-6">
+                                     {plan.features.slice(0, 3).map((f: string, i: number) => (
+                                         <li key={i} className="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400 font-bold tracking-tight leading-snug">
+                                             <div className="w-1.5 h-1.5 rounded-full bg-primary/40 mt-1 shrink-0"></div> {f}
                                          </li>
                                      ))}
-                                     {(plan.features.length > 3 || getFeatures(plan.name).length > 3) && (
-                                         <li className="text-xs text-slate-600 italic">+ more</li>
+                                     {plan.features.length > 3 && (
+                                         <li className="text-[10px] text-slate-600 dark:text-slate-500 font-black uppercase tracking-widest mt-2">+ See full feature list</li>
                                      )}
                                 </ul>
 
                                 {plan.active ? (
-                                    <button disabled className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 rounded-lg text-sm font-medium border border-slate-200 dark:border-slate-700 cursor-default">Current Plan</button>
+                                    <button disabled className="w-full py-3 bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-black uppercase tracking-widest border border-transparent cursor-default">Current Plan</button>
                                 ) : (
                                     <button 
-                                        onClick={() => handleSubscribe(plan.priceId)}
-                                        className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${
-                                            plan.isEnterprise 
-                                            ? 'bg-white text-black hover:bg-slate-50 border border-slate-200 shadow-md shadow-black/5'
-                                            : 'bg-white text-black hover:bg-slate-50 border border-slate-200'
-                                        }`}
+                                        onClick={() => handleSubscribe(plan)}
+                                        className="w-full py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:shadow-lg shadow-black/5"
                                     >
                                         {loading ? 'Processing...' : 'Switch to this plan'}
                                     </button>
@@ -212,12 +339,12 @@ const SubscriptionModal = ({ isOpen, onClose, user, profile }: SubscriptionModal
                     <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
                          <button 
                             onClick={handlePortal}
-                            className="w-full py-3 flex items-center justify-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all text-sm font-medium"
+                            className="w-full py-4 flex items-center justify-center gap-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all text-xs font-black uppercase tracking-widest"
                          >
-                             Manage Billing Settings <ExternalLink size={16} />
+                             Billing Portal <ExternalLink size={14} />
                          </button>
-                         <p className="text-xs text-center text-slate-600 mt-2">
-                             Access receipts, payment methods, and cancel subscription via Stripe.
+                         <p className="text-[10px] text-center text-slate-400 mt-4 leading-relaxed font-bold">
+                             Securely manage receipts, payment methods, and your subscription tier via <span className="text-slate-900 dark:text-slate-200">Stripe</span>.
                          </p>
                     </div>
                 </div>

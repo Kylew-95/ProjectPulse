@@ -75,7 +75,7 @@ const Overview = () => {
     fetchUserTeams();
 
     return () => { supabase.removeChannel(channel); };
-  }, [refreshAnalytics, user?.id]);
+  }, [refreshAnalytics, user?.id, user?.email, user]);
 
   const handleCreateTicketFromSuggestion = (suggestion: { content: string; type: string }) => {
     let title = 'Strategic Insight Implementation';

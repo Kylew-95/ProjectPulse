@@ -1,4 +1,4 @@
-import { type LucideIcon, ZoomIn } from 'lucide-react';
+import { type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 interface DemoSectionProps {
@@ -39,7 +39,7 @@ const DemoSection = ({
     const colorClasses = colorVariants[iconColor as keyof typeof colorVariants] || colorVariants.blue;
 
     return (
-        <section className="mb-20 relative">
+        <section className="mb-12 relative">
             <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-blue-500/0 via-blue-500/20 to-blue-500/0 md:-left-12 hidden md:block"></div>
         
             <div className="flex items-center gap-4 mb-6">
@@ -54,22 +54,15 @@ const DemoSection = ({
             </div>
 
             {screenshotSrc && (
-                <div className={`bg-slate-900/50 border border-white/10 rounded-2xl p-4 overflow-hidden shadow-2xl transition-all group ${colorClasses.shadow} ${colorClasses.hoverBorder}`}>
-                    <div className="aspect-video bg-slate-800/50 rounded-xl flex items-center justify-center relative overflow-hidden">
-                        <div 
-                            className="w-full h-full flex items-center justify-center bg-slate-800/50 cursor-pointer group/image relative"
-                            onClick={() => onImageClick(screenshotSrc)}
-                        >
-                            <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/10 transition-colors flex items-center justify-center z-10 rounded-xl">
-                                <ZoomIn className="text-white opacity-0 group-hover/image:opacity-100 transition-opacity transform scale-75 group-hover/image:scale-100" />
-                            </div>
-                            <img 
-                                src={screenshotSrc} 
-                                alt={screenshotAlt} 
-                                className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover/image:scale-105"
-                            />
-                        </div>
-                    </div>
+                <div 
+                    className="w-full aspect-video flex items-center justify-center cursor-pointer group/image relative overflow-hidden rounded-2xl"
+                    onClick={() => onImageClick(screenshotSrc)}
+                >
+                    <img 
+                        src={screenshotSrc} 
+                        alt={screenshotAlt} 
+                        className="max-w-full max-h-full object-contain"
+                    />
                 </div>
             )}
         </section>

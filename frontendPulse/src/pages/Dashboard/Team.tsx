@@ -5,7 +5,6 @@ import { useAuth } from '../../context/AuthContext';
 import {
   GET_TEAMS_FOR_USER,
   GET_TEAM_MEMBERS,
-  INVITE_MEMBER,
   UPDATE_MEMBER_ROLE,
   DELETE_MEMBER,
   DELETE_TEAM
@@ -135,7 +134,6 @@ const Team = () => {
     skip: viewMode !== 'members' || !teamId,
   });
 
-  const [inviteMemberMutation] = useMutationReact(INVITE_MEMBER);
   const [updateMemberRoleMutation] = useMutationReact(UPDATE_MEMBER_ROLE);
   const [deleteMemberMutation] = useMutationReact(DELETE_MEMBER);
   const [deleteTeamMutation] = useMutationReact(DELETE_TEAM);
@@ -198,17 +196,25 @@ const Team = () => {
     setLoading(true);
     try {
       const isEmail = inviteIdentifier.includes('@');
-      await inviteMemberMutation({
-        variables: {
-          objects: [{
-            team_id: teamId,
-            email: isEmail ? inviteIdentifier : 'pending@discord.user',
-            discord_id: isEmail ? null : inviteIdentifier,
-            role: inviteRole,
-            status: 'inactive'
-          }]
-        }
+      const payload = {
+          email: isEmail ? inviteIdentifier : null,
+          discord_id: isEmail ? null : inviteIdentifier,
+          role: inviteRole,
+          team_id: teamId
+      };
+
+      // Call our new Backend SMTP + Discord Invitation Service
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/general/send-invite`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
       });
+
+      if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Failed to send invitation');
+      }
+
       handleInviteSuccess();
     } catch (err: unknown) {
       alert(`Error: ${(err as Error).message}`);
@@ -229,6 +235,15 @@ const Team = () => {
   };
 
   const handleRemoveMember = (memberId: string) => {
+    // Only Team Lead or Admin can remove members
+    const userRoleInTeam = members.find(m => m.user_id === user?.id)?.role;
+    const isLead = userRoleInTeam === 'Team Lead' || profile?.subscription_tier === 'super_admin';
+
+    if (!isLead) {
+        alert("Permission denied. Only Team Leads or Admins can remove members.");
+        return;
+    }
+
     setDeleteModal({
       isOpen: true,
       type: 'member',

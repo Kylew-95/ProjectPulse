@@ -477,7 +477,7 @@ def chat_with_pulse(query: str, context: dict, kb_context: str = ""):
     try:
         response = co.chat(
             message=prompt,
-            model="command-r-plus" # Upgrade to Plus for better reasoning and grounding
+            model="command-r-08-2024" # use the free model
         )
         return response.text.strip()
     except Exception as e:

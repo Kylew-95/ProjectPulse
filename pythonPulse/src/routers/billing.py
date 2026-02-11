@@ -61,15 +61,8 @@ async def create_checkout_session(data: dict):
                 stripe_customer_id = profile_res.data.get('stripe_customer_id')
                 last_plan_change_at_str = profile_res.data.get('last_plan_change_at')
                 
-                # Enforce 30-day Cooldown (SKIP FOR ADD-ONS)
-                if not is_addon and last_plan_change_at_str:
-                    from datetime import datetime, timezone, timedelta
-                    # Parse as UTC-aware datetime
-                    last_change = datetime.fromisoformat(last_plan_change_at_str.replace('Z', '+00:00'))
-                    if datetime.now(timezone.utc) - last_change < timedelta(days=30):
-                         diff = timedelta(days=30) - (datetime.now(timezone.utc) - last_change)
-                         days_left = diff.days
-                         raise HTTPException(status_code=403, detail=f"You can only change plans once every 30 days. Please try again in {days_left} days.")
+                # Restriction removed to align with "Easy & Flexible" strategy
+                pass
                 
                 print(f"DEBUG CHECKOUT: Found existing stripe_customer_id: {stripe_customer_id}")
         except Exception as e:

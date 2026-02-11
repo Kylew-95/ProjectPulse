@@ -14,6 +14,8 @@ import subprocess
 intents = discord.Intents.default()
 intents.message_content = True 
 intents.presences = True # Critical for status updates
+intents.members = True   # Critical for role management and join events
+intents.guilds = True    # Critical for guild-related interactions
 
 # Initialize Bot
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)

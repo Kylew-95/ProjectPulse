@@ -4,11 +4,13 @@ import type { Session } from '@supabase/supabase-js';
 import { getApiUrl } from '../utils/apiConfig';
 import type { Profile } from '../types/auth';
 import { AuthContext } from './AuthContext';
+import HeartbeatLoader from '../components/ui/HeartbeatLoader';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isResumingCheckout, setIsResumingCheckout] = useState(false);
 
   // Function to fetch profile
   const fetchProfile = async (userId: string) => {
@@ -43,11 +45,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const handleResumeCheckout = async (user: Session['user']) => {
+    const priceId = localStorage.getItem('checkout_priceId');
+    if (priceId && user) {
+      console.log('Resuming checkout for priceId:', priceId);
+      localStorage.removeItem('checkout_priceId');
+      setIsResumingCheckout(true);
+      try {
+        const apiUrl = getApiUrl();
+        const response = await fetch(`${apiUrl}/billing/create-checkout-session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            price_id: priceId,
+            user_id: user.id,
+            email: user.email
+          }),
+        });
+        const data = await response.json();
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          setIsResumingCheckout(false);
+        }
+      } catch (err) {
+        console.error('Resume checkout error:', err);
+        setIsResumingCheckout(false);
+      }
+    }
+  };
+
   useEffect(() => {
     // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
+        handleResumeCheckout(session.user);
         // Sync first, then fetch
         if (session.user.email) {
             syncSubscription(session.user.email, session.user.id).then(() => fetchProfile(session.user.id));
@@ -62,6 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
+         handleResumeCheckout(session.user);
          if (session.user.email) {
             syncSubscription(session.user.email, session.user.id).then(() => fetchProfile(session.user.id));
         } else {
@@ -109,6 +143,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={{ session, user: session?.user || null, profile, loading, refreshProfile }}>
+      {isResumingCheckout && (
+        <HeartbeatLoader 
+          title="Reviewing Your Selection"
+          subtitle="Preparing secure checkout"
+        />
+      )}
       {children}
     </AuthContext.Provider>
   );

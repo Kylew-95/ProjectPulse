@@ -66,7 +66,7 @@ const Tickets = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [userTeams, setUserTeams] = useState<{ id: string; name: string }[]>([]);
+  const [userTeams, setUserTeams] = useState<{ id: string; name: string; role: string }[]>([]);
   const [viewMode, setViewMode] = useState<'table' | 'board'>('board');
   const [activeFilter, setActiveFilter] = useState<QuickFilterType>('all');
   const [deleteModal, setDeleteModal] = useState<{
@@ -167,13 +167,13 @@ const Tickets = () => {
 
   }, [graphqlData, graphqlLoading, graphqlError, tickets.length]);
 
-  // Keep user teams fetch for creating tickets
+  // Keep user teams fetch for creating tickets and permission checks
   useEffect(() => {
     const fetchUserTeams = async () => {
       if (!session?.user?.id) return;
       const { data, error } = await supabase
         .from('team_members')
-        .select('team_id, teams(id, name)')
+        .select('team_id, role, teams(id, name)')
         .eq('user_id', session.user.id);
       
       if (error) {
@@ -183,10 +183,10 @@ const Tickets = () => {
 
       const teams = data?.map(m => {
         const t = Array.isArray(m.teams) ? m.teams[0] : m.teams;
-        return { id: t.id, name: t.name };
+        return { id: t.id, name: t.name, role: m.role };
       }) || [];
 
-      setUserTeams(teams);
+      setUserTeams(teams); 
     };
     fetchUserTeams();
   }, [session]);
